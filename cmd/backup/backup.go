@@ -15,15 +15,16 @@ const (
 )
 
 var (
-	fs      = flag.NewFlagSet("", flag.ExitOnError)
-	srcDir  = fs.String("s", "", "Source directory")
-	dstDir  = fs.String("d", "", "Destination directory")
-	version = fs.Bool("v", false, "Version")
-	debug   = fs.Bool("debug", false, "Debug")
+	fs              = flag.NewFlagSet("", flag.ExitOnError)
+	srcDir          = fs.String("s", "", "Source directory")
+	dstDir          = fs.String("d", "", "Destination directory")
+	version         = fs.Bool("v", false, "Version")
+	debug           = fs.Bool("debug", false, "Debug")
+	hashComparision = fs.Bool("hash", false, "Hash comparison")
 )
 
 func main() {
-	backup := goback.NewBackup(*srcDir, *dstDir, *debug)
+	backup := goback.NewBackup(*srcDir, *dstDir, *hashComparision, *debug)
 	if err := backup.Start(); err != nil {
 		log.Error(err)
 	}

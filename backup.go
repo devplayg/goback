@@ -1,9 +1,12 @@
 package goback
 
 import (
+	"crypto/sha256"
 	"errors"
 	"github.com/boltdb/bolt"
+	"github.com/minio/highwayhash"
 	log "github.com/sirupsen/logrus"
+	"hash"
 	"path/filepath"
 	"sync"
 	"time"
@@ -27,14 +30,16 @@ var (
 )
 
 type Backup struct {
-	srcDir             string
-	dstDir             string
-	db                 *bolt.DB
-	fileDb             *bolt.DB
-	tempDir            string
-	summary            *Summary
-	fileHashComparison bool
-	debug              bool
+	srcDir          string
+	dstDir          string
+	db              *bolt.DB
+	fileDb          *bolt.DB
+	tempDir         string
+	summary         *Summary
+	hashComparision bool
+	debug           bool
+	key             []byte
+	highwayhash     hash.Hash
 
 	//dbOrigin   *sql.DB
 	//dbOriginTx *sql.Tx
@@ -42,15 +47,15 @@ type Backup struct {
 	//dbLogTx    *sql.Tx
 }
 
-func NewBackup(srcDir, dstDir string, debug bool) *Backup {
+func NewBackup(srcDir, dstDir string, hashComparision, debug bool) *Backup {
 	b := Backup{
 		//srcDir:       `filepath.Clean`(srcDir),
 		//dstDir:       filepath.Clean(dstDir),
 		//dbOriginFile: filepath.Join(filepath.Clean(dstDir), "backup_origin.db"),
 		//dbLogFile:    filepath.Join(filepath.Clean(dstDir), "backup_log.db"),
-		srcDir: srcDir,
-		dstDir: dstDir,
-		fileHashComparison: true,
+		srcDir:          srcDir,
+		dstDir:          dstDir,
+		hashComparision: hashComparision,
 		//dbOriginFile: filepath.Join(dstDir, "backup_origin.db"),
 		//dbLogFile:    filepath.Join(dstDir, "backup_log.db"),
 		debug: debug,
@@ -65,6 +70,16 @@ func (b *Backup) init() error {
 
 	if err := b.initDatabase(); err != nil {
 		return err
+	}
+
+	if b.hashComparision {
+		key := sha256.Sum256([]byte("Duplicate File Finder"))
+		highwayhash, err := highwayhash.New(key[:])
+		if err != nil {
+			return err
+		}
+
+		b.highwayhash = highwayhash
 	}
 
 	//b.summary = newSummary(0, b.srcDir)
@@ -89,8 +104,8 @@ func (b *Backup) initDirectories() error {
 	//b.tempDir = tempDir
 
 	log.WithFields(log.Fields{
-		"srcDir":  b.srcDir,
-		"dstDir":  b.dstDir,
+		"srcDir": b.srcDir,
+		"dstDir": b.dstDir,
 	}).Debug("backup directories")
 
 	return nil
@@ -244,13 +259,12 @@ func (b *Backup) Start() error {
 		return err
 	}
 
-	var err error
-	b.summary, err = b.getLastSummary()
+	lastSummary, err := b.getLastSummary()
 	if err != nil {
 		return err
 	}
-	if b.summary.Id < 1 {
-		if err := b.generateFirstBackupData(); err != nil{
+	if lastSummary == nil {
+		if err := b.generateFirstBackupData(); err != nil {
 			return err
 		}
 	}
@@ -610,3 +624,17 @@ func (b *Backup) writeToDatabase(newMap sync.Map, originMap sync.Map) error {
 //		log.Errorf("[Error] %s", err.Error())
 //	}
 //}
+
+func (b *Backup) issueSummaryId() (int64, error) {
+	var summaryId int64
+	err := b.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(BucketSummary)
+		if b == nil {
+			return errors.New("invalid bucket: " + string(BucketSummary))
+		}
+		id, _ := b.NextSequence()
+		summaryId = int64(id)
+		return b.Put(Int64ToBytes(summaryId), nil)
+	})
+	return summaryId, err
+}

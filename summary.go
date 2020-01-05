@@ -27,9 +27,9 @@ type Summary struct {
 	ExecutionTime  float64
 }
 
-func newSummary(lastId int64, srcDir string) *Summary {
+func newSummary(id int64, srcDir string) *Summary {
 	return &Summary{
-		Id:     lastId,
+		Id:     id,
 		Date:   time.Now(),
 		SrcDir: srcDir,
 		State:  BackupReady,

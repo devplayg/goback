@@ -31,8 +31,8 @@ func (b *Backup) getLastSummary() (*Summary, error) {
 	if err != nil {
 		return nil, err
 	}
-	if lastSummaryData == nil {
-		return newSummary(0, b.srcDir), nil
+	if len(lastSummaryData) == 0 {
+		return nil, nil
 	}
 
 	var summary Summary

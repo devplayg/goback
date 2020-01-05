@@ -1,8 +1,10 @@
 package goback
 
 import (
+	"encoding/hex"
 	"github.com/boltdb/bolt"
 	log "github.com/sirupsen/logrus"
+	"io"
 	"os"
 	"path/filepath"
 	"sync"
@@ -11,6 +13,11 @@ import (
 
 func (b *Backup) generateFirstBackupData() error {
 	log.Debug("generating first backup data")
+	id, err := b.issueSummaryId()
+	if err != nil {
+		return err
+	}
+	b.summary = newSummary(id, b.srcDir)
 	b.summary.ReadingTime = time.Now()
 	fileMap, err := b.collectFilesToBackup(true)
 	if err != nil {
@@ -23,8 +30,10 @@ func (b *Backup) generateFirstBackupData() error {
 	b.summary.LoggingTime = time.Now()
 
 	log.WithFields(log.Fields{
-		"count": b.summary.TotalCount,
-		"execTime": b.summary.LoggingTime.Sub(b.summary.ReadingTime).Seconds(),
+		"summaryId": b.summary.Id,
+		"count":     b.summary.TotalCount,
+		"size":      b.summary.TotalSize,
+		"execTime":  b.summary.LoggingTime.Sub(b.summary.ReadingTime).Seconds(),
 	}).Debug("files found")
 
 	return nil
@@ -61,15 +70,14 @@ func (b *Backup) collectFilesToBackup(marshal bool) (*sync.Map, error) {
 
 		fi := newFile(path, file.Size(), file.ModTime())
 		fi.Result = BackupSuccess
-		//if b.fileHashComparison {
-		//	b, err := ioutil.ReadFile(path)
-		//	if err != nil {
-		//		log.Error(err)
-		//		return nil
-		//	}
-		//	highwayhash.Sum()
-		//}
-
+		if b.hashComparision {
+			h, err := b.getFileHash(path)
+			if err != nil {
+				log.Error(err)
+				return nil
+			}
+			fi.Hash = h
+		}
 		if marshal {
 			fi.Marshal()
 		}
@@ -79,4 +87,25 @@ func (b *Backup) collectFilesToBackup(marshal bool) (*sync.Map, error) {
 		return nil
 	})
 	return &fileMap, err
+}
+
+func (b *Backup) getFileHash(path string) (string, error) {
+	file, err := os.Open(path) // specify your file here
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	//hash, err := New(key)
+	//if err != nil {
+	//	fmt.Printf("Failed to create HighwayHash instance: %v", err) // add error handling
+	//	return
+	//}
+
+	if _, err = io.Copy(b.highwayhash, file); err != nil {
+		return "", err
+	}
+
+	checksum := b.highwayhash.Sum(nil)
+	return hex.EncodeToString(checksum), nil
 }
