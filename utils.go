@@ -66,31 +66,36 @@ func GetFileHash(path string) (string, error) {
 	return hex.EncodeToString(checksum), nil
 }
 
-func GetFileMap(dir string, hashComparision bool) (map[string]*File, int64, error) {
+func GetFileMap(dirs []string, hashComparision bool) (map[string]*File, int64, error) {
 	fileMap := make(map[string]*File)
 	var size int64
 
-	err := filepath.Walk(dir, func(path string, file os.FileInfo, err error) error {
-		if file.IsDir() {
-			return nil
-		}
-
-		if !file.Mode().IsRegular() {
-			return nil
-		}
-
-		fi := newFile(path, file.Size(), file.ModTime())
-		if hashComparision {
-			h, err := GetFileHash(path)
-			if err != nil {
-				return err
+	for _, dir := range dirs {
+		err := filepath.Walk(dir, func(path string, file os.FileInfo, err error) error {
+			if file.IsDir() {
+				return nil
 			}
-			fi.Hash = h
-		}
-		fileMap[path] = fi
-		size += fi.Size
-		return nil
-	})
 
-	return fileMap, size, err
+			if !file.Mode().IsRegular() {
+				return nil
+			}
+
+			fi := newFile(path, file.Size(), file.ModTime())
+			if hashComparision {
+				h, err := GetFileHash(path)
+				if err != nil {
+					return err
+				}
+				fi.Hash = h
+			}
+			fileMap[path] = fi
+			size += fi.Size
+			return nil
+		})
+		if err != nil {
+			return nil, 0, err
+		}
+	}
+
+	return fileMap, size, nil
 }

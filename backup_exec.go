@@ -1,7 +1,6 @@
 package goback
 
 import (
-	"github.com/davecgh/go-spew/spew"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"time"
@@ -9,12 +8,14 @@ import (
 
 func (b *Backup) startBackup() error {
 	// Ready
-	log.Debug("generating first backup data")
 	summary, err := b.newSummary()
 	if err != nil {
 		return err
 	}
 	b.summary = summary
+	log.WithFields(log.Fields{
+		"summaryId": summary.Id,
+	}).Debug("new backup is ready")
 	defer func() {
 		if err := b.writeSummary(); err != nil {
 			log.Error(err)
@@ -33,7 +34,7 @@ func (b *Backup) startBackup() error {
 		return err
 	}
 
-	currentFileMap, _, err := GetFileMap(b.srcDir, b.hashComparision)
+	currentFileMap, _, err := GetFileMap(b.srcDirArr, b.hashComparision)
 	if err != nil {
 		return nil
 	}
@@ -49,69 +50,64 @@ func (b *Backup) startBackup() error {
 	//	return err
 	//}
 
-	spew.Dump(lastFileMap)
+	//spew.Dump(lastFileMap)
 	return nil
 }
 
 func (b *Backup) compareFileMaps(lastFileMap, currentFileMap map[string]*File) error {
-	//	b.writeToDatabase(newMap, sync.Map{})
-	//	b.summary.LoggingTime = time.Now()
-	//	return nil
-	//}
-	//	b.summary.ReadingTime = time.Now()
-	//
-	//	// Search files and compare with previous data
-	//	log.Infof("comparing old and new")
-	//	b.summary.State = 3
-	//	i := 1
-	//	err := filepath.Walk(b.srcDir, func(path string, f os.FileInfo, err error) error {
+	for path, current := range currentFileMap {
+		b.summary.TotalCount++
+		b.summary.TotalSize += current.Size
+
+		if last, had := lastFileMap[path]; had {
+			//				last := inf.(*File)
+
+			//
+			if last.ModTime.Unix() != current.ModTime.Unix() || last.Size != current.Size {
+				log.Debugf("modified: %s", path)
+				fi.State = FileModified
+				//					atomic.AddUint32(&b.summary.BackupModified, 1)
+				//					backupPath, dur, err := b.BackupFile(path)
+				//					if err != nil {
+				//						atomic.AddUint32(&b.summary.BackupFailure, 1)
+				//						log.Error(err)
+				//						fi.Message = err.Error()
+				//						fi.State = fi.State * -1
+				//						//spew.Dump(fi)
+				//					} else {
+				//						fi.Message = fmt.Sprintf("copy_time=%4.1f", dur)
+				//						atomic.AddUint32(&b.summary.BackupSuccess, 1)
+				//						atomic.AddUint64(&b.summary.BackupSize, uint64(f.Size()))
+				//						os.Chtimes(backupPath, f.ModTime(), f.ModTime())
+				//						originMap.Delete(path)
+				//					}
+			}
+			//				originMap.Delete(path)
+
+		} else {
+			//				log.Debugf("added: %s", path)
+			//				fi.State = FileAdded
+			//				atomic.AddUint32(&b.summary.BackupAdded, 1)
+			//				backupPath, dur, err := b.BackupFile(path)
+			//				if err != nil {
+			//					atomic.AddUint32(&b.summary.BackupFailure, 1)
+			//					log.Error(err)
+			//					fi.Message = err.Error()
+			//					fi.State = fi.State * -1
+			//					//spew.Dump(fi)
+			//				} else {
+			//					fi.Message = fmt.Sprintf("copy_time=%4.1f", dur)
+			//					atomic.AddUint32(&b.summary.BackupSuccess, 1)
+			//					atomic.AddUint64(&b.summary.BackupSize, uint64(f.Size()))
+			//					os.Chtimes(backupPath, f.ModTime(), f.ModTime())
+			//				}
+
+		}
+	}
+
 	//		if !f.IsDir() && f.Mode().IsRegular() {
-	//
-	//			log.Debugf("Start checking: [%d] %s (%d)", i, path, f.Size())
-	//			atomic.AddUint32(&b.summary.TotalCount, 1)
-	//			atomic.AddUint64(&b.summary.TotalSize, uint64(f.Size()))
-	//			fi := newFile(path, f.Size(), f.ModTime())
-	//
 	//			if inf, ok := originMap.Load(path); ok {
-	//				last := inf.(*File)
-	//
-	//				if last.ModTime.Unix() != f.ModTime().Unix() || last.Size != f.Size() {
-	//					log.Debugf("modified: %s", path)
-	//					fi.State = FileModified
-	//					atomic.AddUint32(&b.summary.BackupModified, 1)
-	//					backupPath, dur, err := b.BackupFile(path)
-	//					if err != nil {
-	//						atomic.AddUint32(&b.summary.BackupFailure, 1)
-	//						log.Error(err)
-	//						fi.Message = err.Error()
-	//						fi.State = fi.State * -1
-	//						//spew.Dump(fi)
-	//					} else {
-	//						fi.Message = fmt.Sprintf("copy_time=%4.1f", dur)
-	//						atomic.AddUint32(&b.summary.BackupSuccess, 1)
-	//						atomic.AddUint64(&b.summary.BackupSize, uint64(f.Size()))
-	//						os.Chtimes(backupPath, f.ModTime(), f.ModTime())
-	//						originMap.Delete(path)
-	//					}
-	//				}
-	//				originMap.Delete(path)
 	//			} else {
-	//				log.Debugf("added: %s", path)
-	//				fi.State = FileAdded
-	//				atomic.AddUint32(&b.summary.BackupAdded, 1)
-	//				backupPath, dur, err := b.BackupFile(path)
-	//				if err != nil {
-	//					atomic.AddUint32(&b.summary.BackupFailure, 1)
-	//					log.Error(err)
-	//					fi.Message = err.Error()
-	//					fi.State = fi.State * -1
-	//					//spew.Dump(fi)
-	//				} else {
-	//					fi.Message = fmt.Sprintf("copy_time=%4.1f", dur)
-	//					atomic.AddUint32(&b.summary.BackupSuccess, 1)
-	//					atomic.AddUint64(&b.summary.BackupSize, uint64(f.Size()))
-	//					os.Chtimes(backupPath, f.ModTime(), f.ModTime())
-	//				}
 	//			}
 	//			//if fi.State < 0 {
 	//			//	log.Debugf("[%d] %s", fi.State, fi.Path)
@@ -121,7 +117,6 @@ func (b *Backup) compareFileMaps(lastFileMap, currentFileMap map[string]*File) e
 	//		}
 	//		return nil
 	//	})
-	//	checkErr(err)
 	//
 	//	// Rename directory
 	//	lastDir := filepath.Join(b.dstDir, b.summary.Date.Format("20060102"))
@@ -153,4 +148,5 @@ func (b *Backup) compareFileMaps(lastFileMap, currentFileMap map[string]*File) e
 	//	err = b.writeToDatabase(newMap, originMap)
 	//	b.summary.LoggingTime = time.Now()
 	//	return err
+	return nil
 }

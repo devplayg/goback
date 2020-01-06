@@ -8,7 +8,7 @@ import (
 type Summary struct {
 	Id         int64
 	Date       time.Time
-	SrcDir     string
+	SrcDirArr  []string
 	DstDir     string
 	State      int
 	TotalSize  int64

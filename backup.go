@@ -32,7 +32,7 @@ var (
 )
 
 type Backup struct {
-	srcDir          string
+	srcDirArr       []string
 	dstDir          string
 	db              *bolt.DB
 	fileDb          *bolt.DB
@@ -48,18 +48,12 @@ type Backup struct {
 	//dbLogTx    *sql.Tx
 }
 
-func NewBackup(srcDir, dstDir string, hashComparision, debug bool) *Backup {
+func NewBackup(srcDirArr []string, dstDir string, hashComparision, debug bool) *Backup {
 	b := Backup{
-		//srcDir:       `filepath.Clean`(srcDir),
-		//dstDir:       filepath.Clean(dstDir),
-		//dbOriginFile: filepath.Join(filepath.Clean(dstDir), "backup_origin.db"),
-		//dbLogFile:    filepath.Join(filepath.Clean(dstDir), "backup_log.db"),
-		srcDir:          srcDir,
+		srcDirArr:       srcDirArr,
 		dstDir:          dstDir,
 		hashComparision: hashComparision,
-		//dbOriginFile: filepath.Join(dstDir, "backup_origin.db"),
-		//dbLogFile:    filepath.Join(dstDir, "backup_log.db"),
-		debug: debug,
+		debug:           debug,
 	}
 	return &b
 }
@@ -77,9 +71,19 @@ func (b *Backup) init() error {
 }
 
 func (b *Backup) initDirectories() error {
-	b.srcDir = filepath.Clean(b.srcDir)
-	if err := isValidDir(b.srcDir); err != nil {
-		return errors.New("source directory error: " + err.Error())
+	for i := range b.srcDirArr {
+		dir, err := filepath.Abs(b.srcDirArr[i])
+		if err != nil {
+			return err
+		}
+		b.srcDirArr[i] = dir
+		if err := isValidDir(b.srcDirArr[i]); err != nil {
+			return errors.New("source directory error: " + err.Error())
+		}
+
+		log.WithFields(log.Fields{
+			"src": b.srcDirArr[i],
+		}).Infof("source directory #%d", i+1)
 	}
 
 	b.dstDir = filepath.Clean(b.dstDir)
@@ -94,9 +98,8 @@ func (b *Backup) initDirectories() error {
 	//b.tempDir = tempDir
 
 	log.WithFields(log.Fields{
-		"srcDir": b.srcDir,
-		"dstDir": b.dstDir,
-	}).Debug("backup directories")
+		"dir": b.dstDir,
+	}).Infof("storage")
 
 	return nil
 }
@@ -212,8 +215,8 @@ func (b *Backup) initDatabase() error {
 	return nil
 }
 
-func (b *Backup) getLastFileMap() (map[string]File, error) {
-	fileMap := make(map[string]File)
+func (b *Backup) getLastFileMap() (map[string]*File, error) {
+	fileMap := make(map[string]*File)
 	err := b.fileDb.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketFiles)
 		if b == nil {
@@ -224,7 +227,7 @@ func (b *Backup) getLastFileMap() (map[string]File, error) {
 			if err := json.Unmarshal(v, &file); err != nil {
 				return err
 			}
-			fileMap[string(k)] = file
+			fileMap[string(k)] = &file
 			return nil
 		})
 	})
@@ -609,11 +612,11 @@ func (b *Backup) newSummary() (*Summary, error) {
 	}
 
 	return &Summary{
-		Id:     id,
-		Date:   time.Now(),
-		SrcDir: b.srcDir,
-		DstDir: b.dstDir,
-		State:  BackupReady,
+		Id:        id,
+		Date:      time.Now(),
+		SrcDirArr: b.srcDirArr,
+		DstDir:    b.dstDir,
+		State:     BackupReady,
 	}, nil
 }
 
@@ -637,7 +640,7 @@ func (b *Backup) getLastSummary() (*Summary, error) {
 		return nil, err
 	}
 
-	if val == nil {
+	if len(val) == 0 {
 		return b.newSummary()
 	}
 

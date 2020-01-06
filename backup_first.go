@@ -10,7 +10,7 @@ import (
 func (b *Backup) generateFirstBackupData() error {
 
 	// Ready
-	log.Debug("generating first backup data")
+	log.Info("generating first backup data")
 	summary, err := b.newSummary()
 	if err != nil {
 		return err
@@ -60,13 +60,13 @@ func (b *Backup) collectFilesToBackup() (map[string]*File, error) {
 	//fileMap := make(map[string]*File)
 	b.summary.State = BackupRunning
 	b.summary.Message = "collecting initialize data"
-	fileMap, size, err := GetFileMap(b.srcDir, b.hashComparision)
+	fileMap, size, err := GetFileMap(b.srcDirArr, b.hashComparision)
 	if err != nil {
 		return nil, err
 	}
-	b.summary.ReadingTime = time.Now()
 	b.summary.TotalCount = len(fileMap)
 	b.summary.TotalSize = size
+	b.summary.ReadingTime = time.Now()
 
 	for path, _ := range fileMap {
 		fileMap[path].Marshal()

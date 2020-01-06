@@ -1,30 +1,31 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"github.com/devplayg/goback"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
 	"os"
 	"runtime"
 )
 
 const (
-	ProductName = "backup"
-	Version     = "2.0.0"
+	appName    = "backup"
+	appVersion = "2.0.0"
 )
 
 var (
-	fs              = flag.NewFlagSet("", flag.ExitOnError)
-	srcDir          = fs.String("s", "", "Source directory")
-	dstDir          = fs.String("d", "", "Destination directory")
-	version         = fs.Bool("v", false, "Version")
+	fs              = pflag.NewFlagSet(appName, pflag.ContinueOnError)
+	srcDirArr       = fs.StringArrayP("src", "s", []string{}, "Source directories")
+	dstDir          = fs.StringP("dst", "d", "", "Destination directory")
 	debug           = fs.Bool("debug", false, "Debug")
+	verbose         = fs.BoolP("verbose", "v", false, "Verbose")
+	version         = fs.Bool("version", false, "Version")
 	hashComparision = fs.Bool("hash", false, "Hash comparison")
 )
 
 func main() {
-	backup := goback.NewBackup(*srcDir, *dstDir, *hashComparision, *debug)
+	backup := goback.NewBackup(*srcDirArr, *dstDir, *hashComparision, *debug)
 	if err := backup.Start(); err != nil {
 		log.Error(err)
 	}
@@ -46,7 +47,7 @@ func main() {
 }
 
 func printHelp() {
-	fmt.Printf("backup v%s\n", Version)
+	fmt.Printf("backup v%s\n", appVersion)
 	fmt.Println("Description: Incremental backup")
 	fmt.Println("Usage: backup -s [directory to backup] -d [directory where backup files will be stored]")
 	fmt.Println("Usage: backup -s /data -d /backup")
@@ -58,7 +59,7 @@ func init() {
 	fs.Usage = printHelp
 	_ = fs.Parse(os.Args[1:])
 	if *version {
-		fmt.Printf("%s %s\n", ProductName, Version)
+		fmt.Printf("%s %s\n", appName, appVersion)
 		return
 	}
 
