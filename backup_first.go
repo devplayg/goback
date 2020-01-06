@@ -8,13 +8,21 @@ import (
 )
 
 func (b *Backup) generateFirstBackupData() error {
+
+	// Ready
 	log.Debug("generating first backup data")
 	summary, err := b.newSummary()
 	if err != nil {
 		return err
 	}
 	b.summary = summary
+	defer func() {
+		if err := b.writeSummary(); err != nil {
+			log.Error(err)
+		}
+	}()
 
+	// Reading
 	fileMap, err := b.collectFilesToBackup()
 	if err != nil {
 		return err
@@ -22,14 +30,11 @@ func (b *Backup) generateFirstBackupData() error {
 	b.summary.ReadingTime = time.Now()
 	b.summary.ComparisonTime = b.summary.ReadingTime
 
+	// Write
 	if err := b.writeFileMap(fileMap); err != nil {
 		return err
 	}
 	b.summary.LoggingTime = time.Now()
-
-	if err := b.writeSummary(); err != nil {
-		return err
-	}
 
 	return nil
 }

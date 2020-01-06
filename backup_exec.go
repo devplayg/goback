@@ -2,28 +2,50 @@ package goback
 
 import (
 	"github.com/davecgh/go-spew/spew"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
+	"time"
 )
 
 func (b *Backup) startBackup() error {
+	// Ready
+	log.Debug("generating first backup data")
+	summary, err := b.newSummary()
+	if err != nil {
+		return err
+	}
+	b.summary = summary
+	defer func() {
+		if err := b.writeSummary(); err != nil {
+			log.Error(err)
+		}
+	}()
+
 	tempDir, err := ioutil.TempDir(b.dstDir, "bak")
 	if err != nil {
 		return err
 	}
 	b.tempDir = tempDir
 
+	// Reading
 	lastFileMap, err := b.getLastFileMap()
 	if err != nil {
 		return err
 	}
-	//
-	//currentFileMap, size, err := GetFileMap(b.srcDir, b.hashComparision)
-	//if err != nil {
-	//    return nil
-	//}
-	//
-	//
-	//if err := b.compareFiles(); err != nil {
+
+	currentFileMap, _, err := GetFileMap(b.srcDir, b.hashComparision)
+	if err != nil {
+		return nil
+	}
+	b.summary.ReadingTime = time.Now()
+
+	if err := b.compareFileMaps(lastFileMap, currentFileMap); err != nil {
+		return err
+	}
+	b.summary.ComparisonTime = time.Now()
+
+	// Write
+	//if err := b.writeFileMap(fileMap); err != nil {
 	//	return err
 	//}
 
@@ -31,7 +53,7 @@ func (b *Backup) startBackup() error {
 	return nil
 }
 
-func aaa() {
+func (b *Backup) compareFileMaps(lastFileMap, currentFileMap map[string]*File) error {
 	//	b.writeToDatabase(newMap, sync.Map{})
 	//	b.summary.LoggingTime = time.Now()
 	//	return nil
