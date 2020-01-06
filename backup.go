@@ -2,9 +2,9 @@ package goback
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"github.com/boltdb/bolt"
-	"github.com/minio/highwayhash"
 	log "github.com/sirupsen/logrus"
 	"hash"
 	"path/filepath"
@@ -27,6 +27,8 @@ const (
 var (
 	BucketSummary = []byte("summary")
 	BucketFiles   = []byte("files")
+	HashKey       = sha256.Sum256([]byte("goback"))
+	Highwayhash   hash.Hash
 )
 
 type Backup struct {
@@ -39,7 +41,6 @@ type Backup struct {
 	hashComparision bool
 	debug           bool
 	key             []byte
-	highwayhash     hash.Hash
 
 	//dbOrigin   *sql.DB
 	//dbOriginTx *sql.Tx
@@ -72,17 +73,6 @@ func (b *Backup) init() error {
 		return err
 	}
 
-	if b.hashComparision {
-		key := sha256.Sum256([]byte("Duplicate File Finder"))
-		highwayhash, err := highwayhash.New(key[:])
-		if err != nil {
-			return err
-		}
-
-		b.highwayhash = highwayhash
-	}
-
-	//b.summary = newSummary(0, b.srcDir)
 	return nil
 }
 
@@ -222,35 +212,23 @@ func (b *Backup) initDatabase() error {
 	return nil
 }
 
-func (b *Backup) getOriginMap(summary *Summary) (sync.Map, int) {
-	m := sync.Map{}
-	if summary.Id < 1 {
-		log.Info("this is first backup")
-		return m, 0
-	}
-	//	log.Infof("recent backup: %s", summary.Date)
-	//
-	//	//The most recent backup was completed on May 5.
-	//	// Recent backups were processed on May 5th.
-	//	rows, err := b.dbOrigin.Query("select path, size, mtime from bak_origin")
-	//	checkErr(err)
-	//
-	//	var count = 0
-	//	var path string
-	//	var size int64
-	//	var modTime string
-	//	for rows.Next() {
-	//		f := newFile("", 0, time.Now())
-	//		err = rows.Scan(&path, &size, &modTime)
-	//		checkErr(err)
-	//		f.Path = path
-	//		f.Size = size
-	//		f.ModTime, _ = time.Parse(time.RFC3339, modTime)
-	//		m.Store(path, f)
-	//		count += 1
-	//	}
-	//	return m, count
-	return m, 0
+func (b *Backup) getLastFileMap() (map[string]File, error) {
+	fileMap := make(map[string]File)
+	err := b.fileDb.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(BucketFiles)
+		if b == nil {
+			return ErrorBucketNotFound
+		}
+		return b.ForEach(func(k, v []byte) error {
+			var file File
+			if err := json.Unmarshal(v, &file); err != nil {
+				return err
+			}
+			fileMap[string(k)] = file
+			return nil
+		})
+	})
+	return fileMap, err
 }
 
 func (b *Backup) Start() error {
@@ -263,10 +241,9 @@ func (b *Backup) Start() error {
 	if err != nil {
 		return err
 	}
-	if lastSummary == nil {
-		if err := b.generateFirstBackupData(); err != nil {
-			return err
-		}
+
+	if lastSummary.TotalCount < 1 {
+		return b.generateFirstBackupData()
 	}
 
 	if err := b.startBackup(); err != nil {
@@ -625,16 +602,44 @@ func (b *Backup) writeToDatabase(newMap sync.Map, originMap sync.Map) error {
 //	}
 //}
 
-func (b *Backup) issueSummaryId() (int64, error) {
-	var summaryId int64
-	err := b.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(BucketSummary)
-		if b == nil {
-			return errors.New("invalid bucket: " + string(BucketSummary))
-		}
-		id, _ := b.NextSequence()
-		summaryId = int64(id)
-		return b.Put(Int64ToBytes(summaryId), nil)
-	})
-	return summaryId, err
+func (b *Backup) newSummary() (*Summary, error) {
+	id, err := IssueDbInt64Id(b.db, BucketSummary)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Summary{
+		Id:     id,
+		Date:   time.Now(),
+		SrcDir: b.srcDir,
+		DstDir: b.dstDir,
+		State:  BackupReady,
+	}, nil
+}
+
+//func (b *Backup) issueSummaryId() (int64, error) {
+//	var summaryId int64
+//	err := b.db.Update(func(tx *bolt.Tx) error {
+//		b := tx.Bucket(BucketSummary)
+//		if b == nil {
+//			return errors.New("invalid bucket: " + string(BucketSummary))
+//		}
+//		id, _ := b.NextSequence()
+//		summaryId = int64(id)
+//		return b.Put(Int64ToBytes(summaryId), nil)
+//	})
+//	return summaryId, err
+//}
+
+func (b *Backup) getLastSummary() (*Summary, error) {
+	_, val, err := GetLastDbData(b.db, BucketSummary)
+	if err != nil {
+		return nil, err
+	}
+
+	if val == nil {
+		return b.newSummary()
+	}
+
+	return UnmarshalSummary(val)
 }

@@ -1,6 +1,9 @@
 package goback
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type Summary struct {
 	Id         int64
@@ -8,12 +11,12 @@ type Summary struct {
 	SrcDir     string
 	DstDir     string
 	State      int
-	TotalSize  uint64
-	TotalCount uint32
+	TotalSize  int64
+	TotalCount int
 
-	BackupAdded    uint32
-	BackupModified uint32
-	BackupDeleted  uint32
+	BackupAdded    int32
+	BackupModified int32
+	BackupDeleted  int32
 
 	BackupSuccess uint32
 	BackupFailure uint32
@@ -27,11 +30,6 @@ type Summary struct {
 	ExecutionTime  float64
 }
 
-func newSummary(id int64, srcDir string) *Summary {
-	return &Summary{
-		Id:     id,
-		Date:   time.Now(),
-		SrcDir: srcDir,
-		State:  BackupReady,
-	}
+func (s *Summary) Marshal() ([]byte, error) {
+	return json.Marshal(s)
 }
