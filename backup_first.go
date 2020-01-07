@@ -41,9 +41,10 @@ func (b *Backup) generateFirstBackupData() error {
 
 func (b *Backup) writeFileMap(fileMap map[string]*File) error {
 	return b.fileDb.Batch(func(tx *bolt.Tx) error {
-		b := tx.Bucket(BucketFiles)
-		if b == nil {
-			return ErrorBucketNotFound
+		tx.DeleteBucket(BucketFiles)
+		b, err := tx.CreateBucket(BucketFiles)
+		if err != nil {
+			return err
 		}
 
 		for path, f := range fileMap {

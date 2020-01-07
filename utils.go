@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/minio/highwayhash"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"path/filepath"
@@ -98,4 +99,39 @@ func GetFileMap(dirs []string, hashComparision bool) (map[string]*File, int64, e
 	}
 
 	return fileMap, size, nil
+}
+
+func CompareFileMaps(lastFileMap, currentFileMap map[string]*File) ([]*File, []*File, []*File, error) {
+	added := make([]*File, 0)
+	deleted := make([]*File, 0)
+	modified := make([]*File, 0)
+	for path, current := range currentFileMap {
+		if last, had := lastFileMap[path]; had {
+			if last.ModTime.Unix() != current.ModTime.Unix() || last.Size != current.Size {
+				log.Debugf("modified: %s", path)
+				current.WhatHappened = FileModified
+				modified = append(modified, current)
+			}
+			delete(lastFileMap, path)
+
+		} else {
+			log.Debugf("added: %s", path)
+			current.WhatHappened = FileAdded
+			added = append(added, current)
+		}
+
+		current.Marshal()
+	}
+	for _, file := range lastFileMap {
+		file.WhatHappened = FileDeleted
+		deleted = append(deleted, file)
+	}
+
+	log.WithFields(log.Fields{
+		"added":    len(added),
+		"modified": len(modified),
+		"deleted":  len(deleted),
+	}).Debugf("total %d files; comparision result", len(currentFileMap))
+
+	return added, modified, deleted, nil
 }

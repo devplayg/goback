@@ -14,19 +14,19 @@ type Summary struct {
 	TotalSize  int64
 	TotalCount int
 
-	BackupAdded    int32
-	BackupModified int32
-	BackupDeleted  int32
+	AddedFiles    int // target to backup
+	ModifiedFiles int // target to backup
+	DeletedFiles  int
 
-	BackupSuccess uint32
-	BackupFailure uint32
+	BackupSuccess int
+	BackupFailure int
+	BackupSize    int64
+	Message       string
 
-	BackupSize uint64
-	Message    string
-
-	ReadingTime    time.Time
-	ComparisonTime time.Time
-	LoggingTime    time.Time
+	ReadingTime    time.Time // Step 1
+	ComparisonTime time.Time // Step 2
+	BackupTime     time.Time // Step 3
+	LoggingTime    time.Time // Step 4
 	ExecutionTime  float64
 }
 

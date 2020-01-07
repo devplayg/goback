@@ -10,7 +10,10 @@ Backup
 
 [backup-{id}]
 
-    filepath / info
+    added / [file]
+    deleted / [file]
+    modified / [file]
+    failed / [file]
     
 
 #### fileDb
