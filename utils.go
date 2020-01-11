@@ -110,6 +110,8 @@ func GetFileMap(dirs []string, hashComparision bool) (*sync.Map, map[string]int6
 			size += fi.Size
 			count++
 
+			fileMap.Store(path, fi)
+
 			return nil
 		})
 		if err != nil {
@@ -233,4 +235,13 @@ func IsEqualStringSlices(a, b []string) bool {
 		}
 	}
 	return true
+}
+
+func EncodeFiles(files []*File) ([]byte, error) {
+	b, err := json.Marshal(files)
+	if err != nil {
+		return nil, err
+	}
+
+	return b, err
 }

@@ -16,7 +16,7 @@ func (b *Backup) startBackup() error {
 	}
 	b.summary = summary
 	defer func() {
-		if err := b.writeSummary(); err != nil {
+		if err := b.writeResult(); err != nil {
 			log.Error(err)
 		}
 	}()
@@ -28,10 +28,10 @@ func (b *Backup) startBackup() error {
 	//b.tempDir = tempDir
 
 	// Reading
-	lastFileMap, err := b.getLastFileMap()
-	if err != nil {
-		return err
-	}
+	//lastFileMap, count, err := b.getLastFileMap()
+	//if err != nil {
+	//	return err
+	//}
 	currentFileMaps, extensions, sizeDistribution, count, size, err := GetCurrentFileMaps(b.srcDirArr, b.workerCount, b.hashComparision)
 	if err != nil {
 		return nil
@@ -41,9 +41,8 @@ func (b *Backup) startBackup() error {
 	b.summary.TotalSize = size
 	b.summary.Extensions = extensions
 	b.summary.SizeDistribution = sizeDistribution
-	log.Trace(lastFileMap)
 
-	if err := b.CompareFileMaps(lastFileMap, currentFileMaps); err != nil {
+	if err := b.CompareFileMaps(currentFileMaps); err != nil {
 		return err
 	}
 
@@ -59,23 +58,23 @@ func (b *Backup) startBackup() error {
 func (b *Backup) writeWhatHappened(file *File, whatHappened int) {
 	file.WhatHappened = whatHappened
 	if whatHappened == FileAdded {
-		b.summary.addedFiles.Store(file, nil)
+		b.addedFiles.Store(file, nil)
 		atomic.AddUint64(&b.summary.AddedCount, uint64(1))
 		return
 	}
 	if whatHappened == FileModified {
-		b.summary.modifiedFiles.Store(file, nil)
+		b.modifiedFiles.Store(file, nil)
 		atomic.AddUint64(&b.summary.ModifiedCount, uint64(1))
 		return
 	}
 	if whatHappened == FileDeleted {
 		atomic.AddUint64(&b.summary.DeletedCount, uint64(1))
-		b.summary.deletedFiles.Store(file, nil)
+		b.deletedFiles.Store(file, nil)
 		return
 	}
 }
 
-func (b *Backup) CompareFileMaps(lastFileMap *sync.Map, currentFileMaps []*sync.Map) error {
+func (b *Backup) CompareFileMaps(currentFileMaps []*sync.Map) error {
 	wg := sync.WaitGroup{}
 	for i := range currentFileMaps {
 		wg.Add(1)
@@ -85,7 +84,7 @@ func (b *Backup) CompareFileMaps(lastFileMap *sync.Map, currentFileMaps []*sync.
 			//	"files": len(m),
 			//}).Debugf("worker-%d has been started", workerId)
 
-			if err := b.compareFileMap(workerId, lastFileMap, currentFileMaps[workerId]); err != nil {
+			if err := b.compareFileMap(workerId, b.lastFileMap, currentFileMaps[workerId]); err != nil {
 				log.Error(err)
 			}
 		}(i)
@@ -93,7 +92,7 @@ func (b *Backup) CompareFileMaps(lastFileMap *sync.Map, currentFileMaps []*sync.
 	wg.Wait()
 
 	// for _, v := range lastFileMap {
-	lastFileMap.Range(func(k, v interface{}) bool {
+	b.lastFileMap.Range(func(k, v interface{}) bool {
 		file := v.(*File)
 		b.writeWhatHappened(file, FileDeleted)
 		return true

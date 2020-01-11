@@ -1,53 +1,32 @@
 package goback
 
 import (
-	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"github.com/boltdb/bolt"
 	log "github.com/sirupsen/logrus"
-	"hash"
 	"path/filepath"
 	"runtime"
 	"sync"
 	"time"
 )
 
-const (
-	FileModified = 1 << iota // 1
-	FileAdded    = 1 << iota // 2
-	FileDeleted  = 1 << iota // 4
-
-	BackupReady    = 1
-	BackupRunning  = 2
-	BackupFinished = 3
-
-	BackupSuccess = 1
-)
-
-var (
-	BucketSummary = []byte("summary")
-	BucketFiles   = []byte("files")
-	HashKey       = sha256.Sum256([]byte("goback"))
-	Highwayhash   hash.Hash
-)
-
 type Backup struct {
-	srcDirArr       []string
-	dstDir          string
-	db              *bolt.DB
-	fileDb          *bolt.DB
-	tempDir         string
+	srcDirArr []string
+	dstDir    string
+	db        *bolt.DB
+	fileDb    *bolt.DB
+	//tempDir         string
 	summary         *Summary
 	hashComparision bool
 	debug           bool
-	key             []byte
 	workerCount     int
 
-	//dbOrigin   *sql.DB
-	//dbOriginTx *sql.Tx
-	//dbLog      *sql.DB
-	//dbLogTx    *sql.Tx
+	addedFiles          *sync.Map
+	modifiedFiles       *sync.Map
+	deletedFiles        *sync.Map
+	filesFailedToBackup *sync.Map
+	lastFileMap         *sync.Map
 }
 
 func NewBackup(srcDirArr []string, dstDir string, hashComparision, debug bool) *Backup {
@@ -57,6 +36,11 @@ func NewBackup(srcDirArr []string, dstDir string, hashComparision, debug bool) *
 		hashComparision: hashComparision,
 		debug:           debug,
 		workerCount:     runtime.NumCPU(),
+
+		addedFiles:          &sync.Map{},
+		modifiedFiles:       &sync.Map{},
+		deletedFiles:        &sync.Map{},
+		filesFailedToBackup: &sync.Map{},
 	}
 	return &b
 }
@@ -107,18 +91,7 @@ func (b *Backup) initDirectories() error {
 	return nil
 }
 
-//// Initialize directories
-//func (b *Backup) 0() error {
-//	tempDir, err := ioutil.TempDir(b.dstDir, "bak")
-//	if err != nil {
-//		return err
-//	}
-//	b.tempDir = tempDir
-//
-//	return nil
-//}
-//
-//// Initialize database
+// Initialize database
 func (b *Backup) initDatabase() error {
 
 	db, err := bolt.Open(filepath.Join(b.dstDir, "backup_log.db"), 0600, &bolt.Options{Timeout: 1 * time.Second})
@@ -150,8 +123,9 @@ func (b *Backup) initDatabase() error {
 	return nil
 }
 
-func (b *Backup) getLastFileMap() (*sync.Map, error) {
+func (b *Backup) getLastFileMap() (*sync.Map, int64, error) {
 	fileMap := sync.Map{}
+	var count int64
 	err := b.fileDb.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketFiles)
 		if b == nil {
@@ -163,10 +137,11 @@ func (b *Backup) getLastFileMap() (*sync.Map, error) {
 				return err
 			}
 			fileMap.Store(string(k), &file)
+			count++
 			return nil
 		})
 	})
-	return &fileMap, err
+	return &fileMap, count, err
 }
 
 func (b *Backup) Start() error {
@@ -179,10 +154,14 @@ func (b *Backup) Start() error {
 	if err != nil {
 		return err
 	}
-
-	if lastSummary == nil || lastSummary.TotalCount < 1 || !IsEqualStringSlices(lastSummary.SrcDirArr, b.srcDirArr) {
+	lastFileMap, lastBackupFileCount, err := b.getLastFileMap()
+	if err != nil {
+		return err
+	}
+	if lastSummary == nil || lastSummary.TotalCount < 1 || !IsEqualStringSlices(lastSummary.SrcDirArr, b.srcDirArr) || lastBackupFileCount == 0 {
 		return b.generateFirstBackupData()
 	}
+	b.lastFileMap = lastFileMap
 
 	if err := b.startBackup(); err != nil {
 		return err
@@ -547,30 +526,14 @@ func (b *Backup) newSummary() (*Summary, error) {
 	}
 
 	return &Summary{
-		Id:            id,
-		Date:          time.Now(),
-		SrcDirArr:     b.srcDirArr,
-		DstDir:        b.dstDir,
-		State:         BackupReady,
-		addedFiles:    &sync.Map{},
-		modifiedFiles: &sync.Map{},
-		deletedFiles:  &sync.Map{},
+		Id:        id,
+		Date:      time.Now(),
+		SrcDirArr: b.srcDirArr,
+		DstDir:    b.dstDir,
+		State:     BackupReady,
+		Version:   1,
 	}, nil
 }
-
-//func (b *Backup) issueSummaryId() (int64, error) {
-//	var summaryId int64
-//	err := b.db.Update(func(tx *bolt.Tx) error {
-//		b := tx.Bucket(BucketSummary)
-//		if b == nil {
-//			return errors.New("invalid bucket: " + string(BucketSummary))
-//		}
-//		id, _ := b.NextSequence()
-//		summaryId = int64(id)
-//		return b.Put(Int64ToBytes(summaryId), nil)
-//	})
-//	return summaryId, err
-//}
 
 func (b *Backup) getLastSummary() (*Summary, error) {
 	_, val, err := GetLastDbData(b.db, BucketSummary)
