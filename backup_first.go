@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/boltdb/bolt"
 	log "github.com/sirupsen/logrus"
+	"sync"
 	"time"
 )
 
@@ -31,7 +32,7 @@ func (b *Backup) generateFirstBackupData() error {
 	b.summary.ComparisonTime = b.summary.ReadingTime
 
 	// Write
-	if err := b.writeFileMap(fileMap); err != nil {
+	if err := b.writeFileMap([]*sync.Map{fileMap}); err != nil {
 		return err
 	}
 	b.summary.LoggingTime = time.Now()
@@ -39,7 +40,16 @@ func (b *Backup) generateFirstBackupData() error {
 	return nil
 }
 
-func (b *Backup) writeFileMap(fileMap map[string]*File) error {
+func (b *Backup) writeFileMap(fileMaps []*sync.Map) error {
+	// Marshal files
+	for _, m := range fileMaps {
+		m.Range(func(k, v interface{}) bool {
+			file := v.(*File)
+			file.Marshal()
+			return true
+		})
+	}
+
 	return b.fileDb.Batch(func(tx *bolt.Tx) error {
 		tx.DeleteBucket(BucketFiles)
 		b, err := tx.CreateBucket(BucketFiles)
@@ -47,31 +57,36 @@ func (b *Backup) writeFileMap(fileMap map[string]*File) error {
 			return err
 		}
 
-		for path, f := range fileMap {
-			if err := b.Put([]byte(path), f.data); err != nil {
-				return err
-			}
+		// Save files
+		for _, m := range fileMaps {
+			m.Range(func(k, v interface{}) bool {
+				path := k.(string)
+				file := v.(*File)
+				if err := b.Put([]byte(path), file.data); err != nil {
+					log.Error(err)
+					return false
+				}
+				return true
+			})
 		}
 		return nil
 	})
 }
 
-func (b *Backup) collectFilesToBackup() (map[string]*File, error) {
+func (b *Backup) collectFilesToBackup() (*sync.Map, error) {
 	log.Debug("first backup; generating first backup data")
 	//fileMap := make(map[string]*File)
 	b.summary.State = BackupRunning
 	b.summary.Message = "collecting initialize data"
-	fileMap, size, err := GetFileMap(b.srcDirArr, b.hashComparision)
+	fileMap, extensions, sizeDistribution, count, size, err := GetFileMap(b.srcDirArr, b.hashComparision)
 	if err != nil {
-		return nil, err
+		return fileMap, err
 	}
-	b.summary.TotalCount = len(fileMap)
+	b.summary.TotalCount = count
 	b.summary.TotalSize = size
 	b.summary.ReadingTime = time.Now()
-
-	for path, _ := range fileMap {
-		fileMap[path].Marshal()
-	}
+	b.summary.Extensions = extensions
+	b.summary.SizeDistribution = sizeDistribution
 
 	return fileMap, nil
 
@@ -108,9 +123,12 @@ func (b *Backup) collectFilesToBackup() (map[string]*File, error) {
 func (b *Backup) writeSummary() error {
 	log.WithFields(log.Fields{
 		"summaryId": b.summary.Id,
-		"count":     b.summary.TotalCount,
+		"files":     b.summary.TotalCount,
 		"size":      b.summary.TotalSize,
-		"execTime":  b.summary.LoggingTime.Sub(b.summary.ReadingTime).Seconds(),
+		"added":     b.summary.AddedCount,
+		"modified":  b.summary.ModifiedCount,
+		"deleted":   b.summary.DeletedCount,
+		"execTime":  time.Since(b.summary.Date).Seconds(),
 	}).Debug("files found")
 
 	return b.db.Update(func(tx *bolt.Tx) error {

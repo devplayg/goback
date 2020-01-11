@@ -2,24 +2,33 @@ package goback
 
 import (
 	"encoding/json"
+	"sync"
 	"time"
 )
 
 type Summary struct {
-	Id         int64
-	Date       time.Time
-	SrcDirArr  []string
-	DstDir     string
-	State      int
+	Id        int64
+	Date      time.Time
+	SrcDirArr []string
+	DstDir    string
+	State     int
+
 	TotalSize  int64
-	TotalCount int
+	TotalCount int64
 
-	AddedFiles    int // target to backup
-	ModifiedFiles int // target to backup
-	DeletedFiles  int
+	AddedCount    uint64
+	ModifiedCount uint64
+	DeletedCount  uint64
 
-	BackupSuccess int
-	BackupFailure int
+	addedFiles    *sync.Map
+	modifiedFiles *sync.Map
+	deletedFiles  *sync.Map
+
+	Extensions       map[string]int64
+	SizeDistribution map[int64]int64
+
+	BackupSuccess int64
+	BackupFailure int64
 	BackupSize    int64
 	Message       string
 

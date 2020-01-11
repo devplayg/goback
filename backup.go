@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"hash"
 	"path/filepath"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -41,6 +42,7 @@ type Backup struct {
 	hashComparision bool
 	debug           bool
 	key             []byte
+	workerCount     int
 
 	//dbOrigin   *sql.DB
 	//dbOriginTx *sql.Tx
@@ -54,6 +56,7 @@ func NewBackup(srcDirArr []string, dstDir string, hashComparision, debug bool) *
 		dstDir:          dstDir,
 		hashComparision: hashComparision,
 		debug:           debug,
+		workerCount:     runtime.NumCPU(),
 	}
 	return &b
 }
@@ -82,8 +85,8 @@ func (b *Backup) initDirectories() error {
 		}
 
 		log.WithFields(log.Fields{
-			"src": b.srcDirArr[i],
-		}).Infof("source directory #%d", i+1)
+			"dir": b.srcDirArr[i],
+		}).Infof("directory to backup")
 	}
 
 	b.dstDir = filepath.Clean(b.dstDir)
@@ -144,79 +147,11 @@ func (b *Backup) initDatabase() error {
 	}
 	b.fileDb = fileDb
 
-	//dbOriginFile: filepath.Join(filepath.Clean(dstDir), "backup_origin.db"),
-	//dbLogFile:    filepath.Join(filepath.Clean(dstDir), "backup_log.db"),
-	//	var err error
-	//	var query string
-	//
-	//	// Set databases
-	//	b.dbOrigin, err = sql.Open("sqlite3", b.dbOriginFile)
-	//	if err != nil {
-	//		return err
-	//	}
-	//	b.dbOriginTx, _ = b.dbOrigin.Begin()
-	//	b.dbLog, err = sql.Open("sqlite3", b.dbLogFile)
-	//	if err != nil {
-	//		return err
-	//	}
-	//	b.dbLogTx, _ = b.dbLog.Begin()
-	//
-	//	// Original database
-	//	query = `
-	//		CREATE TABLE IF NOT EXISTS bak_origin (
-	//			path text not null,
-	//			size int not null,
-	//			mtime text not null
-	//		);
-	//	`
-	//	_, err = b.dbOrigin.Exec(query)
-	//	if err != nil {
-	//		return err
-	//	}
-	//
-	//	// Log database
-	//	query = `
-	//		CREATE TABLE IF NOT EXISTS bak_summary (
-	//			id integer not null primary key autoincrement,
-	//			date integer not null  DEFAULT CURRENT_TIMESTAMP,
-	//			src_dir text not null default '',
-	//			dst_dir text not null default '',
-	//			state integer not null default 0,
-	//			total_size integer not null default 0,
-	//			total_count integer not null default 0,
-	//			backup_modified integer not null default 0,
-	//			backup_added integer not null default 0,
-	//			backup_deleted integer not null default 0,
-	//			backup_success integer not null default 0,
-	//			backup_failure integer not null default 0,
-	//			backup_size integer not null default 0,
-	//			execution_time real not null default 0.0,
-	//			message text not null default ''
-	//		);
-	//
-	//		CREATE INDEX IF NOT EXISTS ix_bak_summary ON bak_summary(date);
-	//
-	//		CREATE TABLE IF NOT EXISTS bak_log(
-	//			id int not null,
-	//			path text not null,
-	//			size int not null,
-	//			mtime text not null,
-	//			state int not null,
-	//			message text not null
-	//		);
-	//
-	//		CREATE INDEX IF NOT EXISTS ix_bak_log_id on bak_log(id);
-	//`
-	//	_, err = b.dbLog.Exec(query)
-	//	if err != nil {
-	//		return err
-	//	}
-
 	return nil
 }
 
-func (b *Backup) getLastFileMap() (map[string]*File, error) {
-	fileMap := make(map[string]*File)
+func (b *Backup) getLastFileMap() (*sync.Map, error) {
+	fileMap := sync.Map{}
 	err := b.fileDb.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(BucketFiles)
 		if b == nil {
@@ -227,11 +162,11 @@ func (b *Backup) getLastFileMap() (map[string]*File, error) {
 			if err := json.Unmarshal(v, &file); err != nil {
 				return err
 			}
-			fileMap[string(k)] = &file
+			fileMap.Store(string(k), &file)
 			return nil
 		})
 	})
-	return fileMap, err
+	return &fileMap, err
 }
 
 func (b *Backup) Start() error {
@@ -245,7 +180,7 @@ func (b *Backup) Start() error {
 		return err
 	}
 
-	if lastSummary.TotalCount < 1 {
+	if lastSummary == nil || lastSummary.TotalCount < 1 || !IsEqualStringSlices(lastSummary.SrcDirArr, b.srcDirArr) {
 		return b.generateFirstBackupData()
 	}
 
@@ -612,11 +547,14 @@ func (b *Backup) newSummary() (*Summary, error) {
 	}
 
 	return &Summary{
-		Id:        id,
-		Date:      time.Now(),
-		SrcDirArr: b.srcDirArr,
-		DstDir:    b.dstDir,
-		State:     BackupReady,
+		Id:            id,
+		Date:          time.Now(),
+		SrcDirArr:     b.srcDirArr,
+		DstDir:        b.dstDir,
+		State:         BackupReady,
+		addedFiles:    &sync.Map{},
+		modifiedFiles: &sync.Map{},
+		deletedFiles:  &sync.Map{},
 	}, nil
 }
 
@@ -639,9 +577,13 @@ func (b *Backup) getLastSummary() (*Summary, error) {
 	if err != nil {
 		return nil, err
 	}
+	//log.WithFields(log.Fields{
+	//	"key":   key,
+	//	"value": string(val),
+	//}).Debug("last backup")
 
 	if len(val) == 0 {
-		return b.newSummary()
+		return nil, nil
 	}
 
 	return UnmarshalSummary(val)

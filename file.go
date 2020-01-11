@@ -32,3 +32,11 @@ func newFile(path string, size int64, modTime time.Time) *File {
 		ModTime: modTime,
 	}
 }
+
+type Directory struct {
+	//Files
+}
+
+//type FileMap struct {
+//	sync.Map
+//}
