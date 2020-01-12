@@ -12,21 +12,28 @@ import (
 )
 
 type Backup struct {
-	srcDirArr []string
-	dstDir    string
-	db        *bolt.DB
-	fileDb    *bolt.DB
-	//tempDir         string
-	summary         *Summary
-	hashComparision bool
-	debug           bool
-	workerCount     int
+	srcDirArr        []string
+	dstDir           string
+	db               *bolt.DB
+	fileDb           *bolt.DB
+	summary          *Summary
+	hashComparision  bool
+	debug            bool
+	workerCount      int
+	fileBackupEnable bool
+	tempDir          string
 
-	addedFiles          *sync.Map
-	modifiedFiles       *sync.Map
-	deletedFiles        *sync.Map
-	filesFailedToBackup *sync.Map
-	lastFileMap         *sync.Map
+	addedFiles    *sync.Map
+	modifiedFiles *sync.Map
+	deletedFiles  *sync.Map
+	failedFiles   *sync.Map
+
+	addedData    []byte
+	modifiedData []byte
+	deletedData  []byte
+	failedData   []byte
+
+	lastFileMap *sync.Map
 }
 
 func NewBackup(srcDirArr []string, dstDir string, hashComparision, debug bool) *Backup {
@@ -37,10 +44,11 @@ func NewBackup(srcDirArr []string, dstDir string, hashComparision, debug bool) *
 		debug:           debug,
 		workerCount:     runtime.NumCPU(),
 
-		addedFiles:          &sync.Map{},
-		modifiedFiles:       &sync.Map{},
-		deletedFiles:        &sync.Map{},
-		filesFailedToBackup: &sync.Map{},
+		addedFiles:       &sync.Map{},
+		modifiedFiles:    &sync.Map{},
+		deletedFiles:     &sync.Map{},
+		failedFiles:      &sync.Map{},
+		fileBackupEnable: true,
 	}
 	return &b
 }
@@ -77,12 +85,6 @@ func (b *Backup) initDirectories() error {
 	if err := isValidDir(b.dstDir); err != nil {
 		return errors.New("destination directory error: " + err.Error())
 	}
-
-	//tempDir, err := ioutil.TempDir(b.dstDir, "bak")
-	//if err != nil {
-	//	return err
-	//}
-	//b.tempDir = tempDir
 
 	log.WithFields(log.Fields{
 		"dir": b.dstDir,
@@ -150,14 +152,20 @@ func (b *Backup) Start() error {
 		return err
 	}
 
+	t := time.Now()
 	lastSummary, err := b.getLastSummary()
 	if err != nil {
 		return err
 	}
+
 	lastFileMap, lastBackupFileCount, err := b.getLastFileMap()
 	if err != nil {
 		return err
 	}
+	log.WithFields(log.Fields{
+		"duration": time.Since(t).Seconds(),
+	}).Debug("load last backup")
+
 	if lastSummary == nil || lastSummary.TotalCount < 1 || !IsEqualStringSlices(lastSummary.SrcDirArr, b.srcDirArr) || lastBackupFileCount == 0 {
 		return b.generateFirstBackupData()
 	}
@@ -486,17 +494,22 @@ func (b *Backup) writeToDatabase(newMap sync.Map, originMap sync.Map) error {
 //}
 //
 //func (b *Backup) BackupFile(path string) (string, float64, error) {
-//	// Set source
-//	t := time.Now()
-//	from, err := os.Open(path)
-//	if err != nil {
-//		return "", time.Since(t).Seconds(), err
+// Set source
+//t := time.Now()
+//from, err := os.Open(path)
+//if err != nil {
+//	return "", time.Since(t).Seconds(), err
 //
-//	}
-//	defer from.Close()
-//
-//	// Set destination
-//	dst := filepath.Join(b.tempDir, path[len(b.srcDir):])
+//}
+//defer from.Close()
+
+// Set destination
+///data/a/a.txt
+///backup
+///backup/temp/
+//dst := filepath.Join(b.tempDir, path)
+//log.Debug(dst)
+//return "", 0.0, nil
 //	err = os.MkdirAll(filepath.Dir(dst), 0644)
 //	to, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE, 0666)
 //	if err != nil {
@@ -530,8 +543,8 @@ func (b *Backup) newSummary() (*Summary, error) {
 		Date:      time.Now(),
 		SrcDirArr: b.srcDirArr,
 		DstDir:    b.dstDir,
-		State:     BackupReady,
-		Version:   1,
+		//State:     BackupReady,
+		Version: 1,
 	}, nil
 }
 

@@ -5,15 +5,40 @@ import (
 	"github.com/boltdb/bolt"
 	log "github.com/sirupsen/logrus"
 	"strconv"
+	"sync"
 	"time"
 )
 
-func (b *Backup) writeResult() error {
-	if err := b.writeSummary(); err != nil {
+func (b *Backup) writeResult(currentFileMaps []*sync.Map) error {
+	//added, modified, deleted, failed, err := b.encodeAndBackup()
+	//if err != nil {
+	//	return err
+	//}
+	//b.summary.BackupTime = time.Now()
+	//log.WithFields(log.Fields{
+	//	"duration": time.Since(b.summary.ComparisonTime).Seconds(),
+	//}).Debug("backup")
+	//log.WithFields(log.Fields{
+	//	"added":    len(added),
+	//	"modified": len(modified),
+	//	"deleted":  len(deleted),
+	//	"failed":   len(failed),
+	//}).Debug("data length")
+
+	if err := b.writeBackupResult(); err != nil {
 		return err
 	}
+	//log.WithFields(log.Fields{
+	//	"duration": time.Since(b.summary.BackupTime).Seconds(),
+	//}).Debug("logging")
+	//
+	if err := b.writeFileMap(currentFileMaps); err != nil {
+		return err
+	}
+	b.summary.LoggingTime = time.Now()
+	b.summary.ExecutionTime = time.Since(b.summary.Date).Seconds()
 
-	if err := b.writeChanges(); err != nil {
+	if err := b.writeSummary(); err != nil {
 		return err
 	}
 
@@ -44,51 +69,57 @@ func (b *Backup) writeSummary() error {
 	})
 }
 
-func (b *Backup) writeChanges() error {
-	added := make([]*File, 0)
-	b.addedFiles.Range(func(k, v interface{}) bool {
-		file := k.(*File)
-		added = append(added, file)
-		return true
-	})
-	_added, err := EncodeFiles(added)
-	if err != nil {
-		return err
-	}
+//func (b *Backup) encodeAndBackup() ([]byte, []byte, []byte, []byte, error) {
+//	added := make([]*File, 0)
+//	b.addedFiles.Range(func(k, v interface{}) bool {
+//		file := k.(*File)
+//		added = append(added, file)
+//		b.BackupFile(file)
+//		return true
+//	})
+//	_added, err := EncodeFiles(added)
+//	if err != nil {
+//		return nil, nil, nil, nil, err
+//	}
+//
+//	modified := make([]*File, 0)
+//	b.modifiedFiles.Range(func(k, v interface{}) bool {
+//		file := k.(*File)
+//		modified = append(modified, file)
+//		BackupFile(b.tempDir, file.Path)
+//		return true
+//	})
+//	_modified, err := EncodeFiles(modified)
+//	if err != nil {
+//		return nil, nil, nil, nil, err
+//	}
+//
+//	deleted := make([]*File, 0)
+//	b.deletedFiles.Range(func(k, v interface{}) bool {
+//		file := k.(*File)
+//		deleted = append(deleted, file)
+//		return true
+//	})
+//	_deleted, err := EncodeFiles(deleted)
+//	if err != nil {
+//		return nil, nil, nil, nil, err
+//	}
+//
+//	failed := make([]*File, 0)
+//	b.filesFailedToBackup.Range(func(k, v interface{}) bool {
+//		file := k.(*File)
+//		failed = append(failed, file)
+//		return true
+//	})
+//	_failed, err := EncodeFiles(failed)
+//	if err != nil {
+//		return nil, nil, nil, nil, err
+//	}
+//
+//	return _added, _modified, _deleted, _failed, err
+//}
 
-	modified := make([]*File, 0)
-	b.modifiedFiles.Range(func(k, v interface{}) bool {
-		file := k.(*File)
-		modified = append(modified, file)
-		return true
-	})
-	_modified, err := EncodeFiles(modified)
-	if err != nil {
-		return err
-	}
-
-	deleted := make([]*File, 0)
-	b.deletedFiles.Range(func(k, v interface{}) bool {
-		file := k.(*File)
-		deleted = append(deleted, file)
-		return true
-	})
-	_deleted, err := EncodeFiles(deleted)
-	if err != nil {
-		return err
-	}
-
-	failed := make([]*File, 0)
-	b.filesFailedToBackup.Range(func(k, v interface{}) bool {
-		file := k.(*File)
-		failed = append(failed, file)
-		return true
-	})
-	_failed, err := EncodeFiles(failed)
-	if err != nil {
-		return err
-	}
-
+func (b *Backup) writeBackupResult() error {
 	return b.db.Batch(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(BackupPrefixStr + strconv.FormatInt(b.summary.Id, 10)))
 		if err != nil {
@@ -96,28 +127,25 @@ func (b *Backup) writeChanges() error {
 		}
 
 		// Write added files
-		if err := bucket.Put(BucketAdded, _added); err != nil {
+		if err := bucket.Put(BucketAdded, b.addedData); err != nil {
 			return err
 		}
 
 		// Write modified files
-		if err := bucket.Put(BucketModified, _modified); err != nil {
+		if err := bucket.Put(BucketModified, b.modifiedData); err != nil {
 			return err
 		}
 
 		// Write deleted files
-		if err := bucket.Put(BucketDeleted, _deleted); err != nil {
+		if err := bucket.Put(BucketDeleted, b.deletedData); err != nil {
 			return err
 		}
 
 		// Write files that failed to back up
-		if err := bucket.Put(BucketFailed, _failed); err != nil {
+		if err := bucket.Put(BucketFailed, b.failedData); err != nil {
 			return err
 		}
 
 		return nil
-
 	})
-
-	return nil
 }

@@ -1,17 +1,23 @@
 package goback
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/binary"
+	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"github.com/minio/highwayhash"
 	log "github.com/sirupsen/logrus"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
+	"time"
 )
 
 var ErrorBucketNotFound = errors.New("bucket not found")
@@ -53,7 +59,6 @@ func UnmarshalSummary(data []byte) (*Summary, error) {
 }
 
 func GetFileHash(path string) (string, error) {
-
 	highwayhash, err := highwayhash.New(HashKey[:])
 	if err != nil {
 		return "", err
@@ -225,6 +230,15 @@ func CompareFileMaps(lastFileMap, currentFileMap map[string]*File) ([]*File, []*
 	return added, modified, deleted, nil
 }
 
+func EncodeFileMap(fileMap *sync.Map) ([]byte, error) {
+	files := make([]*File, 0)
+	fileMap.Range(func(k, v interface{}) bool {
+		files = append(files, k.(*File))
+		return true
+	})
+	return EncodeFiles(files)
+}
+
 func IsEqualStringSlices(a, b []string) bool {
 	if len(a) != len(b) {
 		return false
@@ -237,11 +251,143 @@ func IsEqualStringSlices(a, b []string) bool {
 	return true
 }
 
-func EncodeFiles(files []*File) ([]byte, error) {
+func EncodeFiles2(files []*File) ([]byte, error) {
 	b, err := json.Marshal(files)
 	if err != nil {
 		return nil, err
 	}
 
-	return b, err
+	return Compress(b)
+}
+
+func EncodeFiles(files []*File) ([]byte, error) {
+	if len(files) < 1 {
+		return nil, nil
+	}
+	//b, err := json.Marshal(files)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//return Compress(b)
+
+	b, err := EncodeToBytes(files)
+	if err != nil {
+		return nil, err
+	}
+	compressed, err := Compress(b)
+	if err != nil {
+		return nil, err
+	}
+
+	// test
+	//data, err := Decompress(compressed)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//ff, err := DecodeToFiles(data)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//spew.Dump(ff)
+
+	return compressed, nil
+}
+
+func DecodeToFiles(s []byte) ([]*File, error) {
+	var files []*File
+	dec := gob.NewDecoder(bytes.NewReader(s))
+	err := dec.Decode(&files)
+	if err != nil {
+		return nil, err
+	}
+	return files, nil
+}
+
+func Compress(data []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	zw, err := gzip.NewWriterLevel(&buf, gzip.BestCompression)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := zw.Write(data); err != nil {
+		return nil, err
+	}
+
+	if err := zw.Close(); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+func Decompress(s []byte) ([]byte, error) {
+	reader, err := gzip.NewReader(bytes.NewReader(s))
+	if err != nil {
+		return nil, err
+	}
+	data, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+	if err := reader.Close(); err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+func EncodeToBytes(p interface{}) ([]byte, error) {
+	buf := bytes.Buffer{}
+	enc := gob.NewEncoder(&buf)
+	if err := enc.Encode(p); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+//func Compress(s []byte) ([]byte, error) {
+//	buf := bytes.Buffer{}
+//	zipped := gzip.NewWriter(&buf)
+//	if _, err := zipped.Write(s) err != nil {
+//		return nil, err
+//	}
+//	if err := zipped.Close(); err != nil {
+//		return nil, err
+//	}
+//	return buf.Bytes(), nil
+//}
+
+func BackupFile(tempDir, srcPath string) (string, float64, error) {
+	// Set source
+	t := time.Now()
+	srcFile, err := os.Open(srcPath)
+	if err != nil {
+		return "", 0.0, err
+
+	}
+	defer srcFile.Close()
+
+	// Set destination
+	if runtime.GOOS == "windows" {
+		srcPath = strings.ReplaceAll(srcPath, ":", "")
+	}
+	dstPath := filepath.Join(tempDir, srcPath)
+	if err := os.MkdirAll(filepath.Dir(dstPath), 0644); err != nil {
+		return "", 0.0, err
+	}
+	dstFile, err := os.OpenFile(dstPath, os.O_RDWR|os.O_CREATE, 0600)
+	if err != nil {
+		return "", 0.0, err
+	}
+	defer dstFile.Close()
+
+	// Copy
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return "", 0.0, err
+	}
+
+	return dstPath, time.Since(t).Seconds(), err
 }

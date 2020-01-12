@@ -2,6 +2,10 @@ package goback
 
 import (
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -15,23 +19,22 @@ func (b *Backup) startBackup() error {
 		return err
 	}
 	b.summary = summary
+
+	if b.fileBackupEnable {
+		tempDir, err := ioutil.TempDir(b.dstDir, "backup-")
+		if err != nil {
+			return err
+		}
+		b.tempDir = tempDir
+	}
 	defer func() {
-		if err := b.writeResult(); err != nil {
+		targetDir := filepath.Join(b.dstDir, b.summary.Date.Format("20060102")+"-"+strconv.FormatInt(b.summary.Id, 10))
+		if err := os.Rename(b.tempDir, targetDir); err != nil {
 			log.Error(err)
 		}
 	}()
 
-	//tempDir, err := ioutil.TempDir(b.dstDir, "bak")
-	//if err != nil {
-	//	return err
-	//}
-	//b.tempDir = tempDir
-
-	// Reading
-	//lastFileMap, count, err := b.getLastFileMap()
-	//if err != nil {
-	//	return err
-	//}
+	// 1. Reading current files
 	currentFileMaps, extensions, sizeDistribution, count, size, err := GetCurrentFileMaps(b.srcDirArr, b.workerCount, b.hashComparision)
 	if err != nil {
 		return nil
@@ -41,17 +44,141 @@ func (b *Backup) startBackup() error {
 	b.summary.TotalSize = size
 	b.summary.Extensions = extensions
 	b.summary.SizeDistribution = sizeDistribution
+	log.WithFields(log.Fields{
+		"duration": time.Since(b.summary.Date).Seconds(),
+	}).Debug("read")
 
+	// 2. Compares file maps
 	if err := b.CompareFileMaps(currentFileMaps); err != nil {
 		return err
 	}
+	b.summary.ComparisonTime = time.Now()
+	log.WithFields(log.Fields{
+		"duration": time.Since(b.summary.ReadingTime).Seconds(),
+	}).Debug("compare")
 
-	// Write
-	if err := b.writeFileMap(currentFileMaps); err != nil {
+	// 3. Backup added or changed files
+	if err := b.BackupFiles(); err != nil {
+		return err
+	}
+	b.summary.BackupTime = time.Now()
+
+	// 4. Encode changed files
+	if err := b.encodedChangedFiles(); err != nil {
 		return err
 	}
 
-	//spew.Dump(lastFileMap)
+	// 5. Write result
+	if err := b.writeResult(currentFileMaps); err != nil {
+		log.Error(err)
+	}
+
+	return nil
+}
+
+func (b *Backup) encodedChangedFiles() error {
+	var err error
+
+	if b.addedData, err = EncodeFileMap(b.addedFiles); err != nil {
+		return err
+	}
+	if b.modifiedData, err = EncodeFileMap(b.modifiedFiles); err != nil {
+		return err
+	}
+	if b.deletedData, err = EncodeFileMap(b.deletedFiles); err != nil {
+		return err
+	}
+	if b.failedData, err = EncodeFileMap(b.failedFiles); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b *Backup) backupFileGroup() ([][]*File, error) {
+	fileGroup := make([][]*File, b.workerCount)
+	for i := range fileGroup {
+		fileGroup[i] = make([]*File, 0)
+	}
+
+	i := 0
+	b.addedFiles.Range(func(k, v interface{}) bool {
+		file := k.(*File)
+		workerId := i % b.workerCount
+		fileGroup[workerId] = append(fileGroup[workerId], file)
+		i++
+		return true
+	})
+	b.modifiedFiles.Range(func(k, v interface{}) bool {
+		file := k.(*File)
+		workerId := i % b.workerCount
+		fileGroup[workerId] = append(fileGroup[workerId], file)
+		i++
+		return true
+	})
+
+	return fileGroup, nil
+
+}
+
+func (b *Backup) BackupFiles() error {
+	fileGroup, err := b.backupFileGroup()
+	if err != nil {
+		return err
+	}
+
+	wg := sync.WaitGroup{}
+	for i := range fileGroup {
+		if len(fileGroup[i]) < 1 {
+			continue
+		}
+
+		wg.Add(1)
+		go func(workerId int) {
+			defer wg.Done()
+			t := time.Now()
+			if err := b.backupFiles(workerId, fileGroup[workerId]); err != nil {
+				log.Error(err)
+			}
+			log.WithFields(log.Fields{
+				"workerId":  workerId,
+				"processed": len(fileGroup[workerId]),
+				"duration":  time.Since(t).Seconds(),
+			}).Debug("backup done")
+		}(i)
+	}
+	wg.Wait()
+
+	return nil
+}
+
+func (b *Backup) backupFiles(workerId int, files []*File) error {
+	for _, f := range files {
+		err := b.backupFile(f)
+		if err != nil {
+			log.Errorf("failed to backup: %s; %s", f.Path, err.Error())
+			continue
+		}
+	}
+	return nil
+}
+
+func (b *Backup) backupFile(file *File) error {
+	path, dur, err := BackupFile(b.tempDir, file.Path)
+	if err != nil {
+		b.failedFiles.Store(file, nil)
+		atomic.AddUint64(&b.summary.BackupFailureCount, uint64(1))
+		file.Result = Failure
+		return err
+	}
+
+	atomic.AddUint64(&b.summary.BackupSuccessCount, uint64(1))
+	file.Result = Success
+	file.Duration = dur
+	if err := os.Chtimes(path, file.ModTime, file.ModTime); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -80,10 +207,6 @@ func (b *Backup) CompareFileMaps(currentFileMaps []*sync.Map) error {
 		wg.Add(1)
 		go func(workerId int) {
 			defer wg.Done()
-			//log.WithFields(log.Fields{
-			//	"files": len(m),
-			//}).Debugf("worker-%d has been started", workerId)
-
 			if err := b.compareFileMap(workerId, b.lastFileMap, currentFileMaps[workerId]); err != nil {
 				log.Error(err)
 			}
@@ -102,7 +225,10 @@ func (b *Backup) CompareFileMaps(currentFileMaps []*sync.Map) error {
 }
 
 func (b *Backup) compareFileMap(workerId int, lastFileMap, myMap *sync.Map) error {
+	var count int64
+	t := time.Now()
 	myMap.Range(func(k, v interface{}) bool {
+		count++
 		path := k.(string)
 		current := v.(*File)
 
@@ -117,13 +243,15 @@ func (b *Backup) compareFileMap(workerId int, lastFileMap, myMap *sync.Map) erro
 			lastFileMap.Delete(path)
 			return true
 		}
-		//log.WithFields(log.Fields{
-		//	"workerId": workerId,
-		//}).Debugf("added: %s", path)
 
 		b.writeWhatHappened(current, FileAdded)
 		return true
 	})
+	log.WithFields(log.Fields{
+		"workerId": workerId,
+		"count":    count,
+		"duration": time.Since(t).Seconds(),
+	}).Debugf("done")
 	return nil
 }
 

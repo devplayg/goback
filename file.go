@@ -12,9 +12,10 @@ type File struct {
 	ModTime      time.Time `json:"t"`
 	Path         string    `json:"p"`
 	WhatHappened int       `json:"w"`
+	Result       int       `json:"r"`
+	Duration     float64   `json:"d"`
+	Message      string    `json:"m"`
 	data         []byte
-	//Result  int    `json:"r"`
-	//Message string `json:"m"`
 }
 
 func (f *File) Marshal() {
@@ -32,6 +33,21 @@ func newFile(path string, size int64, modTime time.Time) *File {
 		ModTime: modTime,
 	}
 }
+
+type FileExtended struct {
+	*File
+	Result   int     `json:"r"`
+	Duration float64 `json:"d"`
+}
+
+//
+//func NewFileExtended(file *File) *FileExtended{
+//	return &FileExtended{
+//		File:     file,
+//		Result:   0,
+//		Duration: 0,
+//	}
+//}
 
 type Directory struct {
 	//Files

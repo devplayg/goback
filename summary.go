@@ -7,33 +7,33 @@ import (
 
 type Summary struct {
 	Id        int64     `json:"id"`
-	Date      time.Time `json:"d"`
-	SrcDirArr []string  `json:"src"`
-	DstDir    string    `json:"dst"`
-	State     int       `json:"s"`
+	Date      time.Time `json:"date"`
+	SrcDirArr []string  `json:"srcDirs"`
+	DstDir    string    `json:"dstDir"`
+	//State     int       `json:"state"`
 
-	TotalSize  int64 `json:"sz"`
-	TotalCount int64 `json:"c"`
+	TotalSize  int64 `json:"size"`
+	TotalCount int64 `json:"count"`
 
 	// Thread-safe
-	AddedCount    uint64 `json:"c_a"`
-	ModifiedCount uint64 `json:"c_m"`
-	DeletedCount  uint64 `json:"c_d"`
+	AddedCount    uint64 `json:"countAdded"`
+	ModifiedCount uint64 `json:"countModified"`
+	DeletedCount  uint64 `json:"countDeleted"`
 
 	Extensions       map[string]int64 `json:"ext"`
-	SizeDistribution map[int64]int64  `json:"szd"`
+	SizeDistribution map[int64]int64  `json:"sizeDist"`
 
-	BackupSuccessCount int64 `json:"ok"`
-	BackupFailureCount int64 `json:"fail"`
+	BackupSuccessCount uint64 `json:"successCount"`
+	BackupFailureCount uint64 `json:"failureCount"`
 	//BackupSize    int64
 	Message string `json:"msg"`
 	Version int    `json:"v"`
 
-	ReadingTime    time.Time `json:"t_r"` // Step 1
-	ComparisonTime time.Time `json:"t_c"` // Step 2
-	BackupTime     time.Time `json:"t_b"` // Step 3
-	LoggingTime    time.Time `json:"t_l"` // Step 4
-	ExecutionTime  float64   `json:"t_e"`
+	ReadingTime    time.Time `json:"timeReading"` // Step 1
+	ComparisonTime time.Time `json:"timeComp"`    // Step 2
+	BackupTime     time.Time `json:"timeBak"`     // Step 3
+	LoggingTime    time.Time `json:"timeLog"`     // Step 4
+	ExecutionTime  float64   `json:"timeExec"`
 }
 
 func (s *Summary) Marshal() ([]byte, error) {

@@ -14,7 +14,8 @@ const (
 	BackupRunning  = 2
 	BackupFinished = 3
 
-	BackupSuccess = 1
+	Failure = -1
+	Success = 1
 
 	BackupPrefixStr = "backup-"
 )

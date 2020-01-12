@@ -75,7 +75,7 @@ func (b *Backup) writeFileMap(fileMaps []*sync.Map) error {
 func (b *Backup) collectFilesToBackup() (*sync.Map, error) {
 	log.Debug("first backup; generating first backup data")
 	//fileMap := make(map[string]*File)
-	b.summary.State = BackupRunning
+	//b.summary.State = BackupRunning
 	b.summary.Message = "collecting initialize data"
 	fileMap, extensions, sizeDistribution, count, size, err := GetFileMap(b.srcDirArr, b.hashComparision)
 	if err != nil {
