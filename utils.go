@@ -261,15 +261,10 @@ func EncodeFiles2(files []*File) ([]byte, error) {
 }
 
 func EncodeFiles(files []*File) ([]byte, error) {
+	//return json.Marshal(files)
 	if len(files) < 1 {
 		return nil, nil
 	}
-	//b, err := json.Marshal(files)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//return Compress(b)
 
 	b, err := EncodeToBytes(files)
 	if err != nil {
@@ -279,19 +274,6 @@ func EncodeFiles(files []*File) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// test
-	//data, err := Decompress(compressed)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//ff, err := DecodeToFiles(data)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//spew.Dump(ff)
-
 	return compressed, nil
 }
 

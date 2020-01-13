@@ -550,10 +550,11 @@ func (b *Backup) newSummary() (*Summary, error) {
 	}
 
 	return &Summary{
-		Id:        id,
-		Date:      time.Now(),
-		SrcDirArr: b.srcDirArr,
-		DstDir:    b.dstDir,
+		Id:          id,
+		Date:        time.Now(),
+		SrcDirArr:   b.srcDirArr,
+		DstDir:      b.dstDir,
+		WorkerCount: b.workerCount,
 		//State:     BackupReady,
 		Version: 1,
 	}, nil

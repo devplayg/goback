@@ -169,6 +169,7 @@ func (b *Backup) backupFile(file *File) error {
 		b.failedFiles.Store(file, nil)
 		atomic.AddUint64(&b.summary.BackupFailureCount, uint64(1))
 		file.Result = Failure
+		file.Message = err.Error()
 		return err
 	}
 

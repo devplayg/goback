@@ -51,56 +51,6 @@ func (b *Backup) writeSummary() error {
 	})
 }
 
-//func (b *Backup) encodeAndBackup() ([]byte, []byte, []byte, []byte, error) {
-//	added := make([]*File, 0)
-//	b.addedFiles.Range(func(k, v interface{}) bool {
-//		file := k.(*File)
-//		added = append(added, file)
-//		b.BackupFile(file)
-//		return true
-//	})
-//	_added, err := EncodeFiles(added)
-//	if err != nil {
-//		return nil, nil, nil, nil, err
-//	}
-//
-//	modified := make([]*File, 0)
-//	b.modifiedFiles.Range(func(k, v interface{}) bool {
-//		file := k.(*File)
-//		modified = append(modified, file)
-//		BackupFile(b.tempDir, file.Path)
-//		return true
-//	})
-//	_modified, err := EncodeFiles(modified)
-//	if err != nil {
-//		return nil, nil, nil, nil, err
-//	}
-//
-//	deleted := make([]*File, 0)
-//	b.deletedFiles.Range(func(k, v interface{}) bool {
-//		file := k.(*File)
-//		deleted = append(deleted, file)
-//		return true
-//	})
-//	_deleted, err := EncodeFiles(deleted)
-//	if err != nil {
-//		return nil, nil, nil, nil, err
-//	}
-//
-//	failed := make([]*File, 0)
-//	b.filesFailedToBackup.Range(func(k, v interface{}) bool {
-//		file := k.(*File)
-//		failed = append(failed, file)
-//		return true
-//	})
-//	_failed, err := EncodeFiles(failed)
-//	if err != nil {
-//		return nil, nil, nil, nil, err
-//	}
-//
-//	return _added, _modified, _deleted, _failed, err
-//}
-
 func (b *Backup) writeBackupResult() error {
 	return b.db.Batch(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(BackupPrefixStr + strconv.FormatInt(b.summary.Id, 10)))
