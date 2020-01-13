@@ -66,6 +66,9 @@ func (b *Backup) init() error {
 }
 
 func (b *Backup) initDirectories() error {
+	if len(b.srcDirArr) < 1 {
+		return errors.New("empty source directories")
+	}
 	for i := range b.srcDirArr {
 		dir, err := filepath.Abs(b.srcDirArr[i])
 		if err != nil {
@@ -81,6 +84,9 @@ func (b *Backup) initDirectories() error {
 		}).Infof("directory to backup")
 	}
 
+	if len(b.dstDir) < 1 {
+		return errors.New("empty source directories")
+	}
 	b.dstDir = filepath.Clean(b.dstDir)
 	if err := isValidDir(b.dstDir); err != nil {
 		return errors.New("destination directory error: " + err.Error())
@@ -95,32 +101,37 @@ func (b *Backup) initDirectories() error {
 
 // Initialize database
 func (b *Backup) initDatabase() error {
-
-	db, err := bolt.Open(filepath.Join(b.dstDir, "backup_log.db"), 0600, &bolt.Options{Timeout: 1 * time.Second})
+	db, fileDb, err := InitDatabase(b.dstDir)
 	if err != nil {
 		return err
 	}
-	err = db.Update(func(tx *bolt.Tx) error {
-		_, err = tx.CreateBucketIfNotExists(BucketSummary)
-		return err
-	})
-	if err != nil {
-		return err
-	}
-	b.db = db
-
-	fileDb, err := bolt.Open(filepath.Join(b.dstDir, "backup_origin.db"), 0600, &bolt.Options{Timeout: 1 * time.Second})
-	if err != nil {
-		return err
-	}
-	err = fileDb.Update(func(tx *bolt.Tx) error {
-		_, err = tx.CreateBucketIfNotExists(BucketFiles)
-		return err
-	})
-	if err != nil {
-		return err
-	}
-	b.fileDb = fileDb
+	b.db, b.fileDb = db, fileDb
+	return nil
+	//db, err := bolt.Open(filepath.Join(b.dstDir, "backup_log.db"), 0600, &bolt.Options{Timeout: 1 * time.Second})
+	//if err != nil {
+	//	return err
+	//}
+	//err = db.Update(func(tx *bolt.Tx) error {
+	//	_, err = tx.CreateBucketIfNotExists(BucketSummary)
+	//	return err
+	//})
+	//if err != nil {
+	//	return err
+	//}
+	//b.db = db
+	//
+	//fileDb, err := bolt.Open(filepath.Join(b.dstDir, "backup_origin.db"), 0600, &bolt.Options{Timeout: 1 * time.Second})
+	//if err != nil {
+	//	return err
+	//}
+	//err = fileDb.Update(func(tx *bolt.Tx) error {
+	//	_, err = tx.CreateBucketIfNotExists(BucketFiles)
+	//	return err
+	//})
+	//if err != nil {
+	//	return err
+	//}
+	//b.fileDb = fileDb
 
 	return nil
 }
@@ -147,10 +158,10 @@ func (b *Backup) getLastFileMap() (*sync.Map, int64, error) {
 }
 
 func (b *Backup) Start() error {
-	defer b.Stop()
 	if err := b.init(); err != nil {
 		return err
 	}
+	defer b.Stop()
 
 	t := time.Now()
 	lastSummary, err := b.getLastSummary()

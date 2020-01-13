@@ -61,7 +61,6 @@ func (b *Backup) startBackup() error {
 	if err := b.BackupFiles(); err != nil {
 		return err
 	}
-	b.summary.BackupTime = time.Now()
 
 	// 4. Encode changed files
 	if err := b.encodedChangedFiles(); err != nil {
@@ -148,6 +147,7 @@ func (b *Backup) BackupFiles() error {
 		}(i)
 	}
 	wg.Wait()
+	b.summary.BackupTime = time.Now()
 
 	return nil
 }
@@ -251,39 +251,6 @@ func (b *Backup) compareFileMap(workerId int, lastFileMap, myMap *sync.Map) erro
 		"workerId": workerId,
 		"count":    count,
 		"duration": time.Since(t).Seconds(),
-	}).Debugf("done")
+	}).Debugf("comparing done")
 	return nil
 }
-
-//func (b *Backup) compareFileMaps(lastFileMap, currentFileMap map[string]*File) ([]*File, []*File, []*File, error) {
-//	added := make([]*File, 0)
-//	deleted := make([]*File, 0)
-//	modified := make([]*File, 0)
-//	for path, current := range currentFileMap {
-//		if last, had := lastFileMap[path]; had {
-//			if last.ModTime.Unix() != current.ModTime.Unix() || last.Size != current.Size {
-//				log.Debugf("modified: %s", path)
-//				current.WhatHappened = FileModified
-//				modified = append(modified, current)
-//			}
-//			delete(lastFileMap, path)
-//
-//		} else {
-//			log.Debugf("added: %s", path)
-//			current.WhatHappened = FileAdded
-//			added = append(added, current)
-//		}
-//	}
-//	for _, file := range lastFileMap {
-//		file.WhatHappened = FileDeleted
-//		deleted = append(deleted, file)
-//	}
-//
-//	log.WithFields(log.Fields{
-//		"added":    len(added),
-//		"modified": len(modified),
-//		"deleted":  len(deleted),
-//	}).Debugf("total %d files; comparision result", len(currentFileMap))
-//
-//	return added, modified, deleted, nil
-//}

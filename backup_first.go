@@ -27,19 +27,19 @@ func (b *Backup) generateFirstBackupData() error {
 	if err != nil {
 		return err
 	}
-	b.summary.ReadingTime = time.Now()
-	b.summary.ComparisonTime = b.summary.ReadingTime
 
 	// Write
 	if err := b.writeFileMap([]*sync.Map{fileMap}); err != nil {
 		return err
 	}
-	b.summary.LoggingTime = time.Now()
 
 	return nil
 }
 
 func (b *Backup) writeFileMap(fileMaps []*sync.Map) error {
+	defer func() {
+		b.summary.LoggingTime = time.Now()
+	}()
 	// Marshal files
 	for _, m := range fileMaps {
 		m.Range(func(k, v interface{}) bool {
@@ -73,6 +73,10 @@ func (b *Backup) writeFileMap(fileMaps []*sync.Map) error {
 }
 
 func (b *Backup) collectFilesToBackup() (*sync.Map, error) {
+	defer func() {
+		b.summary.ReadingTime = time.Now()
+		b.summary.ComparisonTime = b.summary.ReadingTime
+	}()
 	log.Debug("first backup; generating first backup data")
 	//fileMap := make(map[string]*File)
 	//b.summary.State = BackupRunning

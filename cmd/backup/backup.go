@@ -22,28 +22,20 @@ var (
 	verbose         = fs.BoolP("verbose", "v", false, "Verbose")
 	version         = fs.Bool("version", false, "Version")
 	hashComparision = fs.Bool("hash", false, "Hash comparison")
+	web             = fs.StringP("web", "w", "", "Database directory")
+	addr            = fs.String("addr", "0.0.0.0:8000", "Listen address and port")
 )
 
 func main() {
+	if len(*web) > 0 {
+		c := goback.NewController(*web, *addr)
+		c.Start()
+		return
+	}
 	backup := goback.NewBackup(*srcDirArr, *dstDir, *hashComparision, *debug)
 	if err := backup.Start(); err != nil {
 		log.Error(err)
 	}
-
-	////	Start backup files
-	//b := goback.NewBackup(*srcDir, *dstDir, *debug)
-	//defer b.Close()
-	//
-	//// Initialize backup
-	//if err := b.Initialize(); err != nil {
-	//	log.Error(err)
-	//	return
-	//}
-	//
-	//// Start backup
-	//if err = b.Start(); err != nil {
-	//	log.Error(err)
-	//}
 }
 
 func printHelp() {

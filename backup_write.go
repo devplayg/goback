@@ -10,33 +10,13 @@ import (
 )
 
 func (b *Backup) writeResult(currentFileMaps []*sync.Map) error {
-	//added, modified, deleted, failed, err := b.encodeAndBackup()
-	//if err != nil {
-	//	return err
-	//}
-	//b.summary.BackupTime = time.Now()
-	//log.WithFields(log.Fields{
-	//	"duration": time.Since(b.summary.ComparisonTime).Seconds(),
-	//}).Debug("backup")
-	//log.WithFields(log.Fields{
-	//	"added":    len(added),
-	//	"modified": len(modified),
-	//	"deleted":  len(deleted),
-	//	"failed":   len(failed),
-	//}).Debug("data length")
-
 	if err := b.writeBackupResult(); err != nil {
 		return err
 	}
-	//log.WithFields(log.Fields{
-	//	"duration": time.Since(b.summary.BackupTime).Seconds(),
-	//}).Debug("logging")
-	//
+
 	if err := b.writeFileMap(currentFileMaps); err != nil {
 		return err
 	}
-	b.summary.LoggingTime = time.Now()
-	b.summary.ExecutionTime = time.Since(b.summary.Date).Seconds()
 
 	if err := b.writeSummary(); err != nil {
 		return err
@@ -46,6 +26,8 @@ func (b *Backup) writeResult(currentFileMaps []*sync.Map) error {
 }
 
 func (b *Backup) writeSummary() error {
+	b.summary.ExecutionTime = time.Since(b.summary.Date).Seconds()
+
 	log.WithFields(log.Fields{
 		"summaryId": b.summary.Id,
 		"files":     b.summary.TotalCount,
