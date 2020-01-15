@@ -1,5 +1,7 @@
 package goback
 
-//func (c *Controller) GetSummaries(w http.ResponseWriter, r *http.Request) {
-//	w.Write([]byte("asdfasdf"))
-//}
+import "net/http"
+
+func (c *Controller) GetSummaries(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("asdfasdf"))
+}
