@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/boltdb/bolt"
+	"github.com/dustin/go-humanize"
 	log "github.com/sirupsen/logrus"
 	"path/filepath"
 	"runtime"
@@ -81,7 +82,7 @@ func (b *Backup) initDirectories() error {
 
 		log.WithFields(log.Fields{
 			"dir": b.srcDirArr[i],
-		}).Infof("directory to backup")
+		}).Infof("src directory")
 	}
 
 	if len(b.dstDir) < 1 {
@@ -94,7 +95,7 @@ func (b *Backup) initDirectories() error {
 
 	log.WithFields(log.Fields{
 		"dir": b.dstDir,
-	}).Infof("storage")
+	}).Infof("dst directory")
 
 	return nil
 }
@@ -173,14 +174,18 @@ func (b *Backup) Start() error {
 	if err != nil {
 		return err
 	}
-	log.WithFields(log.Fields{
-		"duration": time.Since(t).Seconds(),
-	}).Debug("load last backup")
 
 	if lastSummary == nil || lastSummary.TotalCount < 1 || !IsEqualStringSlices(lastSummary.SrcDirArr, b.srcDirArr) || lastBackupFileCount == 0 {
 		return b.generateFirstBackupData()
 	}
 	b.lastFileMap = lastFileMap
+	log.WithFields(log.Fields{
+		"timeToLoadLastBackupData": time.Since(t).Seconds(),
+		"files":                    lastBackupFileCount,
+		"summaryId":                lastSummary.Id,
+		"size":                     humanize.Bytes(lastSummary.TotalSize),
+		"date":                     lastSummary.Date.Format(time.RFC3339),
+	}).Debug("last backup")
 
 	if err := b.startBackup(); err != nil {
 		return err

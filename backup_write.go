@@ -2,7 +2,9 @@ package goback
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/boltdb/bolt"
+	"github.com/dustin/go-humanize"
 	log "github.com/sirupsen/logrus"
 	"strconv"
 	"sync"
@@ -27,16 +29,7 @@ func (b *Backup) writeResult(currentFileMaps []*sync.Map) error {
 
 func (b *Backup) writeSummary() error {
 	b.summary.ExecutionTime = time.Since(b.summary.Date).Seconds()
-
-	log.WithFields(log.Fields{
-		"summaryId": b.summary.Id,
-		"files":     b.summary.TotalCount,
-		"size":      b.summary.TotalSize,
-		"added":     b.summary.AddedCount,
-		"modified":  b.summary.ModifiedCount,
-		"deleted":   b.summary.DeletedCount,
-		"execTime":  time.Since(b.summary.Date).Seconds(),
-	}).Debug("files found")
+	b.logSummary()
 
 	return b.db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(BucketSummary)
@@ -49,6 +42,18 @@ func (b *Backup) writeSummary() error {
 		}
 		return bucket.Put(Int64ToBytes(b.summary.Id), data)
 	})
+}
+
+func (b *Backup) logSummary() {
+	log.WithFields(log.Fields{
+		"summaryId":   b.summary.Id,
+		"files":       b.summary.TotalCount,
+		"totalSize":   fmt.Sprintf("%d(%s)", b.summary.TotalSize, humanize.Bytes(b.summary.TotalSize)),
+		"changeFiles": GetChangeFilesDesc(b.summary.AddedCount, b.summary.ModifiedCount, b.summary.DeletedCount),
+		"changeSize":  GetChangeSizeDesc(b.summary.AddedCount, b.summary.ModifiedCount, b.summary.DeletedCount),
+		"execTime":    time.Since(b.summary.Date).Seconds(),
+	}).Info("summary")
+
 }
 
 func (b *Backup) writeBackupResult() error {

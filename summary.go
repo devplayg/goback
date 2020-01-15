@@ -12,14 +12,17 @@ type Summary struct {
 	DstDir    string    `json:"dstDir"`
 	//State     int       `json:"state"`
 
-	WorkerCount int   `json:"worker"`
-	TotalSize   int64 `json:"size"`
-	TotalCount  int64 `json:"count"`
+	WorkerCount int    `json:"worker"`
+	TotalSize   uint64 `json:"size"`
+	TotalCount  int64  `json:"count"`
 
 	// Thread-safe
 	AddedCount    uint64 `json:"countAdded"`
 	ModifiedCount uint64 `json:"countModified"`
 	DeletedCount  uint64 `json:"countDeleted"`
+	AddedSize     uint64 `json:"sizeAdded"`
+	ModifiedSize  uint64 `json:"sizeModified"`
+	DeletedSize   uint64 `json:"sizeDeleted"`
 
 	Extensions       map[string]int64 `json:"ext"`
 	SizeDistribution map[int64]int64  `json:"sizeDist"`

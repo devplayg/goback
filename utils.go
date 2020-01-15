@@ -8,6 +8,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/dustin/go-humanize"
 	"github.com/minio/highwayhash"
 	log "github.com/sirupsen/logrus"
 	"io"
@@ -77,12 +79,12 @@ func GetFileHash(path string) (string, error) {
 	return hex.EncodeToString(checksum), nil
 }
 
-func GetFileMap(dirs []string, hashComparision bool) (*sync.Map, map[string]int64, map[int64]int64, int64, int64, error) {
+func GetFileMap(dirs []string, hashComparision bool) (*sync.Map, map[string]int64, map[int64]int64, int64, uint64, error) {
 	fileMap := sync.Map{}
 	extensions := make(map[string]int64)
 	sizeDistribution := make(map[int64]int64)
 
-	var size int64
+	var size uint64
 	var count int64
 
 	for _, dir := range dirs {
@@ -112,7 +114,7 @@ func GetFileMap(dirs []string, hashComparision bool) (*sync.Map, map[string]int6
 				extensions["__OTHERS__"]++
 			}
 			sizeDistribution[GetFileSizeCategory(file.Size())]++
-			size += fi.Size
+			size += uint64(fi.Size)
 			count++
 
 			fileMap.Store(path, fi)
@@ -127,7 +129,7 @@ func GetFileMap(dirs []string, hashComparision bool) (*sync.Map, map[string]int6
 	return &fileMap, extensions, sizeDistribution, count, size, nil
 }
 
-func GetCurrentFileMaps(dirs []string, workerCount int, hashComparision bool) ([]*sync.Map, map[string]int64, map[int64]int64, int64, int64, error) {
+func GetCurrentFileMaps(dirs []string, workerCount int, hashComparision bool) ([]*sync.Map, map[string]int64, map[int64]int64, int64, uint64, error) {
 	fileMaps := make([]*sync.Map, workerCount)
 	extensions := make(map[string]int64)
 	sizeDistribution := make(map[int64]int64)
@@ -136,7 +138,7 @@ func GetCurrentFileMaps(dirs []string, workerCount int, hashComparision bool) ([
 		fileMaps[i] = &sync.Map{}
 	}
 
-	var size int64
+	var size uint64
 	var count int64
 
 	for _, dir := range dirs {
@@ -167,7 +169,7 @@ func GetCurrentFileMaps(dirs []string, workerCount int, hashComparision bool) ([
 				extensions["__OTHERS__"]++
 			}
 			sizeDistribution[GetFileSizeCategory(file.Size())]++
-			size += fi.Size
+			size += uint64(fi.Size)
 			count++
 
 			// Distribute works
@@ -329,18 +331,6 @@ func EncodeToBytes(p interface{}) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-//func Compress(s []byte) ([]byte, error) {
-//	buf := bytes.Buffer{}
-//	zipped := gzip.NewWriter(&buf)
-//	if _, err := zipped.Write(s) err != nil {
-//		return nil, err
-//	}
-//	if err := zipped.Close(); err != nil {
-//		return nil, err
-//	}
-//	return buf.Bytes(), nil
-//}
-
 func BackupFile(tempDir, srcPath string) (string, float64, error) {
 	// Set source
 	t := time.Now()
@@ -372,4 +362,12 @@ func BackupFile(tempDir, srcPath string) (string, float64, error) {
 	}
 
 	return dstPath, time.Since(t).Seconds(), err
+}
+
+func GetChangeFilesDesc(added uint64, modified uint64, deleted uint64) string {
+	return fmt.Sprintf("added=%d, modified=%d, deleted=%d", added, modified, deleted)
+}
+
+func GetChangeSizeDesc(added uint64, modified uint64, deleted uint64) string {
+	return fmt.Sprintf("added=%d(%s), modified=%d(%s), deleted=%d(%s)", added, humanize.Bytes(added), modified, humanize.Bytes(modified), deleted, humanize.Bytes(deleted))
 }

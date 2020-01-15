@@ -1,6 +1,8 @@
 package goback
 
 import (
+	"fmt"
+	"github.com/dustin/go-humanize"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
@@ -12,13 +14,15 @@ import (
 )
 
 func (b *Backup) startBackup() error {
-
 	// Ready
 	summary, err := b.newSummary()
 	if err != nil {
 		return err
 	}
 	b.summary = summary
+	log.WithFields(log.Fields{
+		"summaryId": b.summary.Id,
+	}).Debug("New backup has been started")
 
 	if b.fileBackupEnable {
 		tempDir, err := ioutil.TempDir(b.dstDir, "backup-")
@@ -34,7 +38,7 @@ func (b *Backup) startBackup() error {
 		}
 	}()
 
-	// 1. Reading current files
+	// 1. Collect current files
 	currentFileMaps, extensions, sizeDistribution, count, size, err := GetCurrentFileMaps(b.srcDirArr, b.workerCount, b.hashComparision)
 	if err != nil {
 		return nil
@@ -45,8 +49,10 @@ func (b *Backup) startBackup() error {
 	b.summary.Extensions = extensions
 	b.summary.SizeDistribution = sizeDistribution
 	log.WithFields(log.Fields{
-		"duration": time.Since(b.summary.Date).Seconds(),
-	}).Debug("read")
+		"execTime": b.summary.ReadingTime.Sub(b.summary.Date).Seconds(),
+		"files":    count,
+		"size":     fmt.Sprintf("%d(%s)", size, humanize.Bytes(size)),
+	}).Debug("1) collected current files")
 
 	// 2. Compares file maps
 	if err := b.CompareFileMaps(currentFileMaps); err != nil {
@@ -54,13 +60,18 @@ func (b *Backup) startBackup() error {
 	}
 	b.summary.ComparisonTime = time.Now()
 	log.WithFields(log.Fields{
-		"duration": time.Since(b.summary.ReadingTime).Seconds(),
-	}).Debug("compare")
+		"execTime":    b.summary.ComparisonTime.Sub(b.summary.ReadingTime).Seconds(),
+		"changeFiles": GetChangeFilesDesc(b.summary.AddedCount, b.summary.ModifiedCount, b.summary.DeletedCount),
+		"changeSize":  GetChangeSizeDesc(b.summary.AddedCount, b.summary.ModifiedCount, b.summary.DeletedCount),
+	}).Debug("2) comparing files done")
 
 	// 3. Backup added or changed files
 	if err := b.BackupFiles(); err != nil {
 		return err
 	}
+	log.WithFields(log.Fields{
+		"execTime": b.summary.BackupTime.Sub(b.summary.ComparisonTime).Seconds(),
+	}).Debug("3) backup done")
 
 	// 4. Encode changed files
 	if err := b.encodedChangedFiles(); err != nil {
@@ -164,6 +175,7 @@ func (b *Backup) backupFiles(workerId int, files []*File) error {
 }
 
 func (b *Backup) backupFile(file *File) error {
+	//return nil // wondory
 	path, dur, err := BackupFile(b.tempDir, file.Path)
 	if err != nil {
 		b.failedFiles.Store(file, nil)
@@ -188,16 +200,19 @@ func (b *Backup) writeWhatHappened(file *File, whatHappened int) {
 	if whatHappened == FileAdded {
 		b.addedFiles.Store(file, nil)
 		atomic.AddUint64(&b.summary.AddedCount, uint64(1))
+		atomic.AddUint64(&b.summary.AddedSize, uint64(file.Size))
 		return
 	}
 	if whatHappened == FileModified {
 		b.modifiedFiles.Store(file, nil)
 		atomic.AddUint64(&b.summary.ModifiedCount, uint64(1))
+		atomic.AddUint64(&b.summary.ModifiedSize, uint64(file.Size))
 		return
 	}
 	if whatHappened == FileDeleted {
-		atomic.AddUint64(&b.summary.DeletedCount, uint64(1))
 		b.deletedFiles.Store(file, nil)
+		atomic.AddUint64(&b.summary.DeletedCount, uint64(1))
+		atomic.AddUint64(&b.summary.DeletedSize, uint64(file.Size))
 		return
 	}
 }
@@ -227,7 +242,7 @@ func (b *Backup) CompareFileMaps(currentFileMaps []*sync.Map) error {
 
 func (b *Backup) compareFileMap(workerId int, lastFileMap, myMap *sync.Map) error {
 	var count int64
-	t := time.Now()
+	//t := time.Now()
 	myMap.Range(func(k, v interface{}) bool {
 		count++
 		path := k.(string)
@@ -248,10 +263,10 @@ func (b *Backup) compareFileMap(workerId int, lastFileMap, myMap *sync.Map) erro
 		b.writeWhatHappened(current, FileAdded)
 		return true
 	})
-	log.WithFields(log.Fields{
-		"workerId": workerId,
-		"count":    count,
-		"duration": time.Since(t).Seconds(),
-	}).Debugf("comparing done")
+	//log.WithFields(log.Fields{
+	//	"workerId": workerId,
+	//	"count":    count,
+	//	"duration": time.Since(t).Seconds(),
+	//}).Debugf("comparison is over")
 	return nil
 }

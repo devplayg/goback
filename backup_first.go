@@ -8,9 +8,8 @@ import (
 )
 
 func (b *Backup) generateFirstBackupData() error {
-
 	// Ready
-	log.Info("generating first backup data")
+	log.Info("generating first source data..")
 	summary, err := b.newSummary()
 	if err != nil {
 		return err
@@ -77,7 +76,6 @@ func (b *Backup) collectFilesToBackup() (*sync.Map, error) {
 		b.summary.ReadingTime = time.Now()
 		b.summary.ComparisonTime = b.summary.ReadingTime
 	}()
-	log.Debug("first backup; generating first backup data")
 	//fileMap := make(map[string]*File)
 	//b.summary.State = BackupRunning
 	b.summary.Message = "collecting initialize data"

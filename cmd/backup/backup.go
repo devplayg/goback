@@ -27,11 +27,11 @@ var (
 )
 
 func main() {
-	if len(*web) > 0 {
-		c := goback.NewController(*web, *addr)
-		c.Start()
-		return
-	}
+	//if len(*web) > 0 {
+	//	c := goback.NewController(*web, *addr)
+	//	c.Start()
+	//	return
+	//}
 	backup := goback.NewBackup(*srcDirArr, *dstDir, *hashComparision, *debug)
 	if err := backup.Start(); err != nil {
 		log.Error(err)
