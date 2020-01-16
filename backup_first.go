@@ -2,7 +2,11 @@ package goback
 
 import (
 	"github.com/boltdb/bolt"
+	"github.com/devplayg/golibs/converter"
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 )
@@ -36,19 +40,32 @@ func (b *Backup) generateFirstBackupData() error {
 }
 
 func (b *Backup) writeFileMap(fileMaps []*sync.Map) error {
-	defer func() {
-		b.summary.LoggingTime = time.Now()
-	}()
 	// Marshal files
+	files := make([]*File, 0) // test
 	for _, m := range fileMaps {
 		m.Range(func(k, v interface{}) bool {
 			file := v.(*File)
 			file.Marshal()
+			files = append(files, file) // test
 			return true
 		})
 	}
 
-	return b.fileDb.Batch(func(tx *bolt.Tx) error {
+	t := time.Now()
+	data, err := converter.EncodeToBytes(files)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(filepath.Join(b.dstDir, "backup_origin.data"), data, os.FileMode(644))
+	if err != nil {
+		return err
+	}
+	log.WithFields(log.Fields{
+		"execTime": time.Since(t).Seconds(),
+	}).Debug("### goblib backup")
+
+	t = time.Now()
+	err = b.fileDb.Batch(func(tx *bolt.Tx) error {
 		tx.DeleteBucket(BucketFiles)
 		b, err := tx.CreateBucket(BucketFiles)
 		if err != nil {
@@ -69,6 +86,27 @@ func (b *Backup) writeFileMap(fileMaps []*sync.Map) error {
 		}
 		return nil
 	})
+	log.WithFields(log.Fields{
+		"execTime": time.Since(t).Seconds(),
+	}).Debug("### boltdb backup")
+
+	return err
+}
+
+func (b *Backup) writeFileMap2(fileMaps []*sync.Map) error {
+	files := make([]*File, 0)
+	for _, m := range fileMaps {
+		m.Range(func(k, v interface{}) bool {
+			files = append(files, v.(*File))
+			return true
+		})
+	}
+	data, err := converter.EncodeToBytes(files)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(filepath.Join(b.dstDir, "backup_origin.data"), data, os.FileMode(644))
 }
 
 func (b *Backup) collectFilesToBackup() (*sync.Map, error) {

@@ -80,7 +80,14 @@ func (b *Backup) startBackup() error {
 
 	// 5. Write result
 	if err := b.writeResult(currentFileMaps); err != nil {
-		log.Error(err)
+		return err
+	}
+	log.WithFields(log.Fields{
+		"execTime": b.summary.LoggingTime.Sub(b.summary.ComparisonTime).Seconds(),
+	}).Debug("4) logging done")
+
+	if err := b.writeSummary(); err != nil {
+		return err
 	}
 
 	return nil

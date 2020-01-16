@@ -12,15 +12,15 @@ import (
 )
 
 func (b *Backup) writeResult(currentFileMaps []*sync.Map) error {
+	defer func() {
+		b.summary.LoggingTime = time.Now()
+	}()
+
 	if err := b.writeBackupResult(); err != nil {
 		return err
 	}
 
 	if err := b.writeFileMap(currentFileMaps); err != nil {
-		return err
-	}
-
-	if err := b.writeSummary(); err != nil {
 		return err
 	}
 
