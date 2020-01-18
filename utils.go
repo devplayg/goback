@@ -164,15 +164,6 @@ func IsEqualStringSlices(a, b []string) bool {
 	return true
 }
 
-// func EncodeToBytes(p interface{}) ([]byte, error) {
-// 	buf := bytes.Buffer{}
-// 	enc := gob.NewEncoder(&buf)
-// 	if err := enc.Encode(p); err != nil {
-// 		return nil, err
-// 	}
-// 	return buf.Bytes(), nil
-// }
-
 func BackupFile(srcPath, tempDir string) (string, float64, error) {
 	// Set source
 	t := time.Now()
@@ -206,15 +197,6 @@ func BackupFile(srcPath, tempDir string) (string, float64, error) {
 	return dstPath, time.Since(t).Seconds(), err
 }
 
-//
-// func GetChangeFilesDesc(added uint64, modified uint64, deleted uint64) string {
-// 	return fmt.Sprintf("added=%d, modified=%d, deleted=%d", added, modified, deleted)
-// }
-//
-// func GetChangeSizeDesc(added uint64, modified uint64, deleted uint64) string {
-// 	return fmt.Sprintf("added=%d(%s), modified=%d(%s), deleted=%d(%s)", added, humanize.Bytes(added), modified, humanize.Bytes(modified), deleted, humanize.Bytes(deleted))
-// }
-
 func GetHumanizedSize(size uint64) string {
 	humanized := humanize.Bytes(size)
 
@@ -225,13 +207,16 @@ func GetHumanizedSize(size uint64) string {
 	return fmt.Sprintf("%s (%s)", str, humanized)
 }
 
-// func CreateFileIfNotExists(path string) error {
-// 	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0644)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if err := f.Close(); err != nil {
-// 		return nil
-// 	}
-// 	return nil
-// }
+func InitDatabase(summaryDbPath, fileMapDbPath string) (*os.File, *os.File, error) {
+	summaryDb, err := os.OpenFile(summaryDbPath, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	fileMapDb, err := os.OpenFile(fileMapDbPath, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return summaryDb, fileMapDb, nil
+}

@@ -39,11 +39,6 @@ type Backup struct {
 	deletedFiles  *sync.Map
 	failedFiles   *sync.Map
 
-	// _addedFiles    []*FileWrapper
-	// _modifiedFiles []*FileWrapper
-	// _deletedFiles  []*FileWrapper
-	// _failedFiles   []*FileWrapper
-
 	lastFileMap   *sync.Map
 	version       int
 	nextSummaryId int64
@@ -52,19 +47,15 @@ type Backup struct {
 
 func NewBackup(srcDirArr []string, dstDir string, hashComparision, debug bool) *Backup {
 	b := Backup{
-		srcDirArr:       srcDirArr,
-		dstDir:          dstDir,
-		hashComparision: hashComparision,
-		debug:           debug,
-		workerCount:     runtime.NumCPU(),
-		addedFiles:      &sync.Map{},
-		modifiedFiles:   &sync.Map{},
-		deletedFiles:    &sync.Map{},
-		failedFiles:     &sync.Map{},
-		// _addedFiles:      make([]*FileWrapper, 0),
-		// _modifiedFiles:   make([]*FileWrapper, 0),
-		// _deletedFiles:    make([]*FileWrapper, 0),
-		// _failedFiles:     make([]*FileWrapper, 0),
+		srcDirArr:        srcDirArr,
+		dstDir:           dstDir,
+		hashComparision:  hashComparision,
+		debug:            debug,
+		workerCount:      runtime.NumCPU(),
+		addedFiles:       &sync.Map{},
+		modifiedFiles:    &sync.Map{},
+		deletedFiles:     &sync.Map{},
+		failedFiles:      &sync.Map{},
 		fileBackupEnable: true,
 		version:          1,
 	}
@@ -121,28 +112,15 @@ func (b *Backup) initDirectories() error {
 
 // Initialize database
 func (b *Backup) initDatabase() error {
-	b.summaryDbPath = filepath.Join(b.dstDir, "backup_log.db")
-	summaryDb, err := os.OpenFile(b.summaryDbPath, os.O_RDWR|os.O_CREATE, 0644)
+	b.summaryDbPath = filepath.Join(b.dstDir, SummaryDbName)
+	b.fileMapDbPath = filepath.Join(b.dstDir, FileMapDbName)
+	summaryDb, fileMapDb, err := InitDatabase(b.summaryDbPath, b.fileMapDbPath)
 	if err != nil {
 		return err
 	}
-	b.summaryDb = summaryDb
+	b.summaryDb, b.fileMapDb = summaryDb, fileMapDb
 
-	// if err := CreateFileIfNotExists(b.summaryDbPath); err != nil {
-	// 	return fmt.Errorf("failed open or create summary database: %w", err)
-	// }
-
-	b.fileMapDbPath = filepath.Join(b.dstDir, "backup_origin.db")
-	// if err := CreateFileIfNotExists(b.fileMapDbPath); err != nil {
-	// 	return fmt.Errorf("failed open or create file map database: %w", err)
-	// }
-	fileMapDb, err := os.OpenFile(b.fileMapDbPath, os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		return err
-	}
-	b.fileMapDb = fileMapDb
-
-	return nil
+	return err
 }
 
 func (b *Backup) loadFileMapDb() (*sync.Map, error) {
@@ -159,39 +137,13 @@ func (b *Backup) loadFileMapDb() (*sync.Map, error) {
 	if err := converter.DecodeFromBytes(data, &files); err != nil {
 		return nil, err
 	}
-	// decoder := gob.NewDecoder(bytes.NewReader(data))
-	// if err := decoder.Decode(&files); err != nil {
-	// 	return nil, err
-	// }
 
 	fileMap := sync.Map{}
 	for _, f := range files {
-		if len(f.Path) < 1 {
-			// spew.Dump(f)
-		}
 		fileMap.Store(f.Path, f)
 	}
 
 	return &fileMap, nil
-
-	// fileMap := sync.Map{}
-	// var count int64
-	// err := b.fileDb.View(func(tx *bolt.Tx) error {
-	// 	b := tx.Bucket(BucketFiles)
-	// 	if b == nil {
-	// 		return ErrorBucketNotFound
-	// 	}
-	// 	return b.ForEach(func(k, v []byte) error {
-	// 		var file File
-	// 		if err := json.Unmarshal(v, &file); err != nil {
-	// 			return err
-	// 		}
-	// 		fileMap.Store(string(k), &file)
-	// 		count++
-	// 		return nil
-	// 	})
-	// })
-	// return &fileMap, count, err
 }
 
 func (b *Backup) Start() error {

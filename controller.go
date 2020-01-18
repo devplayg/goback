@@ -1,13 +1,18 @@
 package goback
 
 import (
+	"bytes"
+	"encoding/gob"
+	"encoding/json"
 	"fmt"
-	"github.com/boltdb/bolt"
 	"github.com/devplayg/golibs/compress"
+	"github.com/devplayg/himma"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
 	"mime"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -18,18 +23,23 @@ var (
 )
 
 type Controller struct {
-	b      *Backup
-	router *mux.Router
-	db     *bolt.DB
-	fileDb *bolt.DB
-	addr   string
-	dir    string
+	// b             *Backup
+	router        *mux.Router
+	summaryDbPath string
+	summaryDb     *os.File
+	fileMapDbPath string
+	fileMapDb     *os.File
+	addr          string
+	dir           string
+
+	summaries []*Summary
 }
 
 func NewController(dir, addr string) *Controller {
 	return &Controller{
-		addr: addr,
-		dir:  dir,
+		addr:      addr,
+		dir:       dir,
+		summaries: make([]*Summary, 0),
 	}
 }
 
@@ -37,36 +47,48 @@ func (c *Controller) init() error {
 	if err := c.initRouter(); err != nil {
 		return err
 	}
-	// db, fileDb, err := InitDatabase(c.dir)
-	// if err != nil {
-	// 	return err
-	// }
-	// c.db, c.fileDb = db, fileDb
-	//
-	// uiAssetMap, err = himma.GetAssetMap(himma.Bootstrap4)
-	// if err != nil {
-	// 	return err
-	// }
+	c.summaryDbPath = filepath.Join(c.dir, SummaryDbName)
+	c.fileMapDbPath = filepath.Join(c.dir, FileMapDbName)
+	summaryDb, fileMapDb, err := InitDatabase(c.summaryDbPath, c.fileMapDbPath)
+	if err != nil {
+		return err
+	}
+	c.summaryDb, c.fileMapDb = summaryDb, fileMapDb
+
+	uiAssetMap, err = himma.GetAssetMap(himma.Bootstrap4, himma.Plugins)
+	if err != nil {
+		return err
+	}
+
+	summaries, err := c.loadSummaryDb()
+	if err != nil {
+		return err
+	}
+	c.summaries = summaries
 	return nil
 }
 
 func (c *Controller) initRouter() error {
 	c.router = mux.NewRouter()
+	c.router.HandleFunc("/", c.DisplayBackup)
 	c.router.HandleFunc("/summaries", c.GetSummaries)
 	c.router.HandleFunc("/assets/{assetType}/{name}", func(w http.ResponseWriter, r *http.Request) {
 		GetAsset(w, r)
 	})
 
-	c.router.HandleFunc("/assets/plugins/{pluginName}/{name}", func(w http.ResponseWriter, r *http.Request) {
+	c.router.HandleFunc("/assets/{u1}/{u2}/{u3}", func(w http.ResponseWriter, r *http.Request) {
 		GetAsset(w, r)
 	})
-	c.router.HandleFunc("/assets/plugins/{pluginName}/{kind}/{name}", func(w http.ResponseWriter, r *http.Request) {
+	c.router.HandleFunc("/assets/{u1}}/{u2}/{u3}/{u4}", func(w http.ResponseWriter, r *http.Request) {
 		GetAsset(w, r)
 	})
-
-	c.router.HandleFunc("/assets/modules/{moduleName}/{name}", func(w http.ResponseWriter, r *http.Request) {
-		GetAsset(w, r)
-	})
+	// c.router.HandleFunc("/assets/plugins/{pluginName}/{kind}/{name}", func(w http.ResponseWriter, r *http.Request) {
+	// 	GetAsset(w, r)
+	// })
+	//
+	// c.router.HandleFunc("/assets/modules/{moduleName}/{name}", func(w http.ResponseWriter, r *http.Request) {
+	// 	GetAsset(w, r)
+	// })
 	http.Handle("/", c.router)
 
 	srv := &http.Server{
@@ -76,6 +98,7 @@ func (c *Controller) initRouter() error {
 		ReadTimeout:  15 * time.Second,
 	}
 	go func() {
+		log.WithFields(log.Fields{}).Infof("listen on %s", c.addr)
 		log.Fatal(srv.ListenAndServe())
 	}()
 
@@ -94,13 +117,31 @@ func (c *Controller) Start() error {
 }
 
 func (c *Controller) Stop() error {
-	if err := c.db.Close(); err != nil {
+	if err := c.summaryDb.Close(); err != nil {
 		log.Error(err)
 	}
-	if err := c.fileDb.Close(); err != nil {
+	if err := c.fileMapDb.Close(); err != nil {
 		log.Error(err)
 	}
 	return nil
+}
+
+func (c *Controller) loadSummaryDb() ([]*Summary, error) {
+	data, err := ioutil.ReadAll(c.summaryDb)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(data) < 1 {
+		return nil, nil
+	}
+
+	var summaries []*Summary
+	decoder := gob.NewDecoder(bytes.NewReader(data))
+	if err := decoder.Decode(&summaries); err != nil {
+		return nil, err
+	}
+	return summaries, nil
 }
 
 func GetAsset(w http.ResponseWriter, r *http.Request) {
@@ -118,4 +159,19 @@ func DetectContentType(ext string) string {
 		return "application/octet-stream"
 	}
 	return ctype
+}
+
+func Response(w http.ResponseWriter, r *http.Request, err error, statusCode int) {
+	if statusCode != http.StatusOK {
+		log.WithFields(log.Fields{
+			"ip":     r.RemoteAddr,
+			"uri":    r.RequestURI,
+			"method": r.Method,
+			"length": r.ContentLength,
+		}).Error(err)
+	}
+	w.Header().Add("Content-Type", "application/json")
+	b, _ := json.Marshal(err)
+	w.WriteHeader(statusCode)
+	w.Write(b)
 }

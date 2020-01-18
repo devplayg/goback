@@ -12,6 +12,9 @@ const (
 
 	Failure = -1
 	Success = 1
+
+	FileMapDbName = "files.db"
+	SummaryDbName = "summary.db"
 )
 
 var (
