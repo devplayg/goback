@@ -10,14 +10,8 @@ const (
 	FileAdded    = 1 << iota // 2
 	FileDeleted  = 1 << iota // 4
 
-	// BackupReady    = 1
-	// BackupRunning  = 2
-	// BackupFinished = 3
-
 	Failure = -1
 	Success = 1
-
-	BackupPrefixStr = "backup-"
 )
 
 var (

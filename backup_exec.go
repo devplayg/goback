@@ -170,7 +170,6 @@ func (b *Backup) backupFileGroup() ([][]*FileWrapper, uint64, error) {
 		workerId := i % uint64(b.workerCount)
 		fileGroup[workerId] = append(fileGroup[workerId], file)
 		i++
-		// b._addedFiles = append(b._addedFiles, file)
 
 		return true
 	})
@@ -179,7 +178,6 @@ func (b *Backup) backupFileGroup() ([][]*FileWrapper, uint64, error) {
 		workerId := i % uint64(b.workerCount)
 		fileGroup[workerId] = append(fileGroup[workerId], file)
 		i++
-		// b._modifiedFiles = append(b._modifiedFiles, file)
 
 		return true
 	})
@@ -218,26 +216,6 @@ func (b *Backup) backupFiles(workerId int, files []*FileWrapper) error {
 	return nil
 }
 
-// func (b *Backup) backupFile(file *File) error {
-// 	path, dur, err := BackupFile(file.Path, b.tempDir)
-// 	if err != nil {
-// 		b.failedFiles.Store(file, nil)
-// 		atomic.AddUint64(&b.summary.BackupFailureCount, uint64(1))
-// 		file.Result = Failure
-// 		file.Message = err.Error()
-// 		return err
-// 	}
-//
-// 	atomic.AddUint64(&b.summary.BackupSuccessCount, uint64(1))
-// 	file.Result = Success
-// 	file.Duration = dur
-// 	if err := os.Chtimes(path, file.ModTime, file.ModTime); err != nil {
-// 		return err
-// 	}
-//
-// 	return nil
-// }
-
 func (b *Backup) writeWhatHappened(file *FileWrapper, whatHappened int) {
 	file.WhatHappened = whatHappened
 	if whatHappened == FileAdded {
@@ -252,32 +230,9 @@ func (b *Backup) writeWhatHappened(file *FileWrapper, whatHappened int) {
 		atomic.AddUint64(&b.summary.ModifiedSize, uint64(file.Size))
 		return
 	}
-	// if whatHappened == FileDeleted {
-	// 	b.deletedFiles.Store(file, nil)
-	// 	atomic.AddUint64(&b.summary.DeletedCount, uint64(1))
-	// 	atomic.AddUint64(&b.summary.DeletedSize, uint64(file.Size))
-	// 	return
-	// }
 }
 
 func (b *Backup) CompareFileMaps(currentFileMaps []*sync.Map) error {
-	defer func() {
-		b.summary.ComparisonTime = time.Now()
-		log.Info(strings.Repeat("=", 50))
-		log.WithFields(log.Fields{
-			"added": b.summary.AddedCount,
-			"size":  GetHumanizedSize(b.summary.AddedSize),
-		}).Info("# files compared")
-		log.WithFields(log.Fields{
-			"modified": b.summary.ModifiedCount,
-			"size":     GetHumanizedSize(b.summary.ModifiedSize),
-		}).Info("# files compared")
-		log.WithFields(log.Fields{
-			"deleted": b.summary.DeletedCount,
-			"size":    GetHumanizedSize(b.summary.DeletedSize),
-		}).Info("# files compared")
-		log.Info(strings.Repeat("=", 50))
-	}()
 	wg := sync.WaitGroup{}
 	for i := range currentFileMaps {
 		wg.Add(1)
@@ -291,11 +246,23 @@ func (b *Backup) CompareFileMaps(currentFileMaps []*sync.Map) error {
 	wg.Wait()
 
 	// The remaining files in LastFileMap are deleted files.
-	// b.lastFileMap.Range(func(k, v interface{}) bool {
-	// file := v.(*File)
-	// b.writeWhatHappened(file, FileDeleted)
-	// return true
-	// })
+
+	// Logging
+	log.Info(strings.Repeat("=", 50))
+	log.WithFields(log.Fields{
+		"added": b.summary.AddedCount,
+		"size":  GetHumanizedSize(b.summary.AddedSize),
+	}).Info("# files compared")
+	log.WithFields(log.Fields{
+		"modified": b.summary.ModifiedCount,
+		"size":     GetHumanizedSize(b.summary.ModifiedSize),
+	}).Info("# files compared")
+	log.WithFields(log.Fields{
+		"deleted": b.summary.DeletedCount,
+		"size":    GetHumanizedSize(b.summary.DeletedSize),
+	}).Info("# files compared")
+	log.Info(strings.Repeat("=", 50))
+	b.summary.ComparisonTime = time.Now()
 
 	return nil
 }

@@ -11,15 +11,6 @@ type File struct {
 	Path    string    `json:"path"`
 }
 
-// func newFile(path string, size int64, modTime time.Time) *File {
-// 	a := NewFileWrapper("", 1, time.Now())
-// 	return &File{
-// 		Path:    path,
-// 		Size:    size,
-// 		ModTime: modTime,
-// 	}
-// }
-
 type FileWrapper struct {
 	*File
 	WhatHappened int     `json:"how"`
@@ -42,20 +33,3 @@ func NewFileWrapper(path string, size int64, modTime time.Time) *FileWrapper {
 		Message:      "",
 	}
 }
-
-//
-// func NewFileExtended(file *File) *FileExtended{
-//	return &FileExtended{
-//		File:     file,
-//		Result:   0,
-//		Duration: 0,
-//	}
-// }
-
-type Directory struct {
-	// Files
-}
-
-// type FileMap struct {
-//	sync.Map
-// }

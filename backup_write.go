@@ -25,7 +25,6 @@ func (b *Backup) writeResult(currentFileMaps []*sync.Map) error {
 		return err
 	}
 
-	// wondory
 	if err := b.writeFileMap(currentFileMaps); err != nil {
 		return err
 	}
@@ -152,11 +151,4 @@ func (b *Backup) writeChangesLog() error {
 
 	b.changesLog = m
 	return nil
-
-	// data, err := json.MarshalIndent(m, "", "    ")
-	// if err != nil {
-	// 	return err
-	// }
-
-	// return ioutil.WriteFile(filepath.Join(b.backupDir, "changes.json"), data, 0644)
 }
