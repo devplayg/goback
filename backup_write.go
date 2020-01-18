@@ -2,11 +2,11 @@ package goback
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/boltdb/bolt"
-	"github.com/dustin/go-humanize"
+	"github.com/devplayg/golibs/converter"
 	log "github.com/sirupsen/logrus"
-	"strconv"
+	"io/ioutil"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
@@ -14,12 +14,18 @@ import (
 func (b *Backup) writeResult(currentFileMaps []*sync.Map) error {
 	defer func() {
 		b.summary.LoggingTime = time.Now()
+		log.WithFields(log.Fields{
+			"files": b.summary.TotalCount,
+			// "changeFiles": GetChangeFilesDesc(b.summary.AddedCount, b.summary.ModifiedCount, b.summary.DeletedCount),
+			"execTime": time.Since(b.summary.Date).Seconds(),
+		}).Info("current files recorded")
 	}()
 
-	if err := b.writeBackupResult(); err != nil {
+	if err := b.writeChangesLog(); err != nil {
 		return err
 	}
 
+	// wondory
 	if err := b.writeFileMap(currentFileMaps); err != nil {
 		return err
 	}
@@ -27,62 +33,130 @@ func (b *Backup) writeResult(currentFileMaps []*sync.Map) error {
 	return nil
 }
 
+func (b *Backup) writeFileMap(fileMaps []*sync.Map) error {
+	files := make([]*File, 0) // test
+	for _, m := range fileMaps {
+		m.Range(func(k, v interface{}) bool {
+			fileWrapper := v.(*FileWrapper)
+			files = append(files, fileWrapper.File) // test
+			return true
+		})
+	}
+
+	data, err := converter.EncodeToBytes(files)
+	if err != nil {
+		return err
+	}
+	if err := b.fileMapDb.Truncate(0); err != nil {
+		return err
+	}
+
+	if _, err := b.fileMapDb.WriteAt(data, 0); err != nil {
+		return err
+	}
+
+	return err
+}
+
 func (b *Backup) writeSummary() error {
-	b.summary.ExecutionTime = time.Since(b.summary.Date).Seconds()
-	b.logSummary()
+	b.summaries = append(b.summaries, b.summary)
+	data, err := converter.EncodeToBytes(b.summaries)
+	if err != nil {
+		return err
+	}
+	if err := b.summaryDb.Truncate(0); err != nil {
+		return err
+	}
+	if _, err := b.summaryDb.WriteAt(data, 0); err != nil {
+		return err
+	}
+	b.summary.ExecutionTime = b.summary.LoggingTime.Sub(b.summary.Date).Seconds()
 
-	return b.db.Update(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket(BucketSummary)
-		if bucket == nil {
-			return ErrorBucketNotFound
-		}
-		data, err := json.Marshal(b.summary)
-		if err != nil {
-			return err
-		}
-		return bucket.Put(Int64ToBytes(b.summary.Id), data)
-	})
-}
+	// Write changes log
+	data, err = json.MarshalIndent(b.changesLog, "", "  ")
+	if err != nil {
+		return err
+	}
+	if err := ioutil.WriteFile(filepath.Join(b.backupDir, "changes.json"), data, 0644); err != nil {
+		return err
+	}
 
-func (b *Backup) logSummary() {
+	log.Info(strings.Repeat("=", 50))
 	log.WithFields(log.Fields{
-		"summaryId":   b.summary.Id,
-		"files":       b.summary.TotalCount,
-		"totalSize":   fmt.Sprintf("%d(%s)", b.summary.TotalSize, humanize.Bytes(b.summary.TotalSize)),
-		"changeFiles": GetChangeFilesDesc(b.summary.AddedCount, b.summary.ModifiedCount, b.summary.DeletedCount),
-		"changeSize":  GetChangeSizeDesc(b.summary.AddedCount, b.summary.ModifiedCount, b.summary.DeletedCount),
-		"execTime":    time.Since(b.summary.Date).Seconds(),
-	}).Info("summary")
+		"summaryId": b.summary.Id,
+		"files":     b.summary.TotalCount,
+		"totalSize": GetHumanizedSize(b.summary.TotalSize),
+		"execTime":  b.summary.ExecutionTime,
+	}).Info("# summary")
 
+	log.WithFields(log.Fields{
+		"backupFailed": b.summary.FailedCount,
+		"size":         GetHumanizedSize(b.summary.FailedSize),
+	}).Info("# summary")
+	log.WithFields(log.Fields{
+		"backupSuccess": b.summary.SuccessCount,
+		"size":          GetHumanizedSize(b.summary.SuccessSize),
+	}).Info("# summary")
+	log.Info(strings.Repeat("=", 50))
+
+	return nil
 }
 
-func (b *Backup) writeBackupResult() error {
-	return b.db.Batch(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte(BackupPrefixStr + strconv.FormatInt(b.summary.Id, 10)))
-		if err != nil {
-			return err
-		}
+func (b *Backup) writeChangesLog() error {
+	m := make(map[string]interface{})
 
-		// Write added files
-		if err := bucket.Put(BucketAdded, b.addedData); err != nil {
-			return err
-		}
-
-		// Write modified files
-		if err := bucket.Put(BucketModified, b.modifiedData); err != nil {
-			return err
-		}
-
-		// Write deleted files
-		if err := bucket.Put(BucketDeleted, b.deletedData); err != nil {
-			return err
-		}
-
-		// Write files that failed to back up
-		if err := bucket.Put(BucketFailed, b.failedData); err != nil {
-			return err
-		}
-
-		return nil
+	added := make([]*FileWrapper, 0)
+	b.addedFiles.Range(func(k, v interface{}) bool {
+		file := k.(*FileWrapper)
+		added = append(added, file)
+		return true
 	})
+
+	modified := make([]*FileWrapper, 0)
+	b.modifiedFiles.Range(func(k, v interface{}) bool {
+		file := k.(*FileWrapper)
+		modified = append(modified, file)
+		return true
+	})
+
+	failed := make([]*FileWrapper, 0)
+	b.failedFiles.Range(func(k, v interface{}) bool {
+		file := k.(*FileWrapper)
+		failed = append(failed, file)
+		return true
+	})
+
+	// The remaining files in LastFileMap are deleted files.
+	deleted := make([]*FileWrapper, 0)
+	if b.lastFileMap != nil {
+		b.lastFileMap.Range(func(k, v interface{}) bool {
+			file := v.(*File)
+
+			fileWrapper := FileWrapper{
+				File:         file,
+				WhatHappened: FileDeleted,
+				Result:       0,
+				Duration:     0,
+				Message:      "",
+			}
+			deleted = append(deleted, &fileWrapper)
+			return true
+		})
+	}
+
+	m["added"] = added
+	m["modified"] = modified
+	m["failed"] = failed
+	m["deleted"] = deleted
+	m["summary"] = b.summary
+
+	b.changesLog = m
+	return nil
+
+	// data, err := json.MarshalIndent(m, "", "    ")
+	// if err != nil {
+	// 	return err
+	// }
+
+	// return ioutil.WriteFile(filepath.Join(b.backupDir, "changes.json"), data, 0644)
 }

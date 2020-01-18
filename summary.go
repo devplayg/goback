@@ -2,6 +2,8 @@ package goback
 
 import (
 	"encoding/json"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -10,11 +12,11 @@ type Summary struct {
 	Date      time.Time `json:"date"`
 	SrcDirArr []string  `json:"srcDirs"`
 	DstDir    string    `json:"dstDir"`
-	//State     int       `json:"state"`
+	// State     int       `json:"state"`
 
-	WorkerCount int    `json:"worker"`
-	TotalSize   uint64 `json:"size"`
-	TotalCount  int64  `json:"count"`
+	WorkerCount int    `json:"workerCount"`
+	TotalSize   uint64 `json:"totalSize"`
+	TotalCount  int64  `json:"totalCount"`
 
 	// Thread-safe
 	AddedCount    uint64 `json:"countAdded"`
@@ -23,23 +25,46 @@ type Summary struct {
 	AddedSize     uint64 `json:"sizeAdded"`
 	ModifiedSize  uint64 `json:"sizeModified"`
 	DeletedSize   uint64 `json:"sizeDeleted"`
+	FailedCount   uint64 `json:"failedCount"`
+	FailedSize    uint64 `json:"failedSize"`
+	SuccessCount  uint64 `json:"successCount"`
+	SuccessSize   uint64 `json:"successSize"`
 
-	Extensions       map[string]int64 `json:"ext"`
-	SizeDistribution map[int64]int64  `json:"sizeDist"`
+	Extensions       map[string]int64 `json:"extensions"`
+	SizeDistribution map[int64]int64  `json:"sizeDistribution"`
 
-	BackupSuccessCount uint64 `json:"successCount"`
-	BackupFailureCount uint64 `json:"failureCount"`
-	//BackupSize    int64
-	Message string `json:"msg"`
-	Version int    `json:"v"`
+	Message string `json:"message"`
+	Version int    `json:"version"`
 
-	ReadingTime    time.Time `json:"timeReading"` // Step 1
-	ComparisonTime time.Time `json:"timeComp"`    // Step 2
-	BackupTime     time.Time `json:"timeBak"`     // Step 3
-	LoggingTime    time.Time `json:"timeLog"`     // Step 4
-	ExecutionTime  float64   `json:"timeExec"`
+	ReadingTime    time.Time `json:"readingTime"`    // Step 1
+	ComparisonTime time.Time `json:"comparisonTime"` // Step 2
+	BackupTime     time.Time `json:"backupTime"`     // Step 3
+	LoggingTime    time.Time `json:"loggingTime"`    // Step 4
+	ExecutionTime  float64   `json:"execTime"`
 }
 
 func (s *Summary) Marshal() ([]byte, error) {
 	return json.Marshal(s)
+}
+
+func NewSummary(id int64, srcDirs []string, dstDir string, workCount, version int) *Summary {
+	return &Summary{
+		Id:          id,
+		Date:        time.Now(),
+		SrcDirArr:   srcDirs,
+		DstDir:      dstDir,
+		WorkerCount: workCount,
+		Version:     version,
+	}
+}
+
+func (s *Summary) addExtension(name string) {
+	if s.Extensions != nil {
+		ext := strings.ToLower(filepath.Ext(name))
+		if len(ext) > 0 {
+			s.Extensions[ext]++
+		} else {
+			s.Extensions["__OTHERS__"]++
+		}
+	}
 }

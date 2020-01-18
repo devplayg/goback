@@ -1,30 +1,54 @@
 package goback
 
 import (
-	"bytes"
-	"compress/gzip"
-	"encoding/binary"
-	"encoding/gob"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/dustin/go-humanize"
 	"github.com/minio/highwayhash"
-	log "github.com/sirupsen/logrus"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 )
 
+const (
+	DefaultDateFormat = "2006-01-02 15:04:05"
+)
+
 var ErrorBucketNotFound = errors.New("bucket not found")
+
+const (
+	kB = 1000
+	MB = 1000000
+	GB = 1000000000
+)
+
 var fileSizeCategories = []int64{
-	1, 10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000, 5000000, 10000000,
+	1 * kB,
+	5 * kB,
+	10 * kB,
+	50 * kB,
+	100 * kB,
+	500 * kB,
+
+	1 * MB,
+	5 * MB,
+	10 * MB,
+	50 * MB,
+	100 * MB,
+	500 * MB,
+
+	1 * GB,
+	5 * GB,
+	10 * GB,
+	50 * GB,
+	100 * GB,
+	500 * GB,
 }
 
 func isValidDir(dir string) error {
@@ -46,18 +70,6 @@ func isValidDir(dir string) error {
 	}
 
 	return nil
-}
-
-func Int64ToBytes(i int64) []byte {
-	var buf = make([]byte, 8)
-	binary.BigEndian.PutUint64(buf, uint64(i))
-	return buf
-}
-
-func UnmarshalSummary(data []byte) (*Summary, error) {
-	var summary Summary
-	err := json.Unmarshal(data, &summary)
-	return &summary, err
 }
 
 func GetFileHash(path string) (string, error) {
@@ -97,7 +109,7 @@ func GetFileMap(dirs []string, hashComparision bool) (*sync.Map, map[string]int6
 				return nil
 			}
 
-			fi := newFile(path, file.Size(), file.ModTime())
+			fi := NewFileWrapper(path, file.Size(), file.ModTime())
 			if hashComparision {
 				h, err := GetFileHash(path)
 				if err != nil {
@@ -118,7 +130,6 @@ func GetFileMap(dirs []string, hashComparision bool) (*sync.Map, map[string]int6
 			count++
 
 			fileMap.Store(path, fi)
-
 			return nil
 		})
 		if err != nil {
@@ -127,64 +138,6 @@ func GetFileMap(dirs []string, hashComparision bool) (*sync.Map, map[string]int6
 	}
 
 	return &fileMap, extensions, sizeDistribution, count, size, nil
-}
-
-func GetCurrentFileMaps(dirs []string, workerCount int, hashComparision bool) ([]*sync.Map, map[string]int64, map[int64]int64, int64, uint64, error) {
-	fileMaps := make([]*sync.Map, workerCount)
-	extensions := make(map[string]int64)
-	sizeDistribution := make(map[int64]int64)
-
-	for i := range fileMaps {
-		fileMaps[i] = &sync.Map{}
-	}
-
-	var size uint64
-	var count int64
-
-	for _, dir := range dirs {
-		i := 0
-		err := filepath.Walk(dir, func(path string, file os.FileInfo, err error) error {
-			if file.IsDir() {
-				return nil
-			}
-
-			if !file.Mode().IsRegular() {
-				return nil
-			}
-
-			fi := newFile(path, file.Size(), file.ModTime())
-			if hashComparision {
-				h, err := GetFileHash(path)
-				if err != nil {
-					return err
-				}
-				fi.Hash = h
-			}
-
-			// Statistics
-			ext := strings.ToLower(filepath.Ext(file.Name()))
-			if len(ext) > 0 {
-				extensions[ext]++
-			} else {
-				extensions["__OTHERS__"]++
-			}
-			sizeDistribution[GetFileSizeCategory(file.Size())]++
-			size += uint64(fi.Size)
-			count++
-
-			// Distribute works
-			workerId := i % workerCount
-			fileMaps[workerId].Store(path, fi)
-			i++
-
-			return nil
-		})
-		if err != nil {
-			return nil, nil, nil, 0, 0, err
-		}
-	}
-
-	return fileMaps, extensions, sizeDistribution, count, size, nil
 }
 
 func GetFileSizeCategory(size int64) int64 {
@@ -197,51 +150,9 @@ func GetFileSizeCategory(size int64) int64 {
 
 }
 
-func CompareFileMaps(lastFileMap, currentFileMap map[string]*File) ([]*File, []*File, []*File, error) {
-	added := make([]*File, 0)
-	deleted := make([]*File, 0)
-	modified := make([]*File, 0)
-	for path, current := range currentFileMap {
-		if last, had := lastFileMap[path]; had {
-			if last.ModTime.Unix() != current.ModTime.Unix() || last.Size != current.Size {
-				log.Debugf("modified: %s", path)
-				current.WhatHappened = FileModified
-				modified = append(modified, current)
-			}
-			delete(lastFileMap, path)
-
-		} else {
-			log.Debugf("added: %s", path)
-			current.WhatHappened = FileAdded
-			added = append(added, current)
-		}
-
-		current.Marshal()
-	}
-	for _, file := range lastFileMap {
-		file.WhatHappened = FileDeleted
-		deleted = append(deleted, file)
-	}
-
-	log.WithFields(log.Fields{
-		"added":    len(added),
-		"modified": len(modified),
-		"deleted":  len(deleted),
-	}).Debugf("total %d files; comparision result", len(currentFileMap))
-
-	return added, modified, deleted, nil
-}
-
-func EncodeFileMap(fileMap *sync.Map) ([]byte, error) {
-	files := make([]*File, 0)
-	fileMap.Range(func(k, v interface{}) bool {
-		files = append(files, k.(*File))
-		return true
-	})
-	return EncodeFiles(files)
-}
-
 func IsEqualStringSlices(a, b []string) bool {
+	sort.Strings(a)
+	sort.Strings(b)
 	if len(a) != len(b) {
 		return false
 	}
@@ -253,85 +164,16 @@ func IsEqualStringSlices(a, b []string) bool {
 	return true
 }
 
-func EncodeFiles2(files []*File) ([]byte, error) {
-	b, err := json.Marshal(files)
-	if err != nil {
-		return nil, err
-	}
+// func EncodeToBytes(p interface{}) ([]byte, error) {
+// 	buf := bytes.Buffer{}
+// 	enc := gob.NewEncoder(&buf)
+// 	if err := enc.Encode(p); err != nil {
+// 		return nil, err
+// 	}
+// 	return buf.Bytes(), nil
+// }
 
-	return Compress(b)
-}
-
-func EncodeFiles(files []*File) ([]byte, error) {
-	//return json.Marshal(files)
-	if len(files) < 1 {
-		return nil, nil
-	}
-
-	b, err := EncodeToBytes(files)
-	if err != nil {
-		return nil, err
-	}
-	compressed, err := Compress(b)
-	if err != nil {
-		return nil, err
-	}
-	return compressed, nil
-}
-
-func DecodeToFiles(s []byte) ([]*File, error) {
-	var files []*File
-	dec := gob.NewDecoder(bytes.NewReader(s))
-	err := dec.Decode(&files)
-	if err != nil {
-		return nil, err
-	}
-	return files, nil
-}
-
-func Compress(data []byte) ([]byte, error) {
-	var buf bytes.Buffer
-	zw, err := gzip.NewWriterLevel(&buf, gzip.BestCompression)
-	if err != nil {
-		return nil, err
-	}
-
-	if _, err := zw.Write(data); err != nil {
-		return nil, err
-	}
-
-	if err := zw.Close(); err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
-}
-
-func Decompress(s []byte) ([]byte, error) {
-	reader, err := gzip.NewReader(bytes.NewReader(s))
-	if err != nil {
-		return nil, err
-	}
-	data, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return nil, err
-	}
-	if err := reader.Close(); err != nil {
-		return nil, err
-	}
-	return data, nil
-}
-
-func EncodeToBytes(p interface{}) ([]byte, error) {
-	buf := bytes.Buffer{}
-	enc := gob.NewEncoder(&buf)
-	if err := enc.Encode(p); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-func BackupFile(tempDir, srcPath string) (string, float64, error) {
+func BackupFile(srcPath, tempDir string) (string, float64, error) {
 	// Set source
 	t := time.Now()
 	srcFile, err := os.Open(srcPath)
@@ -364,10 +206,32 @@ func BackupFile(tempDir, srcPath string) (string, float64, error) {
 	return dstPath, time.Since(t).Seconds(), err
 }
 
-func GetChangeFilesDesc(added uint64, modified uint64, deleted uint64) string {
-	return fmt.Sprintf("added=%d, modified=%d, deleted=%d", added, modified, deleted)
+//
+// func GetChangeFilesDesc(added uint64, modified uint64, deleted uint64) string {
+// 	return fmt.Sprintf("added=%d, modified=%d, deleted=%d", added, modified, deleted)
+// }
+//
+// func GetChangeSizeDesc(added uint64, modified uint64, deleted uint64) string {
+// 	return fmt.Sprintf("added=%d(%s), modified=%d(%s), deleted=%d(%s)", added, humanize.Bytes(added), modified, humanize.Bytes(modified), deleted, humanize.Bytes(deleted))
+// }
+
+func GetHumanizedSize(size uint64) string {
+	humanized := humanize.Bytes(size)
+
+	str := fmt.Sprintf("%d B", size)
+	if humanized == str {
+		return str
+	}
+	return fmt.Sprintf("%s (%s)", str, humanized)
 }
 
-func GetChangeSizeDesc(added uint64, modified uint64, deleted uint64) string {
-	return fmt.Sprintf("added=%d(%s), modified=%d(%s), deleted=%d(%s)", added, humanize.Bytes(added), modified, humanize.Bytes(modified), deleted, humanize.Bytes(deleted))
-}
+// func CreateFileIfNotExists(path string) error {
+// 	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0644)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if err := f.Close(); err != nil {
+// 		return nil
+// 	}
+// 	return nil
+// }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/boltdb/bolt"
 	"github.com/devplayg/golibs/compress"
-	"github.com/devplayg/himma"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"mime"
@@ -38,16 +37,16 @@ func (c *Controller) init() error {
 	if err := c.initRouter(); err != nil {
 		return err
 	}
-	db, fileDb, err := InitDatabase(c.dir)
-	if err != nil {
-		return err
-	}
-	c.db, c.fileDb = db, fileDb
-
-	uiAssetMap, err = himma.GetAssetMap(himma.Bootstrap4)
-	if err != nil {
-		return err
-	}
+	// db, fileDb, err := InitDatabase(c.dir)
+	// if err != nil {
+	// 	return err
+	// }
+	// c.db, c.fileDb = db, fileDb
+	//
+	// uiAssetMap, err = himma.GetAssetMap(himma.Bootstrap4)
+	// if err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
