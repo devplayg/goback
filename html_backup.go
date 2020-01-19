@@ -1,5 +1,18 @@
 package goback
 
+import (
+	log "github.com/sirupsen/logrus"
+	"io/ioutil"
+)
+
+func DisplayBackupTest() string {
+	b, err := ioutil.ReadFile("static/backup.html")
+	if err != nil {
+		log.Error(err)
+	}
+	return string(b)
+}
+
 func DisplayBackup() string {
 	return `{{define "content"}}
 				<div class="row">

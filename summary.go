@@ -20,15 +20,15 @@ type Summary struct {
 
 	// Thread-safe
 	AddedCount    uint64 `json:"countAdded"`
-	ModifiedCount uint64 `json:"countModified"`
-	DeletedCount  uint64 `json:"countDeleted"`
 	AddedSize     uint64 `json:"sizeAdded"`
+	ModifiedCount uint64 `json:"countModified"`
 	ModifiedSize  uint64 `json:"sizeModified"`
+	DeletedCount  uint64 `json:"countDeleted"`
 	DeletedSize   uint64 `json:"sizeDeleted"`
-	FailedCount   uint64 `json:"failedCount"`
-	FailedSize    uint64 `json:"failedSize"`
-	SuccessCount  uint64 `json:"successCount"`
-	SuccessSize   uint64 `json:"successSize"`
+	FailedCount   uint64 `json:"countFailed"`
+	FailedSize    uint64 `json:"sizeFailed"`
+	SuccessCount  uint64 `json:"countSuccess"`
+	SuccessSize   uint64 `json:"sizeSuccess"`
 
 	Extensions       map[string]int64 `json:"extensions"`
 	SizeDistribution map[int64]int64  `json:"sizeDistribution"`

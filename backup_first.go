@@ -9,21 +9,9 @@ import (
 )
 
 func (b *Backup) generateFirstBackupData() error {
-	defer func() {
-		if err := b.writeSummary(); err != nil {
-			log.Error(err)
-		}
-	}()
-
-	// Ready
 	log.Info("generating source data..")
-	b.summary = NewSummary(b.nextSummaryId, b.srcDirArr, b.dstDir, b.workerCount, b.version)
 
-	if err := b.createBackupDir(); err != nil {
-		return err
-	}
-
-	// Collect files in source directories
+	// 1. Collect files in source directories
 	fileMap, err := b.collectFilesToBackup()
 	if err != nil {
 		return err
@@ -35,9 +23,14 @@ func (b *Backup) generateFirstBackupData() error {
 	// No backup
 	b.summary.BackupTime = b.summary.ComparisonTime
 
-	// Write result
+	// 2. Write result
 	if err := b.writeResult([]*sync.Map{fileMap}); err != nil {
 		return err
+	}
+
+	// 3. Write summary
+	if err := b.writeSummary(); err != nil {
+		log.Error(err)
 	}
 
 	return nil

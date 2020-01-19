@@ -58,6 +58,7 @@ func (b *Backup) writeFileMap(fileMaps []*sync.Map) error {
 }
 
 func (b *Backup) writeSummary() error {
+	b.summary.ExecutionTime = b.summary.LoggingTime.Sub(b.summary.Date).Seconds()
 	b.summaries = append(b.summaries, b.summary)
 	data, err := converter.EncodeToBytes(b.summaries)
 	if err != nil {
@@ -69,20 +70,21 @@ func (b *Backup) writeSummary() error {
 	if _, err := b.summaryDb.WriteAt(data, 0); err != nil {
 		return err
 	}
-	b.summary.ExecutionTime = b.summary.LoggingTime.Sub(b.summary.Date).Seconds()
 
 	// Write changes log
 	data, err = json.MarshalIndent(b.changesLog, "", "  ")
 	if err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(filepath.Join(b.backupDir, "changes.json"), data, 0644); err != nil {
+	if err := ioutil.WriteFile(filepath.Join(b.tempDir, "changes.json"), data, 0644); err != nil {
 		return err
 	}
 
 	log.Info(strings.Repeat("=", 50))
 	log.WithFields(log.Fields{
-		"summaryId": b.summary.Id,
+		"ID": b.summary.Id,
+	}).Info("# summary")
+	log.WithFields(log.Fields{
 		"files":     b.summary.TotalCount,
 		"totalSize": GetHumanizedSize(b.summary.TotalSize),
 		"execTime":  b.summary.ExecutionTime,
@@ -128,17 +130,9 @@ func (b *Backup) writeChangesLog() error {
 	// The remaining files in LastFileMap are deleted files.
 	deleted := make([]*FileWrapper, 0)
 	if b.lastFileMap != nil {
-		b.lastFileMap.Range(func(k, v interface{}) bool {
-			file := v.(*File)
-
-			fileWrapper := FileWrapper{
-				File:         file,
-				WhatHappened: FileDeleted,
-				Result:       0,
-				Duration:     0,
-				Message:      "",
-			}
-			deleted = append(deleted, &fileWrapper)
+		b.deletedFiles.Range(func(k, v interface{}) bool {
+			file := k.(*FileWrapper)
+			failed = append(failed, file)
 			return true
 		})
 	}

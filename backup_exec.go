@@ -6,7 +6,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -14,14 +13,7 @@ import (
 )
 
 func (b *Backup) startBackup() error {
-	// Ready
-	b.summary = NewSummary(b.nextSummaryId, b.srcDirArr, b.dstDir, b.workerCount, b.version)
-
-	if err := b.createBackupDir(); err != nil {
-		return err
-	}
-
-	// 1. Collect current files
+	// 1. Collect files in source directories
 	currentFileMaps, err := b.getCurrentFileMaps()
 	if err != nil {
 		return nil
@@ -188,7 +180,7 @@ func (b *Backup) backupFileGroup() ([][]*FileWrapper, uint64, error) {
 // Thread-safe
 func (b *Backup) backupFiles(workerId int, files []*FileWrapper) error {
 	for _, file := range files {
-		path, dur, err := BackupFile(file.Path, b.backupDir)
+		path, dur, err := BackupFile(file.Path, b.tempDir)
 		if err != nil { // failed to backup
 			b.failedFiles.Store(file, nil)
 			atomic.AddUint64(&b.summary.FailedCount, 1)
@@ -198,7 +190,6 @@ func (b *Backup) backupFiles(workerId int, files []*FileWrapper) error {
 			log.WithFields(log.Fields{
 				"workerId": workerId,
 			}).Error(fmt.Errorf("failed to backup: %s; %w", file.Path, err))
-			// b._failedFiles = append(b._failedFiles, file)
 			continue
 		}
 
@@ -246,6 +237,21 @@ func (b *Backup) CompareFileMaps(currentFileMaps []*sync.Map) error {
 	wg.Wait()
 
 	// The remaining files in LastFileMap are deleted files.
+	b.lastFileMap.Range(func(k, v interface{}) bool {
+		file := v.(*File)
+
+		fileWrapper := FileWrapper{
+			File:         file,
+			WhatHappened: FileDeleted,
+			Result:       0,
+			Duration:     0,
+			Message:      "",
+		}
+		b.deletedFiles.Store(&fileWrapper, nil)
+		atomic.AddUint64(&b.summary.DeletedCount, 1)
+		atomic.AddUint64(&b.summary.DeletedSize, uint64(file.Size))
+		return true
+	})
 
 	// Logging
 	log.Info(strings.Repeat("=", 50))
@@ -298,11 +304,11 @@ func (b *Backup) compareFileMap(workerId int, lastFileMap, currentFileMap *sync.
 	return nil
 }
 
-func (b *Backup) createBackupDir() error {
-	backupDir := filepath.Join(b.dstDir, b.summary.Date.Format("20060102")+"-"+strconv.FormatInt(b.summary.Id, 10))
-	if err := os.Mkdir(backupDir, 0644); err != nil {
-		return err
-	}
-	b.backupDir = backupDir
-	return nil
-}
+// func (b *Backup) createBackupDir() error {
+// 	backupDir := filepath.Join(b.dstDir, b.summary.Date.Format("20060102")+"-"+strconv.FormatInt(b.summary.Id, 10))
+// 	if err := os.Mkdir(backupDir, 0644); err != nil {
+// 		return err
+// 	}
+// 	b.backupDir = backupDir
+// 	return nil
+// }

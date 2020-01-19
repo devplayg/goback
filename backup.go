@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -32,7 +33,7 @@ type Backup struct {
 	hashComparision  bool
 	workerCount      int
 	fileBackupEnable bool
-	backupDir        string
+	tempDir          string
 
 	addedFiles    *sync.Map
 	modifiedFiles *sync.Map
@@ -152,10 +153,30 @@ func (b *Backup) Start() error {
 	}
 	defer b.Stop()
 
+	// Load last backup
 	lastSummary, lastFileMap, err := b.loadLastBackup()
 	if err != nil {
 		return err
 	}
+
+	// Issue summary
+	if err := b.issueSummary(b.nextSummaryId, b.srcDirArr, b.dstDir, b.workerCount, b.version); err != nil {
+		return err
+	}
+
+	// Create temp directory
+	tempDir, err := ioutil.TempDir(b.dstDir, "backup-")
+	if err != nil {
+		return err
+	}
+	b.tempDir = tempDir
+	defer func() {
+		dstDir := filepath.Join(b.dstDir, b.summary.Date.Format("20060102")+"-"+strconv.FormatInt(b.summary.Id, 10))
+		if err := os.Rename(b.tempDir, dstDir); err != nil {
+			log.Error(err)
+		}
+	}()
+
 	if lastSummary == nil || lastSummary.TotalCount < 1 || !IsEqualStringSlices(lastSummary.SrcDirArr, b.srcDirArr) {
 		return b.generateFirstBackupData()
 	}
@@ -165,6 +186,23 @@ func (b *Backup) Start() error {
 		return err
 	}
 
+	return nil
+}
+
+func (b *Backup) issueSummary(id int64, srcDirs []string, dstDir string, workCount, version int) error {
+	b.summary = NewSummary(b.nextSummaryId, b.srcDirArr, b.dstDir, b.workerCount, b.version)
+
+	tempSummaries := append(b.summaries, b.summary)
+	data, err := converter.EncodeToBytes(tempSummaries)
+	if err != nil {
+		return err
+	}
+	if err := b.summaryDb.Truncate(0); err != nil {
+		return err
+	}
+	if _, err := b.summaryDb.WriteAt(data, 0); err != nil {
+		return err
+	}
 	return nil
 }
 
