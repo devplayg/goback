@@ -20,7 +20,8 @@ import (
 type Backup struct {
 	debug bool
 
-	srcDirArr []string
+	srcDirs   []string
+	srcDirMap map[string]string
 	dstDir    string
 
 	summaryDbPath string
@@ -46,9 +47,9 @@ type Backup struct {
 	changesLog    map[string]interface{}
 }
 
-func NewBackup(srcDirArr []string, dstDir string, hashComparision, debug bool) *Backup {
+func NewBackup(srcDirs []string, dstDir string, hashComparision, debug bool) *Backup {
 	b := Backup{
-		srcDirArr:        srcDirArr,
+		srcDirs:          srcDirs,
 		dstDir:           dstDir,
 		hashComparision:  hashComparision,
 		debug:            debug,
@@ -78,21 +79,21 @@ func (b *Backup) init() error {
 
 // Initialize directories
 func (b *Backup) initDirectories() error {
-	if len(b.srcDirArr) < 1 {
+	if len(b.srcDirs) < 1 {
 		return errors.New("empty source directories")
 	}
-	for i := range b.srcDirArr {
-		dir, err := filepath.Abs(b.srcDirArr[i])
+	for i := range b.srcDirs {
+		dir, err := filepath.Abs(b.srcDirs[i])
 		if err != nil {
 			return err
 		}
-		b.srcDirArr[i] = dir
-		if err := isValidDir(b.srcDirArr[i]); err != nil {
+		b.srcDirs[i] = dir
+		if err := isValidDir(b.srcDirs[i]); err != nil {
 			return errors.New("source directory error: " + err.Error())
 		}
 
 		log.WithFields(log.Fields{
-			"dir": b.srcDirArr[i],
+			"dir": b.srcDirs[i],
 		}).Infof("source")
 	}
 
@@ -160,7 +161,7 @@ func (b *Backup) Start() error {
 	}
 
 	// Issue summary
-	if err := b.issueSummary(b.nextSummaryId, b.srcDirArr, b.dstDir, b.workerCount, b.version); err != nil {
+	if err := b.issueSummary(b.nextSummaryId, b.srcDirs, b.dstDir, b.workerCount, b.version); err != nil {
 		return err
 	}
 
@@ -177,7 +178,7 @@ func (b *Backup) Start() error {
 		}
 	}()
 
-	if lastSummary == nil || lastSummary.TotalCount < 1 || !IsEqualStringSlices(lastSummary.SrcDirArr, b.srcDirArr) {
+	if lastSummary == nil || lastSummary.TotalCount < 1 || !IsEqualStringSlices(lastSummary.SrcDirArr, b.srcDirs) {
 		return b.generateFirstBackupData()
 	}
 	b.lastFileMap = lastFileMap
@@ -190,7 +191,7 @@ func (b *Backup) Start() error {
 }
 
 func (b *Backup) issueSummary(id int64, srcDirs []string, dstDir string, workCount, version int) error {
-	b.summary = NewSummary(b.nextSummaryId, b.srcDirArr, b.dstDir, b.workerCount, b.version)
+	b.summary = NewSummary(b.nextSummaryId, b.srcDirs, b.dstDir, b.workerCount, b.version)
 
 	tempSummaries := append(b.summaries, b.summary)
 	data, err := converter.EncodeToBytes(tempSummaries)
@@ -256,244 +257,6 @@ func (b *Backup) Stop() error {
 	return nil
 }
 
-// func (b *Backup) writeToDatabase(newMap sync.Map, originMap sync.Map) error {
-// log.Info("writing to database")
-//
-// rs, err := b.dbLogTx.Exec("insert into bak_summary(date,src_dir,dst_dir,state,total_size,total_count,backup_modified,backup_added,backup_deleted,backup_success,backup_failure,backup_size,execution_time,message) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-//	b.summary.Date.Format(time.RFC3339),
-//	b.summary.SrcDir,
-//	b.summary.DstDir,
-//	b.summary.State,
-//	b.summary.TotalSize,
-//	b.summary.TotalCount,
-//	b.summary.BackupModified,
-//	b.summary.BackupAdded,
-//	b.summary.BackupDeleted,
-//	b.summary.BackupSuccess,
-//	b.summary.BackupFailure,
-//	b.summary.BackupSize,
-//	b.summary.ExecutionTime,
-//	b.summary.Message,
-// )
-// if err != nil {
-//	return err
-// }
-//
-// b.summary.Id, _ = rs.LastInsertId()
-// log.Infof("backup_id=%d", b.summary.ID)
-//
-// var maxInsertSize uint32 = 500
-// var lines []string
-// var eventLines []string
-// var i uint32 = 0
-// var j uint32 = 0
-//
-// // Delete original data
-// b.dbOriginTx.Exec("delete from bak_origin")
-//
-// // Modified or added files
-// newMap.Range(func(key, value interface{}) bool {
-//	f := value.(*File)
-//	path := strings.Replace(f.Path, "'", "''", -1)
-//	lines = append(lines, fmt.Sprintf("select '%s', %d, '%s'", path, f.Size, f.ModTime.Format(time.RFC3339)))
-//
-//	i += 1
-//
-//	if i%maxInsertSize == 0 || i == b.summary.TotalCount {
-//		err := b.insertIntoOrigin(lines)
-//		checkErr(err)
-//		lines = nil
-//	}
-//
-//	if f.State != 0 {
-//		eventLines = append(eventLines, fmt.Sprintf("select %d, '%s', %d, '%s', %d, '%s'", b.summary.ID, path, f.Size, f.ModTime.Format(time.RFC3339), f.State, f.Message))
-//		j += 1
-//
-//		if j%maxInsertSize == 0 {
-//			err := b.insertIntoLog(eventLines)
-//			checkErr(err)
-//			eventLines = nil
-//		}
-//	}
-//	return true
-// })
-// if len(eventLines) > 0 {
-//	err := b.insertIntoLog(eventLines)
-//	checkErr(err)
-//	eventLines = nil
-// }
-//
-// // Deleted files
-// eventLines = make([]string, 0)
-// j = 0
-// originMap.Range(func(key, value interface{}) bool {
-//	atomic.AddUint32(&b.summary.BackupSuccess, 1)
-//	f := value.(*File)
-//	log.Debugf("deleted: %s", f.Path)
-//	f.State = FileDeleted
-//	path := strings.Replace(f.Path, "'", "''", -1)
-//	eventLines = append(eventLines, fmt.Sprintf("select %d, '%s', %d, '%s', %d, '%s'", b.summary.ID, path, f.Size, f.ModTime.Format(time.RFC3339), f.State, f.Message))
-//	j += 1
-//
-//	if j%maxInsertSize == 0 {
-//		err := b.insertIntoLog(eventLines)
-//		checkErr(err)
-//		eventLines = nil
-//	}
-//	return true
-// })
-// if len(eventLines) > 0 {
-//	err := b.insertIntoLog(eventLines)
-//	checkErr(err)
-//	eventLines = nil
-// }
-// atomic.AddUint32(&b.summary.BackupDeleted, j)
-
-// return nil
-// }
-
-// func (b *Backup) insertIntoLog(rows []string) error {
-//	query := fmt.Sprintf("insert into bak_log(id, path, size, mtime, state, message) %s", strings.Join(rows, " union all "))
-//	_, err := b.dbLogTx.Exec(query)
-//	return err
-// }
-//
-// func (b *Backup) insertIntoOrigin(rows []string) error {
-//	query := fmt.Sprintf("insert into bak_origin(path, size, mtime) %s", strings.Join(rows, " union all "))
-//	_, err := b.dbOriginTx.Exec(query)
-//	defer func() {
-//		if r := recover(); r != nil {
-//			if err != nil {
-//				log.Println(query)
-//			}
-//		}
-//	}()
-//	checkErr(err)
-//	return err
-// }
-//
-// func (b *Backup) Close() error {
-//	b.summary.ExecutionTime = b.summary.LoggingTime.Sub(b.summary.Date).Seconds()
-//	b.summary.Message += fmt.Sprintf("reading: %3.1fs, comparing: %3.1fs, writing: %3.1fs",
-//		b.summary.ReadingTime.Sub(b.summary.Date).Seconds(),
-//		b.summary.ComparisonTime.Sub(b.summary.ReadingTime).Seconds(),
-//		b.summary.LoggingTime.Sub(b.summary.ComparisonTime).Seconds(),
-//	)
-//	b.dbLogTx.Exec("update bak_summary set backup_deleted = ?, execution_time = ?, message = ? where id = ?",
-//		b.summary.BackupDeleted,
-//		b.summary.ExecutionTime,
-//		b.summary.Message,
-//		b.summary.ID,
-//	)
-//
-//	b.dbLogTx.Commit()
-//	b.dbOriginTx.Commit()
-//	b.dbOrigin.Close()
-//	b.dbLog.Close()
-//
-//	if b.summary.ID > 1 { // ID 1 is about initializing data
-//		log.WithFields(log.Fields{
-//			"modified": b.summary.BackupModified,
-//			"added":    b.summary.BackupAdded,
-//			"deleted":  b.summary.BackupDeleted,
-//		}).Infof("files: %d", b.summary.BackupModified+b.summary.BackupAdded+b.summary.BackupDeleted)
-//		log.WithFields(log.Fields{
-//			"success": b.summary.BackupSuccess,
-//			"failure": b.summary.BackupFailure,
-//		}).Infof("backup result")
-//		log.Infof("backup size: %d(%s)", b.summary.BackupSize, humanize.Bytes(b.summary.BackupSize))
-//	}
-//	log.WithFields(log.Fields{
-//		"files": b.summary.TotalCount,
-//		"size":  fmt.Sprintf("%d(%s)", b.summary.TotalSize, humanize.Bytes(b.summary.TotalSize)),
-//	}).Info("source directory")
-//
-//	log.WithFields(log.Fields{
-//		"reading":    fmt.Sprintf("%3.1fs", b.summary.ReadingTime.Sub(b.summary.Date).Seconds()),
-//		"comparison": fmt.Sprintf("%3.1fs", b.summary.ComparisonTime.Sub(b.summary.ReadingTime).Seconds()),
-//		"writing":    fmt.Sprintf("%3.1fs", b.summary.LoggingTime.Sub(b.summary.ComparisonTime).Seconds()),
-//	}).Infof("execution time: %3.1fs", b.summary.ExecutionTime)
-//
-//	return nil
-// }
-//
-// func (b *Backup) BackupFile(path string) (string, float64, error) {
-// Set source
-// t := time.Now()
-// from, err := os.Open(path)
-// if err != nil {
-//	return "", time.Since(t).Seconds(), err
-//
-// }
-// defer from.Close()
-
-// Set destination
-// /data/a/a.txt
-// /backup
-// /backup/temp/
-// dst := filepath.Join(b.tempDir, path)
-// log.Debug(dst)
-// return "", 0.0, nil
-//	err = os.MkdirAll(filepath.Dir(dst), 0644)
-//	to, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE, 0666)
-//	if err != nil {
-//		return "", time.Since(t).Seconds(), err
-//	}
-//	defer to.Close()
-//
-//	// Copy
-//	_, err = io.Copy(to, from)
-//	if err != nil {
-//		return "", time.Since(t).Seconds(), err
-//	}
-//
-//	return dst, time.Since(t).Seconds(), err
-// }
-//
-// func checkErr(err error) {
-//	if err != nil {
-//		log.Errorf("[Error] %s", err.Error())
-//	}
-// }
-//
-// func (b *Backup) newSummary() *Summary {
-// 	return &Summary{
-// 		Date:        time.Now(),
-// 		SrcDirArr:   b.srcDirArr,
-// 		DstDir:      b.dstDir,
-// 		WorkerCount: b.workerCount,
-// 		Version: b.version,
-// 	}
-
-// 	// id, err := IssueDbInt64Id(b.db, BucketSummary)
-// 	// if err != nil {
-// 	// 	return nil, err
-// 	// }
-// 	id, err := b.issueSummaryId()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-//
-// 	return &Summary{
-// 		Id:          id,
-// 		Date:        time.Now(),
-// 		SrcDirArr:   b.srcDirArr,
-// 		DstDir:      b.dstDir,
-// 		WorkerCount: b.workerCount,
-// 		// State:     BackupReady,
-// 		Version: 1,
-// 	}, nil
-// }
-//
-// func (b *Backup) issueSummaryId() (int64, error) {
-// 	summaries, err := b.readSummary()
-// 	if summaries == nil {
-// 		b.newSummary()
-// 	}
-// 	// log.Error(len(summaries))
-// 	return 0, err
-// }
-
 func (b *Backup) loadSummaryDb() ([]*Summary, error) {
 	data, err := ioutil.ReadAll(b.summaryDb)
 	if err != nil {
@@ -510,9 +273,4 @@ func (b *Backup) loadSummaryDb() ([]*Summary, error) {
 		return nil, err
 	}
 	return summaries, nil
-}
-
-func Decode(data []byte, to interface{}) error {
-	decoder := gob.NewDecoder(bytes.NewReader(data))
-	return decoder.Decode(to)
 }

@@ -51,7 +51,7 @@ func (b *Backup) getCurrentFileMaps() ([]*sync.Map, error) {
 		fileMaps[i] = &sync.Map{}
 	}
 
-	for _, dir := range b.srcDirArr {
+	for _, dir := range b.srcDirs {
 		i := 0
 		err := filepath.Walk(dir, func(path string, file os.FileInfo, err error) error {
 			if file.IsDir() {

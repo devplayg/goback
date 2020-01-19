@@ -47,7 +47,7 @@ func (b *Backup) collectFilesToBackup() (*sync.Map, error) {
 		}).Info("files loaded")
 
 	}()
-	fileMap, extensions, sizeDistribution, count, size, err := GetFileMap(b.srcDirArr, b.hashComparision)
+	fileMap, extensions, sizeDistribution, count, size, err := GetFileMap(b.srcDirs, b.hashComparision)
 	if err != nil {
 		return fileMap, err
 	}

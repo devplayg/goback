@@ -16,7 +16,7 @@ const (
 
 var (
 	fs              = pflag.NewFlagSet(appName, pflag.ContinueOnError)
-	srcDirArr       = fs.StringArrayP("src", "s", []string{}, "Source directories")
+	srcDirs         = fs.StringArrayP("src", "s", []string{}, "Source directories")
 	dstDir          = fs.StringP("dst", "d", "", "Destination directory")
 	debug           = fs.Bool("debug", false, "Debug")
 	verbose         = fs.BoolP("verbose", "v", false, "Verbose")
@@ -27,30 +27,29 @@ var (
 )
 
 func main() {
-	if len(*web) > 0 {
+	if len(*web) > 0 { // Web UI
 		c := goback.NewController(*web, *addr)
 		if err := c.Start(); err != nil {
 			log.Error(err)
 		}
 		return
 	}
-	backup := goback.NewBackup(*srcDirArr, *dstDir, *hashComparision, *debug)
+
+	backup := goback.NewBackup(*srcDirs, *dstDir, *hashComparision, *debug)
 	if err := backup.Start(); err != nil {
 		log.Error(err)
 	}
 }
 
-func printHelp() {
-	fmt.Printf("backup v%s\n", appVersion)
-	fmt.Println("Description: Incremental backup")
-	fmt.Println("Usage: backup -s [directory to backup] -d [directory where backup files will be stored]")
-	fmt.Println("Usage: backup -s /data -d /backup")
-	fs.PrintDefaults()
-}
-
 func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	fs.Usage = printHelp
+	fs.Usage = func() {
+		fmt.Printf("backup v%s\n", appVersion)
+		fmt.Println("Description: Incremental backup")
+		fmt.Println("Usage: backup -s [directory to backup] -d [directory where backup files will be stored]")
+		fmt.Println("Usage: backup -s /data -d /backup")
+		fs.PrintDefaults()
+	}
 	_ = fs.Parse(os.Args[1:])
 	if *version {
 		fmt.Printf("%s %s\n", appName, appVersion)
