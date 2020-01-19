@@ -1,23 +1,5 @@
-Backup
+# Backup
 
-## Database
+summary.db
 
-#### db
-
-[summary]
-
-    id / summary
-
-[backup-{id}]
-
-    added / [file]
-    deleted / [file]
-    modified / [file]
-    failed / [file]
-    
-
-#### fileDb
-
-[files]
-
-    path / hash
+files-[md5/of/dir].db

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/devplayg/golibs/compress"
-	"github.com/devplayg/himma"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -43,27 +42,27 @@ func NewController(dir, addr string) *Controller {
 }
 
 func (c *Controller) init() error {
-	if err := c.initRouter(); err != nil {
-		return err
-	}
-	c.summaryDbPath = filepath.Join(c.dir, SummaryDbName)
-	c.fileMapDbPath = filepath.Join(c.dir, FileMapDbName)
-	summaryDb, fileMapDb, err := InitDatabase(c.summaryDbPath, c.fileMapDbPath)
-	if err != nil {
-		return err
-	}
-	c.summaryDb, c.fileMapDb = summaryDb, fileMapDb
-
-	uiAssetMap, err = himma.GetAssetMap(himma.Bootstrap4, himma.Plugins)
-	if err != nil {
-		return err
-	}
-
-	summaries, err := c.loadSummaryDb()
-	if err != nil {
-		return err
-	}
-	c.summaries = summaries
+	// if err := c.initRouter(); err != nil {
+	// 	return err
+	// }
+	// c.summaryDbPath = filepath.Join(c.dir, SummaryDbName)
+	// c.fileMapDbPath = filepath.Join(c.dir, FileMapDbName)
+	// summaryDb, fileMapDb, err := InitDatabase(c.summaryDbPath, c.fileMapDbPath)
+	// if err != nil {
+	// 	return err
+	// }
+	// c.summaryDb, c.fileMapDb = summaryDb, fileMapDb
+	//
+	// uiAssetMap, err = himma.GetAssetMap(himma.Bootstrap4, himma.Plugins)
+	// if err != nil {
+	// 	return err
+	// }
+	//
+	// summaries, err := c.loadSummaryDb()
+	// if err != nil {
+	// 	return err
+	// }
+	// c.summaries = summaries
 	return nil
 }
 

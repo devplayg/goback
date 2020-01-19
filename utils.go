@@ -1,6 +1,7 @@
 package goback
 
 import (
+	"crypto/md5"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -51,25 +52,26 @@ var fileSizeCategories = []int64{
 	500 * GB,
 }
 
-func isValidDir(dir string) error {
-	if len(dir) < 1 {
-		return errors.New("empty directory")
-	}
-
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		return errors.New("directory not found: " + dir)
-	}
-
-	fi, err := os.Lstat(dir)
+func IsValidDir(dir string) (string, error) {
+	absDir, err := filepath.Abs(dir)
 	if err != nil {
-		return err
+		return "", err
+	}
+
+	if _, err := os.Stat(absDir); os.IsNotExist(err) {
+		return "", errors.New("directory not found: " + absDir)
+	}
+
+	fi, err := os.Lstat(absDir)
+	if err != nil {
+		return "", err
 	}
 
 	if !fi.Mode().IsDir() {
-		return errors.New("invalid source directory: " + fi.Name())
+		return "", errors.New("invalid source directory: " + fi.Name())
 	}
 
-	return nil
+	return absDir, nil
 }
 
 func GetFileHash(path string) (string, error) {
@@ -207,16 +209,39 @@ func GetHumanizedSize(size uint64) string {
 	return fmt.Sprintf("%s (%s)", str, humanized)
 }
 
-func InitDatabase(summaryDbPath, fileMapDbPath string) (*os.File, *os.File, error) {
-	summaryDb, err := os.OpenFile(summaryDbPath, os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		return nil, nil, err
-	}
+// func InitDatabase(summaryDbPath, fileMapDbPath string) (*os.File, *os.File, error) {
+// 	summaryDb, err := os.OpenFile(summaryDbPath, os.O_RDWR|os.O_CREATE, 0644)
+// 	if err != nil {
+// 		return nil, nil, err
+// 	}
+//
+// 	fileMapDb, err := os.OpenFile(fileMapDbPath, os.O_RDWR|os.O_CREATE, 0644)
+// 	if err != nil {
+// 		return nil, nil, err
+// 	}
+//
+// 	return summaryDb, fileMapDb, nil
+// }
 
-	fileMapDb, err := os.OpenFile(fileMapDbPath, os.O_RDWR|os.O_CREATE, 0644)
+func LoadOrCreateDatabase(path string) (*os.File, error) {
+	db, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
+	return db, nil
+}
 
-	return summaryDb, fileMapDb, nil
+func FillMd5ValueOfStringKey(m map[string]string, key string) {
+	k := strings.TrimSpace(key)
+	sum := md5.Sum([]byte(key))
+	v := hex.EncodeToString(sum[:])
+	m[k] = v
+}
+
+func CreateSrcDirsHashMap(dirs []string) map[string]string {
+	m := make(map[string]string)
+	for _, u := range dirs {
+		FillMd5ValueOfStringKey(m, u)
+	}
+	return m
 }

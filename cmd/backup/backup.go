@@ -15,15 +15,15 @@ const (
 )
 
 var (
-	fs              = pflag.NewFlagSet(appName, pflag.ContinueOnError)
-	srcDirs         = fs.StringArrayP("src", "s", []string{}, "Source directories")
-	dstDir          = fs.StringP("dst", "d", "", "Destination directory")
-	debug           = fs.Bool("debug", false, "Debug")
-	verbose         = fs.BoolP("verbose", "v", false, "Verbose")
-	version         = fs.Bool("version", false, "Version")
-	hashComparision = fs.Bool("hash", false, "Hash comparison")
-	web             = fs.StringP("web", "w", "", "Database directory")
-	addr            = fs.String("addr", "0.0.0.0:8000", "Listen address and port")
+	fs      = pflag.NewFlagSet(appName, pflag.ContinueOnError)
+	srcDirs = fs.StringArrayP("src", "s", []string{}, "Source directories")
+	dstDir  = fs.StringP("dst", "d", "", "Destination directory")
+	debug   = fs.Bool("debug", false, "Debug")
+	verbose = fs.BoolP("verbose", "v", false, "Verbose")
+	version = fs.Bool("version", false, "Version")
+	// hashComparision = fs.Bool("hash", false, "Hash comparison")
+	web  = fs.StringP("web", "w", "", "Database directory")
+	addr = fs.String("addr", "0.0.0.0:8000", "Listen address and port")
 )
 
 func main() {
@@ -35,7 +35,7 @@ func main() {
 		return
 	}
 
-	backup := goback.NewBackup(*srcDirs, *dstDir, *hashComparision, *debug)
+	backup := goback.NewBackup(*srcDirs, *dstDir, false, *debug)
 	if err := backup.Start(); err != nil {
 		log.Error(err)
 	}

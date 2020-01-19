@@ -8,15 +8,15 @@ import (
 )
 
 type Summary struct {
-	Id        int64     `json:"id"`
-	Date      time.Time `json:"date"`
-	SrcDirArr []string  `json:"srcDirs"`
-	DstDir    string    `json:"dstDir"`
-	// State     int       `json:"state"`
-
-	WorkerCount int    `json:"workerCount"`
-	TotalSize   uint64 `json:"totalSize"`
-	TotalCount  int64  `json:"totalCount"`
+	Id          int64     `json:"id"`
+	Date        time.Time `json:"date"`
+	SrcDirArr   []string  `json:"srcDirs"`
+	DstDir      string    `json:"dstDir"`
+	BackupType  int       `json:"backupType"`
+	State       int       `json:"state"`
+	WorkerCount int       `json:"workerCount"`
+	TotalSize   uint64    `json:"totalSize"`
+	TotalCount  int64     `json:"totalCount"`
 
 	// Thread-safe
 	AddedCount    uint64 `json:"countAdded"`
