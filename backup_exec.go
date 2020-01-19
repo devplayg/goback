@@ -185,7 +185,7 @@ func (b *Backup) backupFiles(workerId int, files []*FileWrapper) error {
 			b.failedFiles.Store(file, nil)
 			atomic.AddUint64(&b.summary.FailedCount, 1)
 			atomic.AddUint64(&b.summary.FailedSize, uint64(file.Size))
-			file.Result = Failure
+			file.Result = FileBackupFailed
 			file.Message = err.Error()
 			log.WithFields(log.Fields{
 				"workerId": workerId,
@@ -195,7 +195,8 @@ func (b *Backup) backupFiles(workerId int, files []*FileWrapper) error {
 
 		// Success
 		atomic.AddUint64(&b.summary.SuccessCount, 1)
-		file.Result = Success
+		atomic.AddUint64(&b.summary.SuccessSize, uint64(file.Size))
+		file.Result = FileBackupSucceeded
 		file.Duration = dur
 		if err := os.Chtimes(path, file.ModTime, file.ModTime); err != nil {
 			log.WithFields(log.Fields{

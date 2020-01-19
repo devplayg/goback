@@ -23,7 +23,6 @@ var (
 )
 
 type Controller struct {
-	// b             *Backup
 	router        *mux.Router
 	summaryDbPath string
 	summaryDb     *os.File

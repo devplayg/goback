@@ -10,8 +10,8 @@ const (
 	FileAdded    = 1 << iota // 2
 	FileDeleted  = 1 << iota // 4
 
-	Failure = -1
-	Success = 1
+	FileBackupFailed    = -1
+	FileBackupSucceeded = 1
 
 	FileMapDbName = "files.db"
 	SummaryDbName = "summary.db"
