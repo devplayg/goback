@@ -33,7 +33,7 @@ func (b *Backup) generateFirstBackupData(srcDir string) error {
 }
 
 func (b *Backup) collectFilesToBackup(srcDir string) (*sync.Map, error) {
-	fileMap, extensions, sizeDistribution, count, size, err := GetFileMap(srcDir, b.hashComparision)
+	fileMap, extensionMap, sizeDistribution, count, size, err := GetFileMap(srcDir, b.hashComparision)
 	if err != nil {
 		return fileMap, err
 	}
@@ -41,7 +41,7 @@ func (b *Backup) collectFilesToBackup(srcDir string) (*sync.Map, error) {
 	b.summary.TotalSize = size
 	b.summary.AddedCount = uint64(count)
 	b.summary.AddedSize = size
-	b.summary.Extensions = extensions
+	b.summary.ExtensionMap = extensionMap
 	b.summary.SizeDistribution = sizeDistribution
 	b.writeBackupState(Read)
 	log.WithFields(log.Fields{
