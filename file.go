@@ -1,6 +1,10 @@
 package goback
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"fmt"
+	"path/filepath"
 	"time"
 )
 
@@ -32,4 +36,19 @@ func NewFileWrapper(path string, size int64, modTime time.Time) *FileWrapper {
 		Duration:     0,
 		Message:      "",
 	}
+}
+
+type DirInfo struct {
+	Checksum string
+	dbPath   string
+}
+
+func NewDirInfo(srcDir, dstDir string) *DirInfo {
+	checksum := md5.Sum([]byte(srcDir))
+	checksumStr := hex.EncodeToString(checksum[:])
+	d := DirInfo{
+		Checksum: checksumStr,
+		dbPath:   filepath.Join(dstDir, fmt.Sprintf(FilesDbName, checksumStr)),
+	}
+	return &d
 }

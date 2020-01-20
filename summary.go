@@ -4,19 +4,26 @@ import (
 	"encoding/json"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
 type Summary struct {
-	Id          int64     `json:"id"`
+	Id          int       `json:"id"`
+	BackupId    int       `json:"backupId"`
 	Date        time.Time `json:"date"`
-	SrcDirArr   []string  `json:"srcDirs"`
+	SrcDir      string    `json:"srcDir"`
 	DstDir      string    `json:"dstDir"`
 	BackupType  int       `json:"backupType"`
 	State       int       `json:"state"`
 	WorkerCount int       `json:"workerCount"`
 	TotalSize   uint64    `json:"totalSize"`
 	TotalCount  int64     `json:"totalCount"`
+
+	addedFiles    *sync.Map
+	modifiedFiles *sync.Map
+	deletedFiles  *sync.Map
+	failedFiles   *sync.Map
 
 	// Thread-safe
 	AddedCount    uint64 `json:"countAdded"`
@@ -47,14 +54,24 @@ func (s *Summary) Marshal() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func NewSummary(id int64, srcDirs []string, dstDir string, workCount, version int) *Summary {
+func NewSummary(summaryId, backupId int, srcDir, dstDir string, backupType, workCount, version int) *Summary {
 	return &Summary{
-		Id:          id,
-		Date:        time.Now(),
-		SrcDirArr:   srcDirs,
-		DstDir:      dstDir,
-		WorkerCount: workCount,
-		Version:     version,
+		Id:               summaryId,
+		BackupId:         backupId,
+		Date:             time.Now(),
+		SrcDir:           srcDir,
+		DstDir:           dstDir,
+		WorkerCount:      workCount,
+		Version:          version,
+		BackupType:       backupType,
+		State:            Started,
+		Extensions:       make(map[string]int64),
+		SizeDistribution: make(map[int64]int64),
+
+		addedFiles:    &sync.Map{},
+		modifiedFiles: &sync.Map{},
+		deletedFiles:  &sync.Map{},
+		failedFiles:   &sync.Map{},
 	}
 }
 
@@ -64,7 +81,7 @@ func (s *Summary) addExtension(name string) {
 		if len(ext) > 0 {
 			s.Extensions[ext]++
 		} else {
-			s.Extensions["__OTHERS__"]++
+			s.Extensions["__NO_EXT__"]++
 		}
 	}
 }

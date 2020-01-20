@@ -2,30 +2,32 @@ package goback
 
 import (
 	"bytes"
-	"crypto/md5"
 	"encoding/gob"
-	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/devplayg/golibs/converter"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"sync"
+	"time"
 )
 
 type Backup struct {
+	Id    int
 	debug bool
 
 	srcDirs   []string
-	srcDirMap map[string]string
+	srcDirMap map[string]*DirInfo
 	dstDir    string
 
 	// summaryDbPath string
 	summaryDb *os.File
 	// fileMapDbPath string
-	fileMapDb *os.File
+	//fileMapDb *os.File
 
 	summary          *Summary
 	summaries        []*Summary
@@ -34,31 +36,33 @@ type Backup struct {
 	fileBackupEnable bool
 	tempDir          string
 
-	addedFiles    *sync.Map
-	modifiedFiles *sync.Map
-	deletedFiles  *sync.Map
-	failedFiles   *sync.Map
+	//addedFiles    *sync.Map
+	//modifiedFiles *sync.Map
+	//deletedFiles  *sync.Map
+	//failedFiles   *sync.Map
 
 	// lastFileMap   *sync.Map
 	version       int
 	nextSummaryId int64
-	changesLog    map[string]interface{}
+
+	started time.Time
 }
 
 func NewBackup(srcDirs []string, dstDir string, hashComparision, debug bool) *Backup {
 	return &Backup{
-		srcDirs:          srcDirs,
-		srcDirMap:        make(map[string]string),
-		dstDir:           dstDir,
-		hashComparision:  hashComparision,
-		debug:            debug,
-		workerCount:      runtime.NumCPU(),
-		addedFiles:       &sync.Map{},
-		modifiedFiles:    &sync.Map{},
-		deletedFiles:     &sync.Map{},
-		failedFiles:      &sync.Map{},
+		srcDirs:         srcDirs,
+		srcDirMap:       make(map[string]*DirInfo),
+		dstDir:          dstDir,
+		hashComparision: hashComparision,
+		debug:           debug,
+		workerCount:     runtime.NumCPU(),
+		//addedFiles:       &sync.Map{},
+		//modifiedFiles:    &sync.Map{},
+		//deletedFiles:     &sync.Map{},
+		//failedFiles:      &sync.Map{},
 		fileBackupEnable: true,
 		version:          1,
+		started:          time.Now(),
 	}
 }
 
@@ -67,7 +71,6 @@ func (b *Backup) init() error {
 	if err := b.initDirectories(); err != nil {
 		return err
 	}
-
 	if err := b.initDatabase(); err != nil {
 		return err
 	}
@@ -81,7 +84,7 @@ func (b *Backup) init() error {
 // Initialize directories
 func (b *Backup) initDirectories() error {
 	if len(b.srcDirs) < 1 {
-		return errors.New("empty source directories")
+		return errors.New("source directories not found")
 	}
 
 	// Check if source directories is valid
@@ -102,7 +105,7 @@ func (b *Backup) initDirectories() error {
 	//
 	// Check if destination is valid
 	if len(b.dstDir) < 1 {
-		return errors.New("empty source directories")
+		return errors.New("backup directory not found")
 	}
 	dstDir, err := IsValidDir(b.dstDir)
 	if err != nil {
@@ -124,6 +127,28 @@ func (b *Backup) initDatabase() error {
 		return fmt.Errorf("failed to load summary database: %w", err)
 	}
 	b.summaryDb = summaryDb
+
+	// Load all summaries
+	//data, err := ioutil.ReadAll(summaryDb)
+	//if err != nil {
+	//    return err
+	//}
+
+	//if len(data) < 1 {
+	//    b.Id = 1
+	//    b.summaries = make([]*Summary, 0)
+	//    return nil
+	//}
+	//
+	//var summaries []*Summary
+	//decoder := gob.NewDecoder(bytes.NewReader(data))
+	//if err := decoder.Decode(&summaries); err != nil {
+	//    return fmt.Errorf("failed to load summary database: %w", err)
+	//}
+	//
+	//b.summaries = summaries
+	return nil
+
 	// b.summaryDbPath = filepath.Join(b.dstDir, SummaryDbName)
 	// 	b.fileMapDbPath = filepath.Join(b.dstDir, FileMapDbName)
 	// 	summaryDb, fileMapDb, err := InitDatabase(b.summaryDbPath, b.fileMapDbPath)
@@ -163,12 +188,34 @@ func (b *Backup) Start() error {
 	if err := b.init(); err != nil {
 		return err
 	}
-	defer b.Stop()
+	defer func() {
+		log.WithFields(log.Fields{
+			"execTime": time.Since(b.started).Seconds(),
+			"dirCount": len(b.srcDirMap),
+		}).Info("backup process done")
+	}()
+
+	// Create temp directory
+	tempDir, err := ioutil.TempDir(b.dstDir, "backup-")
+	if err != nil {
+		return err
+	}
+	b.tempDir = tempDir
+	//defer func() {
+	//    dstDir := filepath.Join(b.dstDir, b.summary.Date.Format("20060102")+"-"+strconv.Itoa(b.summary.Id))
+	//    if err := os.Rename(b.tempDir, dstDir); err != nil {
+	//        log.Error(err)
+	//    }
+	//}()
 
 	for _, dir := range b.srcDirs {
 		if err := b.doBackup(dir); err != nil {
 			log.Error(err)
 		}
+	}
+
+	if err := b.Stop(); err != nil {
+		return err
 	}
 
 	// 	// Load last backup
@@ -207,24 +254,33 @@ func (b *Backup) Start() error {
 	return nil
 }
 
-func (b *Backup) doBackup(target string) error {
-	dir, err := IsValidDir(target)
+func (b *Backup) doBackup(dirToBackup string) error {
+	srcDir, err := IsValidDir(dirToBackup)
 	if err != nil {
 		return errors.New("source directory error: " + err.Error())
 	}
 
-	if _, have := b.srcDirMap[dir]; have {
-		return errors.New("duplicate source directory: " + dir)
+	if _, have := b.srcDirMap[srcDir]; have {
+		return errors.New("duplicate source directory: " + srcDir)
 	}
 
-	dirSum := md5.Sum([]byte(dir))
-	b.srcDirMap[dir] = hex.EncodeToString(dirSum[:])
-	log.Debugf("%s => %s", dir, b.srcDirMap[dir])
+	b.srcDirMap[srcDir] = NewDirInfo(srcDir, b.dstDir)
+	//dirSum := md5.Sum([]byte(dir))
+	//b.srcDirMap[dir] = hex.EncodeToString(dirSum[:])
+	//log.Debugf("%s => %s", dir, b.srcDirMap[dir].Checksum)
 
-	// lastFileMap, err := b.loadLastFileMap(dir)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to load last file map: %w", err)
-	// }
+	lastFileMap, err := b.loadLastFileMap(srcDir)
+	if err != nil {
+		return fmt.Errorf("failed to load last backup data for %s: %w", srcDir, err)
+	}
+
+	if lastFileMap == nil { // First backup
+		return b.generateFirstBackupData(srcDir)
+	}
+
+	if err := b.startBackup(srcDir, lastFileMap); err != nil {
+		return err
+	}
 
 	// spew.Dump(b.summaries)
 	// log.Debug(absDir)
@@ -266,32 +322,41 @@ func (b *Backup) doBackup(target string) error {
 }
 
 func (b *Backup) loadLastFileMap(dir string) (*sync.Map, error) {
-	// 	data, err := ioutil.ReadAll(b.fileMapDb)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	//
-	// 	if len(data) < 1 {
-	// 		return &sync.Map{}, nil
-	// 	}
-	//
-	// 	var files []*File
-	// 	if err := converter.DecodeFromBytes(data, &files); err != nil {
-	// 		return nil, err
-	// 	}
-	//
-	// 	fileMap := sync.Map{}
-	// 	for _, f := range files {
-	// 		fileMap.Store(f.Path, f)
-	// 	}
-	//
-	// 	return &fileMap, nil
+	if _, err := os.Stat(b.srcDirMap[dir].dbPath); os.IsNotExist(err) {
+		return nil, nil
+	}
 
-	return nil, nil
+	data, err := ioutil.ReadFile(b.srcDirMap[dir].dbPath)
+	if err != nil || len(data) < 1 {
+		return nil, err
+	}
+
+	var files []*File
+	if err := converter.DecodeFromBytes(data, &files); err != nil {
+		return nil, err
+	}
+
+	fileMap := sync.Map{}
+	for _, f := range files {
+		fileMap.Store(f.Path, f)
+	}
+
+	return &fileMap, nil
 }
 
-//
-// func (b *Backup) issueSummary(id int64, srcDirs []string, dstDir string, workCount, version int) error {
+func (b *Backup) issueSummary(dir string, backupType int) {
+	summaryId := len(b.summaries) + 1
+	summary := NewSummary(summaryId, b.Id, dir, b.dstDir, backupType, b.workerCount, b.version)
+	b.summaries = append(b.summaries, summary)
+	b.summary = summary
+
+	log.WithFields(log.Fields{
+		"id":  summaryId,
+		"dir": dir,
+	}).Debug("issued new summary ====================================================")
+}
+
+//func (b *Backup) issueSummary(id int64, srcDirs []string, dstDir string, workCount, version int) error {
 // 	b.summary = NewSummary(id, srcDirs, dstDir, workCount, version)
 //
 // 	tempSummaries := append(b.summaries, b.summary)
@@ -305,9 +370,9 @@ func (b *Backup) loadLastFileMap(dir string) (*sync.Map, error) {
 // 	if _, err := b.summaryDb.WriteAt(data, 0); err != nil {
 // 		return err
 // 	}
-// 	return nil
-// }
-//
+//	return nil
+//}
+
 // func (b *Backup) loadLastBackup() (*Summary, *sync.Map, error) {
 // 	t := time.Now()
 // 	lastSummary, backupCount, err := b.getLastSummary()
@@ -351,6 +416,11 @@ func (b *Backup) Stop() error {
 		log.Error(err)
 	}
 
+	dstDir := filepath.Join(b.dstDir, b.summary.Date.Format("20060102")+"-"+strconv.Itoa(b.summary.BackupId))
+	if err := os.Rename(b.tempDir, dstDir); err != nil {
+		log.Error(err)
+	}
+
 	// 	if err := b.fileMapDb.Close(); err != nil {
 	// 		log.Error(err)
 	// 	}
@@ -365,6 +435,7 @@ func (b *Backup) loadSummaryDb() error {
 	}
 
 	if len(data) < 1 {
+		b.Id = 1
 		b.summaries = make([]*Summary, 0)
 		return nil
 	}
@@ -374,6 +445,42 @@ func (b *Backup) loadSummaryDb() error {
 	if err := decoder.Decode(&summaries); err != nil {
 		return fmt.Errorf("failed to load summary database: %w", err)
 	}
+	if len(summaries) < 1 {
+		b.Id = 1
+	} else {
+		b.Id = summaries[len(summaries)-1].BackupId + 1
+	}
+
 	b.summaries = summaries
 	return nil
+}
+
+func (b *Backup) writeBackupState(state int) {
+	t := time.Now()
+	b.summary.State = state
+
+	if state == Read {
+		b.summary.ReadingTime = t
+		return
+	}
+
+	if state == Compared {
+		b.summary.ComparisonTime = t
+		return
+
+	}
+	if state == Copied {
+		b.summary.BackupTime = t
+		return
+
+	}
+	if state == Logged {
+		b.summary.LoggingTime = t
+		return
+
+	}
+	if state == Completed {
+		b.summary.ExecutionTime = b.summary.LoggingTime.Sub(b.summary.Date).Seconds()
+		return
+	}
 }

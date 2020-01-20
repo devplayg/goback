@@ -13,8 +13,21 @@ const (
 	FileBackupFailed    = -1
 	FileBackupSucceeded = 1
 
-	FileMapDbName = "files.db"
+	FilesDbName   = "files-%s.db"
 	SummaryDbName = "summary.db"
+
+	InitialBackup = 1
+	NormalBackup  = 2
+
+	Failed = -1
+)
+const (
+	Started = iota + 1
+	Read
+	Compared
+	Copied
+	Logged
+	Completed
 )
 
 var (

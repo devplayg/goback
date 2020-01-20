@@ -93,7 +93,7 @@ func GetFileHash(path string) (string, error) {
 	return hex.EncodeToString(checksum), nil
 }
 
-func GetFileMap(dirs []string, hashComparision bool) (*sync.Map, map[string]int64, map[int64]int64, int64, uint64, error) {
+func GetFileMap(dir string, hashComparision bool) (*sync.Map, map[string]int64, map[int64]int64, int64, uint64, error) {
 	fileMap := sync.Map{}
 	extensions := make(map[string]int64)
 	sizeDistribution := make(map[int64]int64)
@@ -101,45 +101,40 @@ func GetFileMap(dirs []string, hashComparision bool) (*sync.Map, map[string]int6
 	var size uint64
 	var count int64
 
-	for _, dir := range dirs {
-		err := filepath.Walk(dir, func(path string, file os.FileInfo, err error) error {
-			if file.IsDir() {
-				return nil
-			}
-
-			if !file.Mode().IsRegular() {
-				return nil
-			}
-
-			fi := NewFileWrapper(path, file.Size(), file.ModTime())
-			if hashComparision {
-				h, err := GetFileHash(path)
-				if err != nil {
-					return err
-				}
-				fi.Hash = h
-			}
-
-			// Statistics
-			ext := strings.ToLower(filepath.Ext(file.Name()))
-			if len(ext) > 0 {
-				extensions[ext]++
-			} else {
-				extensions["__OTHERS__"]++
-			}
-			sizeDistribution[GetFileSizeCategory(file.Size())]++
-			size += uint64(fi.Size)
-			count++
-
-			fileMap.Store(path, fi)
+	err := filepath.Walk(dir, func(path string, file os.FileInfo, err error) error {
+		if file.IsDir() {
 			return nil
-		})
-		if err != nil {
-			return nil, nil, nil, 0, 0, err
 		}
-	}
 
-	return &fileMap, extensions, sizeDistribution, count, size, nil
+		if !file.Mode().IsRegular() {
+			return nil
+		}
+
+		fi := NewFileWrapper(path, file.Size(), file.ModTime())
+		if hashComparision {
+			h, err := GetFileHash(path)
+			if err != nil {
+				return err
+			}
+			fi.Hash = h
+		}
+
+		// Statistics
+		ext := strings.ToLower(filepath.Ext(file.Name()))
+		if len(ext) > 0 {
+			extensions[ext]++
+		} else {
+			extensions["__NO_EXT__"]++
+		}
+		sizeDistribution[GetFileSizeCategory(file.Size())]++
+		size += uint64(fi.Size)
+		count++
+
+		fileMap.Store(path, fi)
+		return nil
+	})
+
+	return &fileMap, extensions, sizeDistribution, count, size, err
 }
 
 func GetFileSizeCategory(size int64) int64 {
