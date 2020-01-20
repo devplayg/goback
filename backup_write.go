@@ -8,17 +8,6 @@ import (
 	"sync"
 )
 
-// import (
-// 	"encoding/json"
-// 	"github.com/devplayg/golibs/converter"
-// 	log "github.com/sirupsen/logrus"
-// 	"io/ioutil"
-// 	"path/filepath"
-// 	"strings"
-// 	"sync"
-// 	"time"
-// )
-//
 func (b *Backup) writeResult(currentFileMaps []*sync.Map, lastFileMap *sync.Map) error {
 	// 	defer func() {
 	// 		b.summary.LoggingTime = time.Now()

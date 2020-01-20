@@ -38,6 +38,16 @@ func NewFileWrapper(path string, size int64, modTime time.Time) *FileWrapper {
 	}
 }
 
+func WrapFile(file *File) *FileWrapper {
+	return &FileWrapper{
+		File:         file,
+		WhatHappened: 0,
+		Result:       0,
+		Duration:     0,
+		Message:      "",
+	}
+}
+
 type DirInfo struct {
 	Checksum string
 	dbPath   string

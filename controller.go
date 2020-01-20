@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/gob"
 	"encoding/json"
-	"fmt"
 	"github.com/devplayg/golibs/compress"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -42,12 +41,12 @@ func NewController(dir, addr string) *Controller {
 }
 
 func (c *Controller) init() error {
-	// if err := c.initRouter(); err != nil {
-	// 	return err
-	// }
-	// c.summaryDbPath = filepath.Join(c.dir, SummaryDbName)
-	// c.fileMapDbPath = filepath.Join(c.dir, FileMapDbName)
-	// summaryDb, fileMapDb, err := InitDatabase(c.summaryDbPath, c.fileMapDbPath)
+	if err := c.initRouter(); err != nil {
+		return err
+	}
+	//c.summaryDbPath = filepath.Join(c.dir, SummaryDbName)
+	//c.fileMapDbPath = filepath.Join(c.dir, FileMapDbName)
+	//summaryDb, fileMapDb, err := InitDatabase(c.summaryDbPath, c.fileMapDbPath)
 	// if err != nil {
 	// 	return err
 	// }
@@ -110,7 +109,7 @@ func (c *Controller) Start() error {
 
 	defer c.Stop()
 
-	fmt.Scanln()
+	//fmt.Scanln()
 	return nil
 }
 

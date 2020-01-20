@@ -102,18 +102,6 @@ func (b *Backup) backupFiles() error {
 	if err != nil {
 		return err
 	}
-	// 	defer func() {
-	// 		b.summary.BackupTime = time.Now()
-	// 		if count > 0 {
-	// 			log.WithFields(log.Fields{
-	// 				"execTim" +
-	// 					"" +
-	// 					"e": b.summary.BackupTime.Sub(b.summary.ComparisonTime).Seconds(),
-	// 				"success": b.summary.SuccessCount,
-	// 				"failed":  b.summary.FailedCount,
-	// 			}).Info("backup report")
-	// 		}
-	// 	}()
 
 	log.WithFields(log.Fields{
 		"workers": b.workerCount,
@@ -247,18 +235,11 @@ func (b *Backup) compareFileMaps(currentFileMaps []*sync.Map, lastFileMap *sync.
 
 	// The remaining files in LastFileMap are deleted files.
 	lastFileMap.Range(func(k, v interface{}) bool {
-		file := v.(*File)
-
-		fileWrapper := FileWrapper{
-			File:         file,
-			WhatHappened: FileDeleted,
-			Result:       0,
-			Duration:     0,
-			Message:      "",
-		}
+		fileWrapper := v.(*FileWrapper)
+		fileWrapper.WhatHappened = FileDeleted
 		b.summary.deletedFiles.Store(&fileWrapper, nil)
 		atomic.AddUint64(&b.summary.DeletedCount, 1)
-		atomic.AddUint64(&b.summary.DeletedSize, uint64(file.Size))
+		atomic.AddUint64(&b.summary.DeletedSize, uint64(fileWrapper.Size))
 		return true
 	})
 
@@ -289,7 +270,7 @@ func (b *Backup) compareFileMap(workerId int, lastFileMap, currentFileMap *sync.
 		current := v.(*FileWrapper)
 
 		if val, have := lastFileMap.Load(path); have {
-			last := val.(*File)
+			last := val.(*FileWrapper)
 			if last.ModTime.Unix() != current.ModTime.Unix() || last.Size != current.Size {
 				// log.WithFields(log.Fields{
 				//	"workerId": workerId,

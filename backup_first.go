@@ -7,14 +7,6 @@ import (
 	"sync"
 )
 
-// import (
-// 	"fmt"
-// 	"github.com/dustin/go-humanize"
-// 	log "github.com/sirupsen/logrus"
-// 	"sync"
-// 	"time"
-// )
-//
 func (b *Backup) generateFirstBackupData(srcDir string) error {
 	log.Infof("generating source data from %s", srcDir)
 
