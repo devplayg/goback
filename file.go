@@ -23,9 +23,19 @@ type FileWrapper struct {
     Message      string  `json:"msg"`
 }
 
-type FilesTopN struct {
-    *File
-    Count int64
+type FileStats struct {
+    Key   string `json:"key"`
+    Size  int64  `json:"size"`
+    Count int64  `json:"count"`
+}
+
+func NewFileStats(key string, size int64) *FileStats {
+    return &FileStats{
+        Key:   key,
+        Size:  size,
+        Count: 1,
+    }
+
 }
 
 func NewFileWrapper(path string, size int64, modTime time.Time) *FileWrapper {
@@ -66,14 +76,4 @@ func NewDirInfo(srcDir, dstDir string) *DirInfo {
         dbPath:   filepath.Join(dstDir, fmt.Sprintf(FilesDbName, checksumStr)),
     }
     return &d
-}
-
-type FileGroupReport struct {
-    ExtensionMap     map[string]int64
-    SizeDistribution map[int64]int64
-    TopN             struct {
-        BySize      []*FilesTopN
-        ByName      []*FilesTopN
-        ByExtension []*FilesTopN
-    }
 }

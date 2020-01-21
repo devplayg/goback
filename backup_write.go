@@ -57,7 +57,6 @@ func (b *Backup) writeSummary() error {
 	if err != nil {
 		return err
 	}
-	//spew.Dump(b.summary)
 
 	if err := b.summaryDb.Truncate(0); err != nil {
 		return err
@@ -65,15 +64,6 @@ func (b *Backup) writeSummary() error {
 	if _, err := b.summaryDb.WriteAt(data, 0); err != nil {
 		return err
 	}
-
-	// 	// Write changes log
-	// 	data, err = json.MarshalIndent(b.changesLog, "", "  ")
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	if err := ioutil.WriteFile(filepath.Join(b.tempDir, "changes.json"), data, 0644); err != nil {
-	// 		return err
-	// 	}
 
 	// 	log.Info(strings.Repeat("=", 50))
 	// 	log.WithFields(log.Fields{
@@ -95,6 +85,7 @@ func (b *Backup) writeSummary() error {
 	// 	}).Info("# summary")
 	// 	log.Info(strings.Repeat("=", 50))
 	//
+
 	return nil
 }
 

@@ -11,46 +11,17 @@ import (
     "os"
     "path/filepath"
     "runtime"
-    "sort"
     "strings"
     "sync"
     "time"
 )
 
-const (
-    DefaultDateFormat = "2006-01-02 15:04:05"
-)
+//const (
+//    DefaultDateFormat = "2006-01-02 15:04:05"
+//)
 
 var ErrorBucketNotFound = errors.New("bucket not found")
 
-const (
-    kB = 1000
-    MB = 1000000
-    GB = 1000000000
-)
-
-var fileSizeCategories = []int64{
-    1 * kB,
-    5 * kB,
-    10 * kB,
-    50 * kB,
-    100 * kB,
-    500 * kB,
-
-    1 * MB,
-    5 * MB,
-    10 * MB,
-    50 * MB,
-    100 * MB,
-    500 * MB,
-
-    1 * GB,
-    5 * GB,
-    10 * GB,
-    50 * GB,
-    100 * GB,
-    500 * GB,
-}
 
 func IsValidDir(dir string) (string, error) {
     absDir, err := filepath.Abs(dir)
@@ -93,10 +64,9 @@ func GetFileHash(path string) (string, error) {
     return hex.EncodeToString(checksum), nil
 }
 
-func GetFileMap(dir string, hashComparision bool) (*sync.Map, map[string]int64, map[int64]int64, int64, uint64, error) {
+func GetFileMap(dir string, hashComparision bool) (*sync.Map, *FilesReport, int64, uint64, error) {
     fileMap := sync.Map{}
-    extensionMap := make(map[string]int64)
-    sizeDistribution := make(map[int64]int64)
+    report := NewFilesReport()
 
     var size uint64
     var count int64
@@ -120,13 +90,8 @@ func GetFileMap(dir string, hashComparision bool) (*sync.Map, map[string]int64, 
         }
 
         // Statistics
-        ext := strings.ToLower(filepath.Ext(file.Name()))
-        if len(ext) > 0 {
-            extensionMap[ext]++
-        } else {
-            extensionMap["__NO_EXT__"]++
-        }
-        sizeDistribution[GetFileSizeCategory(file.Size())]++
+        report.addExtension(file.Name(), file.Size())
+        report.addSize(file.Size())
         size += uint64(fi.Size)
         count++
 
@@ -134,32 +99,18 @@ func GetFileMap(dir string, hashComparision bool) (*sync.Map, map[string]int64, 
         return nil
     })
 
-    return &fileMap, extensionMap, sizeDistribution, count, size, err
+    return &fileMap, report, count, size, err
 }
-
-func GetFileSizeCategory(size int64) int64 {
-    for i := range fileSizeCategories {
-        if size <= fileSizeCategories[i] {
-            return fileSizeCategories[i]
-        }
-    }
-    return -1
-
-}
-
-func IsEqualStringSlices(a, b []string) bool {
-    sort.Strings(a)
-    sort.Strings(b)
-    if len(a) != len(b) {
-        return false
-    }
-    for i, v := range a {
-        if v != b[i] {
-            return false
-        }
-    }
-    return true
-}
+//
+//func GetFileSizeCategory(size int64) int64 {
+//    for i := range fileSizeCategories {
+//        if size <= fileSizeCategories[i] {
+//            return fileSizeCategories[i]
+//        }
+//    }
+//    return -1
+//
+//}
 
 func BackupFile(srcPath, tempDir string) (string, float64, error) {
     // Set source

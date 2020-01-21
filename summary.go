@@ -2,8 +2,6 @@ package goback
 
 import (
     "encoding/json"
-    "path/filepath"
-    "strings"
     "sync"
     "time"
 )
@@ -17,23 +15,22 @@ type Summary struct {
     BackupType  int       `json:"backupType"`
     State       int       `json:"state"`
     WorkerCount int       `json:"workerCount"`
-    TotalSize   uint64    `json:"totalSize"`
-    TotalCount  int64     `json:"totalCount"`
 
     // Thread-safe
+    TotalSize     uint64 `json:"totalSize"`
+    TotalCount    int64  `json:"totalCount"`
     AddedCount    uint64 `json:"countAdded"`
     AddedSize     uint64 `json:"sizeAdded"`
     ModifiedCount uint64 `json:"countModified"`
     ModifiedSize  uint64 `json:"sizeModified"`
     DeletedCount  uint64 `json:"countDeleted"`
     DeletedSize   uint64 `json:"sizeDeleted"`
-    FailedCount   uint64 `json:"countFailed"`
-    FailedSize    uint64 `json:"sizeFailed"`
-    SuccessCount  uint64 `json:"countSuccess"`
-    SuccessSize   uint64 `json:"sizeSuccess"`
 
-    ExtensionMap     map[string]int64 `json:"extensions"`
-    SizeDistribution map[int64]int64  `json:"sizeDistribution"`
+    // Backup
+    FailedCount  uint64 `json:"countFailed"`
+    FailedSize   uint64 `json:"sizeFailed"`
+    SuccessCount uint64 `json:"countSuccess"`
+    SuccessSize  uint64 `json:"sizeSuccess"`
 
     ReadingTime    time.Time `json:"readingTime"`    // Step 1
     ComparisonTime time.Time `json:"comparisonTime"` // Step 2
@@ -41,8 +38,9 @@ type Summary struct {
     LoggingTime    time.Time `json:"loggingTime"`    // Step 4
     ExecutionTime  float64   `json:"execTime"`       // Result
 
-    Message string `json:"message"`
-    Version int    `json:"version"`
+    Message string       `json:"message"`
+    Version int          `json:"version"`
+    Report  *FilesReport `json:"report"`
 
     addedFiles    *sync.Map
     modifiedFiles *sync.Map
@@ -56,32 +54,21 @@ func (s *Summary) Marshal() ([]byte, error) {
 
 func NewSummary(summaryId, backupId int, srcDir, dstDir string, backupType, workCount, version int) *Summary {
     return &Summary{
-        Id:               summaryId,
-        BackupId:         backupId,
-        Date:             time.Now(),
-        SrcDir:           srcDir,
-        DstDir:           dstDir,
-        WorkerCount:      workCount,
-        Version:          version,
-        BackupType:       backupType,
-        State:            Started,
-        ExtensionMap:     make(map[string]int64),
-        SizeDistribution: make(map[int64]int64),
-
+        Id:          summaryId,
+        BackupId:    backupId,
+        Date:        time.Now(),
+        SrcDir:      srcDir,
+        DstDir:      dstDir,
+        WorkerCount: workCount,
+        Version:     version,
+        BackupType:  backupType,
+        State:       Started,
+        Report:        NewFilesReport(),
         addedFiles:    &sync.Map{},
         modifiedFiles: &sync.Map{},
         deletedFiles:  &sync.Map{},
         failedFiles:   &sync.Map{},
-    }
-}
-
-func (s *Summary) addExtension(name string) {
-    if s.ExtensionMap != nil {
-        ext := strings.ToLower(filepath.Ext(name))
-        if len(ext) > 0 {
-            s.ExtensionMap[ext]++
-        } else {
-            s.ExtensionMap["__NO_EXT__"]++
-        }
+        //ExtensionMap:     make(map[string]int64),
+        //SizeDistribution: make(map[int64]int64),
     }
 }

@@ -1,8 +1,6 @@
 package goback
 
 import (
-	"bytes"
-	"encoding/gob"
 	"errors"
 	"fmt"
 	"github.com/devplayg/golibs/converter"
@@ -12,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -151,6 +150,7 @@ func (b *Backup) doBackup(dirToBackup string) error {
 		return fmt.Errorf("failed to load last backup data for %s: %w", srcDir, err)
 	}
 
+	log.Debugf ("%s backup started",  strings.Repeat("=", 50))
 	if lastFileMap == nil { // First backup
 		return b.generateFirstBackupData(srcDir)
 	}
@@ -194,7 +194,7 @@ func (b *Backup) issueSummary(dir string, backupType int) {
 	log.WithFields(log.Fields{
 		"id":  summaryId,
 		"dir": dir,
-	}).Debug("issued new summary ====================================================")
+	}).Debug("issued new summary")
 }
 
 func (b *Backup) Stop() error {
@@ -223,8 +223,7 @@ func (b *Backup) loadSummaryDb() error {
 	}
 
 	var summaries []*Summary
-	decoder := gob.NewDecoder(bytes.NewReader(data))
-	if err := decoder.Decode(&summaries); err != nil {
+	if err := converter.DecodeFromBytes(data, &summaries); err != nil {
 		return fmt.Errorf("failed to load summary database: %w", err)
 	}
 	if len(summaries) < 1 {

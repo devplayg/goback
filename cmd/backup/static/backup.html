@@ -25,9 +25,10 @@
                             <tr>
                                 <th data-field="id" data-sortable="true">ID</th>
                                 <th data-field="date" data-sortable="true" data-formatter="dateOnlyFormatter">Date</th>
-                                <th data-field="srcDirs" data-sortable="true" data-formatter="backupSrcDirsFormatter">Src.</th>
-                                <th data-field="dstDir" data-sortable="true" data-visible="false">Dst.</th>
+                                <th data-field="srcDir" data-sortable="true">Src.</th>
+                                <th data-field="execTime" data-sortable="true" data-formatter="toFixed2Formatter">Time(Sec)</th>
                                 <th data-field="workerCount" data-sortable="true" data-visible="false">Workers</th>
+
                                 <th data-field="totalSize" data-sortable="true" data-formatter="thCommaWithTooltipFormatter">Total Size (B)</th>
                                 <th data-field="totalCount" data-sortable="true" data-formatter="thCommaFormatter">Files</th>
 
@@ -46,14 +47,13 @@
                                 <th data-field="countSuccess" data-sortable="true" data-formatter="backupSuccessFormatter">Success</th>
                                 <th data-field="sizeSuccess" data-sortable="true" data-formatter="backupSuccessFormatter" data-visible="false">Success (B) </th>
 
-                                <th data-field="extensions" data-sortable="true">extensions</th>
+                                <th data-field="extensions" data-sortable="true" data-formatter="backupExtFormatter">Extension</th>
                                 <th data-field="sizeDistribution" data-sortable="true">sizeDistribution</th>
                                 <th data-field="message" data-sortable="true">message </th>
-                                <th data-field="readingTime" data-sortable="true">readingTime </th>
-                                <th data-field="comparisonTime " data-sortable="true">comparisonTime</th>
-                                <th data-field="backupTime " data-sortable="true">backupTime</th>
-                                <th data-field="loggingTime" data-sortable="true">loggingTime </th>
-                                <th data-field="execTime" data-sortable="true">execTime</th>
+                                <th data-field="readingTime" data-sortable="true" data-formatter="dateFormatter" data-visible="false">1) Reading </th>
+                                <th data-field="comparisonTime" data-sortable="true" data-formatter="dateFormatter" data-visible="false">2) Compare</th>
+                                <th data-field="backupTime" data-sortable="true" data-formatter="dateFormatter" data-visible="false">3) Backup</th>
+                                <th data-field="loggingTime" data-sortable="true" data-formatter="dateFormatter" data-visible="false">4) Logging </th>
                             </tr>
                             </thead>
                         </table>
@@ -71,6 +71,10 @@
         $("#table-backup").on('load-success.bs.table', function (e, data) {
             $('.has-popover').popover();
         });
+
+        function backupExtFormatter(val, row, idx) {
+            return '<a href="#" class="extension">Ext</a>';
+        }
 
 
         function backupSrcDirsFormatter(val, row, idx) {
@@ -211,6 +215,10 @@
         //     );
         //     return link[0].outerHTML;
         // }
+
+        function toFixed2Formatter(val, row, idx) {
+            return  val.toFixed(2);
+        }
         function backupFailedCountFormatter(val, row, idx) {
             let str =  val.toLocaleString();
             if (val > 0) {
@@ -246,6 +254,9 @@
         function dateOnlyFormatter(val, row, idx) {
             return moment(val).format("ll");
         }
+        function dateFormatter(val, row, idx) {
+            return moment(val).format("YYYY-MM-DD HH:mm:ss");
+        }
         function bytesToSize(bytes) {
             return toHumanizedSize(bytes, true);
             // let sizes = ['B', 'kB', 'MB', 'GB', 'TB'];
@@ -270,7 +281,7 @@
             return bytes.toFixed(1)+' '+units[u];
         }
 
-        function    bytesWithSize(bytes, prefix, suffix) {
+        function  bytesWithSize(bytes, prefix, suffix) {
             if (prefix === undefined) {
                 prefix = "";
             }
