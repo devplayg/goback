@@ -23,8 +23,8 @@ type FileWrapper struct {
     Message      string  `json:"msg"`
 }
 
-type FileWrapperTop struct {
-    FileWrapper
+type FilesTopN struct {
+    *File
     Count int64
 }
 
@@ -72,8 +72,8 @@ type FileGroupReport struct {
     ExtensionMap     map[string]int64
     SizeDistribution map[int64]int64
     TopN             struct {
-        BySize      []*FileWrapperTop
-        ByName      []*FileWrapperTop
-        ByExtension []*FileWrapperTop
+        BySize      []*FilesTopN
+        ByName      []*FilesTopN
+        ByExtension []*FilesTopN
     }
 }
