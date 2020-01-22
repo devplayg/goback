@@ -1,7 +1,6 @@
 package goback
 
 import (
-    "encoding/json"
     "fmt"
     "github.com/devplayg/golibs/compress"
     "github.com/devplayg/golibs/converter"
@@ -88,8 +87,8 @@ func (b *Backup) writeSummary() error {
     // 	log.Info(strings.Repeat("=", 50))
     //
 
-    bdd, _ := json.Marshal(b.summary)
-    fmt.Println(string(bdd))
+    //bdd, _ := json.Marshal(b.summary)
+    //fmt.Println(string(bdd))
     return nil
 }
 
