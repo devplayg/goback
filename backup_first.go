@@ -21,10 +21,5 @@ func (b *Backup) generateFirstBackupData(srcDir string) error {
 		return err
 	}
 
-	// 4. Write summary
-	if err := b.writeSummary(); err != nil {
-		log.Error(err)
-	}
-
 	return nil
 }

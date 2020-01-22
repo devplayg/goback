@@ -1,3 +1,4 @@
+
 {{define "content"}}
     <div class="row">
         <div class="col">
@@ -7,6 +8,7 @@
                         <div id="toolbar-backup">
                         </div>
                         <table  id="table-backup"
+                                class="table-sm"
                                 data-toggle="table"
                                 data-toolbar="#toolbar-backup"
                                 data-search="true"
@@ -24,28 +26,31 @@
                             <thead>
                             <tr>
                                 <th data-field="id" data-sortable="true">ID</th>
-                                <th data-field="date" data-sortable="true" data-formatter="dateOnlyFormatter">Date</th>
-                                <th data-field="srcDir" data-sortable="true">Src.</th>
+                                <th data-field="date" data-sortable="true" data-formatter="dateFormatter">Date</th>
+                                <th data-field="srcDir" data-sortable="true">Backup Dir.</th>
+                                <th data-field="backupType" data-sortable="true" data-formatter="backupTypeFormatter">Type</th>
+                                <th data-field="state" data-sortable="true" data-formatter="backupStateFormatter">Result</th>
                                 <th data-field="execTime" data-sortable="true" data-formatter="toFixed2Formatter">Time(Sec)</th>
+
                                 <th data-field="workerCount" data-sortable="true" data-visible="false">Workers</th>
 
-                                <th data-field="totalSize" data-sortable="true" data-formatter="thCommaWithTooltipFormatter">Total Size (B)</th>
+                                <th data-field="totalSize" data-sortable="true" data-formatter="bytesTooltipFormatter">Total Size (B)</th>
                                 <th data-field="totalCount" data-sortable="true" data-formatter="thCommaFormatter">Files</th>
 
-                                <th data-field="countAdded" data-sortable="true" data-formatter="backupAddedFormatter">Added</th>
-                                <th data-field="sizeAdded" data-sortable="true" data-formatter="backupAddedFormatter" data-visible="false">Added (B)</th>
+                                <th data-field="countAdded" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Added</th>
+                                <th data-field="sizeAdded" data-sortable="true" data-formatter="bytesTooltipFormatter" data-visible="true">Added (B)</th>
 
-                                <th data-field="countModified" data-sortable="true" data-formatter="backupModifiedFormatter">Modified </th>
-                                <th data-field="sizeModified" data-sortable="true" data-formatter="backupModifiedFormatter" data-visible="false">Modified (B)</th>
+                                <th data-field="countModified" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Modified </th>
+                                <th data-field="sizeModified" data-sortable="true" data-formatter="bytesTooltipFormatter" data-visible="true">Modified (B)</th>
 
-                                <th data-field="countDeleted" data-sortable="true" data-formatter="backupDeletedFormatter">Deleted </th>
-                                <th data-field="sizeDeleted" data-sortable="true" data-formatter="backupDeletedFormatter" data-visible="false">Deleted (B)</th>
+                                <th data-field="countDeleted" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Deleted </th>
+                                <th data-field="sizeDeleted" data-sortable="true" data-formatter="bytesTooltipFormatter" data-visible="true">Deleted (B)</th>
 
-                                <th data-field="countFailed" data-sortable="true" data-formatter="backupFailedFormatter">Failed </th>
-                                <th data-field="sizeFailed" data-sortable="true" data-formatter="backupFailedFormatter" data-visible="false">Failed (B)</th>
+                                <th data-field="countFailed" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Failed </th>
+                                <th data-field="sizeFailed" data-sortable="true" data-formatter="bytesTooltipFormatter" data-visible="true">Failed (B)</th>
 
-                                <th data-field="countSuccess" data-sortable="true" data-formatter="backupSuccessFormatter">Success</th>
-                                <th data-field="sizeSuccess" data-sortable="true" data-formatter="backupSuccessFormatter" data-visible="false">Success (B) </th>
+                                <th data-field="countSuccess" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Success</th>
+                                <th data-field="sizeSuccess" data-sortable="true" data-formatter="bytesTooltipFormatter" data-visible="true">Success (B) </th>
 
                                 <th data-field="extensions" data-sortable="true" data-formatter="backupExtFormatter">Extension</th>
                                 <th data-field="sizeDistribution" data-sortable="true">sizeDistribution</th>
@@ -63,25 +68,143 @@
 
         </div>
     </div>
+
+
+    <div class="modal fade" id="modal-files" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modal title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true"><i class="fal fa-times"></i></span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <table  id="table-files"
+                            class=" table-sm"
+                            data-toggle="table"
+                            data-search="true"
+                            data-pagination="true"
+                            data-show-export="true"
+                            data-export-types="['csv', 'txt', 'excel']"
+                            data-side-pagination="client"
+                            data-show-columns="true"
+                            data-sort-name="name"
+                            data-page-size="20"
+                            data-sort-order="asc">
+                        <thead>
+                        <tr>
+                            <th data-field="name" data-sortable="true">Name</th>
+                            <th data-field="size" data-sortable="true">Size</th>
+                            <th data-field="result" data-sortable="true">Result</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
 {{end}}
 
 {{define "script"}}
     <script>
 
+        $('#modal-files')
+            .on('show.bs.modal', function (e) {
+            }).on('hidden.bs.modal', function (e) {
+                $("#table-files").bootstrapTable("removeAll");
+            });
+
+        function backupResultFormatter(val, row, idx, field) {
+            let th = $('#table-backup').find("[data-field='" + field + "']");
+
+            if (val === 0) {
+                return '<span class="text-muted">' + val + '</span>';
+            }
+            let link = $("<a/>", {
+                href: "#",
+                class: "file",
+                "data-title": th.text(),
+                "data-field": field,
+                // class: "has-popover",
+                // "data-toggle": "popover",
+                // "data-trigger":"hover",
+                // "data-placement": "top",
+                "title": "",
+                // "data-original-title": row.countAdded + ' file(s) added',
+                // "data-html": true,
+                // "data-content": bytesWithSize(row.sizeAdded, "<br>"),
+            }).html(
+                val.toLocaleString()
+            );
+            return link[0].outerHTML;
+
+            // return [
+            //     '<a class="file" href="javascript:void(0)" title="Like">',
+            //     '<i class="fa fa-heart"></i>',
+            //     '</a>  ',
+            // ].join('')
+
+        }
+
         $("#table-backup").on('load-success.bs.table', function (e, data) {
             $('.has-popover').popover();
         });
+
+        window.backupOperateEvents = {
+            'click .file': function (e, val, row, idx) {
+                let $btn = $(e.currentTarget);
+                $("#modal-files .modal-title").text($btn.data("title"));
+
+                console.log($btn.data("field"));
+                getBackupFiles(row, $btn.data("field"));
+                $("#modal-files").modal("show");
+            },
+        }
+
+        function backupTypeFormatter(val, row, idx) {
+            if (val === 1) {
+                return 'Initial';
+            }
+            if (val === 2) {
+                return 'Incremental';
+            }
+        }
 
         function backupExtFormatter(val, row, idx) {
             return '<a href="#" class="extension">Ext</a>';
         }
 
+        function backupStateFormatter(val, row, idx) {
+            if (val === 5) {
+                return 'Completed';
+            }
+            return val;
+        }
 
         function backupSrcDirsFormatter(val, row, idx) {
             return val.join("<br>");
         }
 
-        function backupAddedFormatter(val, row, idx) {
+
+
+        function backupResultSizeFormatter(val, row, idx, field) {
+            if (val === 0) {
+                return '<span class="text-muted">' + val + '</span>';
+            }
+
+            let size = -1;
+            if (field.endsWith("Added")) {
+                size = row.countAdded;
+            }
+
+
+            console.log(  );
+
             let link = $("<a/>", {
                 href: "#",
                 class: "has-popover",
@@ -89,80 +212,97 @@
                 "data-trigger":"hover",
                 "data-placement": "top",
                 "title": "",
-                "data-original-title": row.countAdded + ' file(s) added',
+                "data-original-title": val+ ' file(s) ' + field.substr(4).toLowerCase(),
                 "data-html": true,
-                "data-content": bytesWithSize(row.sizeAdded, "<br>"),
-            }).html(
-                val.toLocaleString()
-            );
-            return link[0].outerHTML;
-        }
-        function backupModifiedFormatter(val, row, idx) {
-            let link = $("<a/>", {
-                href: "#",
-                class: "has-popover",
-                "data-toggle": "popover",
-                "data-trigger":"hover",
-                "data-placement": "top",
-                "title": "",
-                "data-original-title": row.countModified + ' file(s) modified',
-                "data-html": true,
-                "data-content": bytesWithSize(row.sizeModified, "<br>"),
-            }).html(
-                val.toLocaleString()
-            );
-            return link[0].outerHTML;
-        }
-        function backupDeletedFormatter(val, row, idx) {
-            let link = $("<a/>", {
-                href: "#",
-                class: "has-popover",
-                "data-toggle": "popover",
-                "data-trigger":"hover",
-                "data-placement": "top",
-                "title": "",
-                "data-original-title": row.countDeleted + ' file(s) deleted',
-                "data-html": true,
-                "data-content": bytesWithSize(row.sizeDeleted, "<br>"),
+                "data-content": bytesWithSize(val, "<br>"),
             }).html(
                 val.toLocaleString()
             );
             return link[0].outerHTML;
         }
 
-        function backupFailedFormatter(val, row, idx) {
-            let link = $("<a/>", {
-                href: "#",
-                class: "has-popover",
-                "data-toggle": "popover",
-                "data-trigger":"hover",
-                "data-placement": "top",
-                "title": "",
-                "data-original-title": row.countFailed + ' file(s) failed to backup',
-                "data-html": true,
-                "data-content": bytesWithSize(row.sizeFailed, "<br>"),
-            }).html(
-                val.toLocaleString()
-            );
-            return link[0].outerHTML;
-        }
-
-        function backupSuccessFormatter(val, row, idx) {
-            let link = $("<a/>", {
-                href: "#",
-                class: "has-popover",
-                "data-toggle": "popover",
-                "data-trigger":"hover",
-                "data-placement": "top",
-                "title": "",
-                "data-original-title": row.countSuccess + ' file(s) failed to backup',
-                "data-html": true,
-                "data-content": bytesWithSize(row.sizeSuccess, "<br>"),
-            }).html(
-                val.toLocaleString()
-            );
-            return link[0].outerHTML;
-        }
+        // function backupAddedFormatter(val, row, idx) {
+        //     let link = $("<a/>", {
+        //         href: "#",
+        //         class: "has-popover",
+        //         "data-toggle": "popover",
+        //         "data-trigger":"hover",
+        //         "data-placement": "top",
+        //         "title": "",
+        //         "data-original-title": row.countAdded + ' file(s) added',
+        //         "data-html": true,
+        //         "data-content": bytesWithSize(row.sizeAdded, "<br>"),
+        //     }).html(
+        //         val.toLocaleString()
+        //     );
+        //     return link[0].outerHTML;
+        // }
+        // function backupModifiedFormatter(val, row, idx) {
+        //     let link = $("<a/>", {
+        //         href: "#",
+        //         class: "has-popover",
+        //         "data-toggle": "popover",
+        //         "data-trigger":"hover",
+        //         "data-placement": "top",
+        //         "title": "",
+        //         "data-original-title": row.countModified + ' file(s) modified',
+        //         "data-html": true,
+        //         "data-content": bytesWithSize(row.sizeModified, "<br>"),
+        //     }).html(
+        //         val.toLocaleString()
+        //     );
+        //     return link[0].outerHTML;
+        // }
+        // function backupDeletedFormatter(val, row, idx) {
+        //     let link = $("<a/>", {
+        //         href: "#",
+        //         class: "has-popover",
+        //         "data-toggle": "popover",
+        //         "data-trigger":"hover",
+        //         "data-placement": "top",
+        //         "title": "",
+        //         "data-original-title": row.countDeleted + ' file(s) deleted',
+        //         "data-html": true,
+        //         "data-content": bytesWithSize(row.sizeDeleted, "<br>"),
+        //     }).html(
+        //         val.toLocaleString()
+        //     );
+        //     return link[0].outerHTML;
+        // }
+        //
+        // function backupFailedFormatter(val, row, idx) {
+        //     let link = $("<a/>", {
+        //         href: "#",
+        //         class: "has-popover",
+        //         "data-toggle": "popover",
+        //         "data-trigger":"hover",
+        //         "data-placement": "top",
+        //         "title": "",
+        //         "data-original-title": row.countFailed + ' file(s) failed to backup',
+        //         "data-html": true,
+        //         "data-content": bytesWithSize(row.sizeFailed, "<br>"),
+        //     }).html(
+        //         val.toLocaleString()
+        //     );
+        //     return link[0].outerHTML;
+        // }
+        //
+        // function backupSuccessFormatter(val, row, idx) {
+        //     let link = $("<a/>", {
+        //         href: "#",
+        //         class: "has-popover",
+        //         "data-toggle": "popover",
+        //         "data-trigger":"hover",
+        //         "data-placement": "top",
+        //         "title": "",
+        //         "data-original-title": row.countSuccess + ' file(s) failed to backup',
+        //         "data-html": true,
+        //         "data-content": bytesWithSize(row.sizeSuccess, "<br>"),
+        //     }).html(
+        //         val.toLocaleString()
+        //     );
+        //     return link[0].outerHTML;
+        // }
 
         // function backupAddedCountFormatter(val, row, idx) {
         //     let link = $("<a/>", {
@@ -231,7 +371,7 @@
             return val.toLocaleString();
         }
 
-        function thCommaWithTooltipFormatter(val, row, idx) {
+        function bytesTooltipFormatter(val, row, idx) {
             let link = $("<a/>", {
                 href: "#",
                 class: "has-popover",
@@ -241,7 +381,6 @@
                 "title": "",
                 "data-original-title": bytesToSize(val),
                 "data-html": true,
-                // "data-content": bytesToSize(row.sizeDeleted) + "<br>" + row.sizeDeleted.toLocaleString()+ " B",
             }).html(
                 val.toLocaleString()
             );
@@ -251,9 +390,9 @@
         function bytesFormatter(val, row, idx) {
             return bytesToSize(val);
         }
-        function dateOnlyFormatter(val, row, idx) {
-            return moment(val).format("ll");
-        }
+        // function dateOnlyFormatter(val, row, idx) {
+        //     return moment(val).format("ll");
+        // }
         function dateFormatter(val, row, idx) {
             return moment(val).format("YYYY-MM-DD HH:mm:ss");
         }
