@@ -8,34 +8,36 @@ import (
     "strings"
 )
 
-type FilesReport struct {
-    ExtensionRanking []*FileStats          `json:"extRanking"`
-    SizeDistribution map[int64]int64       `json:"sizeDistribution"`
-    SizeRanking      []*File               `json:"sizeRanking"`
-    NameRanking      []*FileNameStats      `json:"nameRanking"`
+type StatsReport struct {
+    ExtensionRanking []*ExtensionStats `json:"extRanking"`
+    SizeDistribution map[int64]int64   `json:"sizeDistribution"`
+    SizeRanking      []*File           `json:"sizeRanking"`
+    NameRanking      []*FileNameStats  `json:"nameRanking"`
 
-    extension        map[string]*FileStats
-    nameMap          map[string]*FileNameStats
+    extension       map[string]*ExtensionStats
+    nameMap         map[string]*FileNameStats
+    sizeRankMinSize int64
 }
 
-func NewFilesReport() *FilesReport {
-    return &FilesReport{
-        ExtensionRanking: make([]*FileStats, 0),
-        extension:        make(map[string]*FileStats),
+func NewStatsReport(sizeRankMinSize int64) *StatsReport {
+    return &StatsReport{
+        ExtensionRanking: make([]*ExtensionStats, 0),
+        extension:        make(map[string]*ExtensionStats),
         SizeDistribution: NewSizeDistribution(),
         SizeRanking:      make([]*File, 0),          // path: size, path
         NameRanking:      make([]*FileNameStats, 0), // name: count, size, name
         nameMap:          make(map[string]*FileNameStats),
+        sizeRankMinSize:  sizeRankMinSize,
     }
 }
 
-func (r *FilesReport) addToReport(file *File) {
+func (r *StatsReport) addToReport(file *File) {
     r.addExtension(file.Path, file.Size)
     r.addSize(file)
     r.addName(file)
 }
 
-func (r *FilesReport) addExtension(name string, size int64) {
+func (r *StatsReport) addExtension(name string, size int64) {
     ext := strings.ToLower(filepath.Ext(name))
     if _, have := r.extension[ext]; !have {
         r.extension[ext] = NewFileStats(ext, size)
@@ -46,7 +48,7 @@ func (r *FilesReport) addExtension(name string, size int64) {
     r.extension[ext].Size += size
 }
 
-func (r *FilesReport) addName(file *File) {
+func (r *StatsReport) addName(file *File) {
     name := GetFileNameKey(file)
     if _, have := r.nameMap[name]; !have {
         r.nameMap[name] = NewFileNameStats(file)
@@ -56,9 +58,9 @@ func (r *FilesReport) addName(file *File) {
     r.nameMap[name].Count++
 }
 
-func (r *FilesReport) addSize(file *File) {
-    // file size is larger thant 10 MB
-    if file.Size > 10*MB {
+func (r *StatsReport) addSize(file *File) {
+    // Size ranking
+    if file.Size >= r.sizeRankMinSize {
         r.SizeRanking = append(r.SizeRanking, file)
     }
 
@@ -89,15 +91,13 @@ func (r *FilesReport) addSize(file *File) {
     r.SizeDistribution[int64(n)]++
 }
 
-func (r *FilesReport) tune(rank int) {
+func (r *StatsReport) tune(rank int) {
     // Size ranking
     sort.Slice(r.SizeRanking, func(i, j int) bool {
         return r.SizeRanking[i].Size > r.SizeRanking[j].Size
     })
-
     if len(r.SizeRanking) > rank {
         r.SizeRanking = r.SizeRanking[0:rank]
-        return
     }
 
     // Name ranking
@@ -112,18 +112,34 @@ func (r *FilesReport) tune(rank int) {
     })
     if len(r.NameRanking) > rank {
         r.NameRanking = r.NameRanking[0:rank]
-        return
     }
 
-    // Extension
+    // Extension (keep all)
     for _, stats := range r.extension {
         r.ExtensionRanking = append(r.ExtensionRanking, stats)
     }
     sort.Slice(r.ExtensionRanking, func(i, j int) bool {
         return r.ExtensionRanking[i].Size > r.ExtensionRanking[j].Size
     })
-    if len(r.ExtensionRanking) > rank {
-        r.ExtensionRanking = r.ExtensionRanking[0:rank]
-        return
+    //if len(r.ExtensionRanking) > rank {
+    //    r.ExtensionRanking = r.ExtensionRanking[0:rank]
+    //    return
+    //}
+}
+
+type StatsReportWithList struct {
+    Files  []*FileWrapper `json:"files"`
+    Report *StatsReport   `json:"report"`
+}
+
+func CreateFilesReportWithList(files []*FileWrapper, sizeRankMinSize int64, rank int) *StatsReportWithList {
+    r := StatsReportWithList{
+        Files:  files,
+        Report: NewStatsReport(sizeRankMinSize),
     }
+    for _, f := range files {
+        r.Report.addToReport(f.File)
+    }
+    r.Report.tune(rank)
+    return &r
 }

@@ -183,7 +183,7 @@ func (b *Backup) compareFileMaps(currentFileMaps []*sync.Map, lastFileMap *sync.
     lastFileMap.Range(func(k, v interface{}) bool {
         fileWrapper := v.(*FileWrapper)
         fileWrapper.WhatHappened = FileDeleted
-        b.summary.deletedFiles.Store(&fileWrapper, nil)
+        b.summary.deletedFiles.Store(fileWrapper, nil)
         atomic.AddUint64(&b.summary.DeletedCount, 1)
         atomic.AddUint64(&b.summary.DeletedSize, uint64(fileWrapper.Size))
         return true

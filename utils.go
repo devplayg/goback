@@ -1,7 +1,6 @@
 package goback
 
 import (
-    "crypto/md5"
     "encoding/hex"
     "errors"
     "fmt"
@@ -157,14 +156,14 @@ func LoadOrCreateDatabase(path string) (*os.File, error) {
     }
     return db, nil
 }
-
-func FillMd5ValueOfStringKey(m map[string]string, key string) {
-    k := strings.TrimSpace(key)
-    sum := md5.Sum([]byte(key))
-    v := hex.EncodeToString(sum[:])
-    m[k] = v
-}
-
+//
+//func FillMd5ValueOfStringKey(m map[string]string, key string) {
+//    k := strings.TrimSpace(key)
+//    sum := md5.Sum([]byte(key))
+//    v := hex.EncodeToString(sum[:])
+//    m[k] = v
+//}
+//
 
 
 func NewSizeDistribution() map[int64]int64 {

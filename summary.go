@@ -40,7 +40,7 @@ type Summary struct {
 
     Message string       `json:"message"`
     Version int          `json:"version"`
-    Report  *FilesReport `json:"report"`
+    Report  *StatsReport `json:"report"`
 
     addedFiles    *sync.Map
     modifiedFiles *sync.Map
@@ -52,18 +52,18 @@ func (s *Summary) Marshal() ([]byte, error) {
     return json.Marshal(s)
 }
 
-func NewSummary(summaryId, backupId int, srcDir, dstDir string, backupType, workCount, version int) *Summary {
+func NewSummary(summaryId, backupId int, srcDir, dstDir string, backupType, workCount, version int, sizeRankMinSize int64) *Summary {
     return &Summary{
-        Id:          summaryId,
-        BackupId:    backupId,
-        Date:        time.Now(),
-        SrcDir:      srcDir,
-        DstDir:      dstDir,
-        WorkerCount: workCount,
-        Version:     version,
-        BackupType:  backupType,
-        State:       Started,
-        Report:        NewFilesReport(),
+        Id:            summaryId,
+        BackupId:      backupId,
+        Date:          time.Now(),
+        SrcDir:        srcDir,
+        DstDir:        dstDir,
+        WorkerCount:   workCount,
+        Version:       version,
+        BackupType:    backupType,
+        State:         Started,
+        Report:        NewStatsReport(sizeRankMinSize),
         addedFiles:    &sync.Map{},
         modifiedFiles: &sync.Map{},
         deletedFiles:  &sync.Map{},

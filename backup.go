@@ -32,9 +32,10 @@ type Backup struct {
     fileBackupEnable bool
     tempDir          string
 
-    version int
-    started time.Time
-    rank    int
+    version         int
+    started         time.Time
+    rank            int
+    sizeRankMinSize int64
 }
 
 func NewBackup(srcDirs []string, dstDir string, hashComparision, debug bool) *Backup {
@@ -49,6 +50,7 @@ func NewBackup(srcDirs []string, dstDir string, hashComparision, debug bool) *Ba
         version:          1,
         started:          time.Now(),
         rank:             50,
+        sizeRankMinSize:  10 * MB,
     }
 }
 
@@ -187,7 +189,7 @@ func (b *Backup) loadLastFileMap(dir string) (*sync.Map, error) {
 
 func (b *Backup) issueSummary(dir string, backupType int) {
     summaryId := len(b.summaries) + 1
-    summary := NewSummary(summaryId, b.Id, dir, b.dstDir, backupType, b.workerCount, b.version)
+    summary := NewSummary(summaryId, b.Id, dir, b.dstDir, backupType, b.workerCount, b.version, b.sizeRankMinSize)
     b.summaries = append(b.summaries, summary)
     b.summary = summary
 

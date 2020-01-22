@@ -23,25 +23,25 @@ type FileWrapper struct {
     Message      string  `json:"msg"`
 }
 
-type FileStats struct {
-    Key   string `json:"key"`
+type ExtensionStats struct {
+    Ext   string `json:"ext"`
     Size  int64  `json:"size"`
     Count int64  `json:"count"`
 }
 
-func NewFileStats(key string, size int64) *FileStats {
-    return &FileStats{
-        Key:   key,
+func NewFileStats(ext string, size int64) *ExtensionStats {
+    return &ExtensionStats{
+        Ext:   ext,
         Size:  size,
         Count: 1,
     }
 }
 
 type FileNameStats struct {
-    Name  string
-    Size  int64
-    Paths []string
-    Count int64
+    Name  string   `json:"name"`
+    Size  int64    `json:"size"`
+    Paths []string `json:"paths"`
+    Count int64    `json:"count"`
 }
 
 func NewFileNameStats(file *File) *FileNameStats {
