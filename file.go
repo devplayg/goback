@@ -10,9 +10,9 @@ import (
 
 type File struct {
     Size    int64     `json:"size"`
-    Hash    string    `json:"hash"`
     ModTime time.Time `json:"mtime"`
     Path    string    `json:"path"`
+    Hash    string    `json:"hash"`
 }
 
 type FileWrapper struct {
@@ -35,7 +35,28 @@ func NewFileStats(key string, size int64) *FileStats {
         Size:  size,
         Count: 1,
     }
+}
 
+type FileNameStats struct {
+    Name  string
+    Size  int64
+    Paths []string
+    Count int64
+}
+
+func NewFileNameStats(file *File) *FileNameStats {
+    stats := FileNameStats{
+        Name:  filepath.Base(file.Path),
+        Size:  file.Size,
+        Paths: make([]string, 0),
+        Count: 1,
+    }
+    stats.Paths = append(stats.Paths, file.Path)
+    return &stats
+}
+
+func GetFileNameKey(file *File) string {
+    return fmt.Sprintf("%s-%d", filepath.Base(file.Path), file.Size)
 }
 
 func NewFileWrapper(path string, size int64, modTime time.Time) *FileWrapper {
@@ -71,9 +92,8 @@ type DirInfo struct {
 func NewDirInfo(srcDir, dstDir string) *DirInfo {
     checksum := md5.Sum([]byte(srcDir))
     checksumStr := hex.EncodeToString(checksum[:])
-    d := DirInfo{
+    return &DirInfo{
         Checksum: checksumStr,
         dbPath:   filepath.Join(dstDir, fmt.Sprintf(FilesDbName, checksumStr)),
     }
-    return &d
 }

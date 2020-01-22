@@ -12,16 +12,10 @@ import (
     "path/filepath"
     "runtime"
     "strings"
-    "sync"
     "time"
 )
 
-//const (
-//    DefaultDateFormat = "2006-01-02 15:04:05"
-//)
-
 var ErrorBucketNotFound = errors.New("bucket not found")
-
 
 func IsValidDir(dir string) (string, error) {
     absDir, err := filepath.Abs(dir)
@@ -64,43 +58,44 @@ func GetFileHash(path string) (string, error) {
     return hex.EncodeToString(checksum), nil
 }
 
-func GetFileMap(dir string, hashComparision bool) (*sync.Map, *FilesReport, int64, uint64, error) {
-    fileMap := sync.Map{}
-    report := NewFilesReport()
-
-    var size uint64
-    var count int64
-
-    err := filepath.Walk(dir, func(path string, file os.FileInfo, err error) error {
-        if file.IsDir() {
-            return nil
-        }
-
-        if !file.Mode().IsRegular() {
-            return nil
-        }
-
-        fi := NewFileWrapper(path, file.Size(), file.ModTime())
-        if hashComparision {
-            h, err := GetFileHash(path)
-            if err != nil {
-                return err
-            }
-            fi.Hash = h
-        }
-
-        // Statistics
-        report.addExtension(file.Name(), file.Size())
-        report.addSize(file.Size())
-        size += uint64(fi.Size)
-        count++
-
-        fileMap.Store(path, fi)
-        return nil
-    })
-
-    return &fileMap, report, count, size, err
-}
+//
+//func GetFileMap(dir string, hashComparision bool) (*sync.Map, *FilesReport, int64, uint64, error) {
+//    fileMap := sync.Map{}
+//    report := NewFilesReport()
+//
+//    var size uint64
+//    var count int64
+//
+//    err := filepath.Walk(dir, func(path string, file os.FileInfo, err error) error {
+//        if file.IsDir() {
+//            return nil
+//        }
+//
+//        if !file.Mode().IsRegular() {
+//            return nil
+//        }
+//
+//        fi := NewFileWrapper(path, file.Size(), file.ModTime())
+//        if hashComparision {
+//            h, err := GetFileHash(path)
+//            if err != nil {
+//                return err
+//            }
+//            fi.Hash = h
+//        }
+//
+//        // Statistics
+//        report.addExtension(file.Name(), file.Size())
+//        report.addSize(file)
+//        size += uint64(fi.Size)
+//        count++
+//
+//        fileMap.Store(path, fi)
+//        return nil
+//    })
+//
+//    return &fileMap, report, count, size, err
+//}
 //
 //func GetFileSizeCategory(size int64) int64 {
 //    for i := range fileSizeCategories {
@@ -155,20 +150,6 @@ func GetHumanizedSize(size uint64) string {
     return fmt.Sprintf("%s (%s)", str, humanized)
 }
 
-// func InitDatabase(summaryDbPath, fileMapDbPath string) (*os.File, *os.File, error) {
-// 	summaryDb, err := os.OpenFile(summaryDbPath, os.O_RDWR|os.O_CREATE, 0644)
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-//
-// 	fileMapDb, err := os.OpenFile(fileMapDbPath, os.O_RDWR|os.O_CREATE, 0644)
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-//
-// 	return summaryDb, fileMapDb, nil
-// }
-
 func LoadOrCreateDatabase(path string) (*os.File, error) {
     db, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0644)
     if err != nil {
@@ -184,10 +165,12 @@ func FillMd5ValueOfStringKey(m map[string]string, key string) {
     m[k] = v
 }
 
-func CreateSrcDirsHashMap(dirs []string) map[string]string {
-    m := make(map[string]string)
-    for _, u := range dirs {
-        FillMd5ValueOfStringKey(m, u)
+
+
+func NewSizeDistribution() map[int64]int64 {
+    m := make(map[int64]int64)
+    for _, size := range fileSizeCategories {
+        m[size] = 0
     }
     return m
 }

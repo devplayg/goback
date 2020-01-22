@@ -2,10 +2,8 @@ package goback
 
 import (
     "fmt"
-    "github.com/dustin/go-humanize"
     log "github.com/sirupsen/logrus"
     "os"
-    "path/filepath"
     "sync"
     "sync/atomic"
     "time"
@@ -44,59 +42,6 @@ func (b *Backup) startBackup(srcDir string, lastFileMap *sync.Map) error {
     return nil
 }
 
-// Using go-routine
-func (b *Backup) getCurrentFileMaps(dir string) ([]*sync.Map, error) {
-    fileMaps := make([]*sync.Map, b.workerCount)
-    for i := range fileMaps {
-        fileMaps[i] = &sync.Map{}
-    }
-
-    i := 0
-    err := filepath.Walk(dir, func(path string, file os.FileInfo, err error) error {
-        if file.IsDir() {
-            return nil
-        }
-
-        if !file.Mode().IsRegular() {
-            return nil
-        }
-
-        fi := NewFileWrapper(path, file.Size(), file.ModTime())
-        if b.hashComparision {
-            h, err := GetFileHash(path)
-            if err != nil {
-                return err
-            }
-            fi.Hash = h
-        }
-
-        // Statistics
-        b.summary.Report.addExtension(file.Name(), file.Size())
-        b.summary.Report.addSize(file.Size())
-        b.summary.TotalSize += uint64(fi.Size)
-        b.summary.TotalCount++
-
-        // Distribute works
-        workerId := i % b.workerCount
-        fileMaps[workerId].Store(path, fi)
-        i++
-
-        return nil
-    })
-    if err != nil {
-        return nil, err
-    }
-
-    b.writeBackupState(Read)
-    log.WithFields(log.Fields{
-        "execTime": b.summary.ReadingTime.Sub(b.summary.Date).Seconds(),
-        "files":    b.summary.TotalCount,
-        "dir":      dir,
-        "size":     fmt.Sprintf("%d(%s)", b.summary.TotalSize, humanize.Bytes(b.summary.TotalSize)),
-    }).Info("read files")
-
-    return fileMaps, nil
-}
 
 func (b *Backup) backupFiles() error {
     fileGroup, count, err := b.createBackupFileGroup()
