@@ -2,6 +2,7 @@ package goback
 
 import (
     "encoding/json"
+    "github.com/devplayg/golibs/compress"
     "github.com/devplayg/himma"
     "github.com/gorilla/mux"
     log "github.com/sirupsen/logrus"
@@ -23,15 +24,20 @@ func (c *Controller) GetSummaries(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) GetChangesLog(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     id, _ := strconv.Atoi(vars["id"])
-    logs, err := c.getChangesLog(id)
+    data, err := c.getChangesLog(id)
     if err != nil {
         w.WriteHeader(http.StatusInternalServerError)
         w.Write([]byte(err.Error()))
         return
     }
 
-    b, _ := json.MarshalIndent(logs, "", "  ")
-    w.Write(b)
+    //w.Header().Set("Content-Type", DetectContentType(filepath.Ext(r.RequestURI)))
+    //w.Header().Set("Content-Length", strconv.FormatInt(int64(len(content)), 10))
+    w.Header().Set("Content-Encoding", compress.GZIP)
+    w.Header().Add("Content-Type", "application/json")
+
+    //b, _ := json.MarshalIndent(logs, "", "  ")
+    w.Write(data)
     log.WithFields(log.Fields{
         "id":   vars["id"],
         "what": vars["what"],

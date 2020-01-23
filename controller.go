@@ -68,7 +68,7 @@ func (c *Controller) initRouter() error {
 	c.router.HandleFunc("/", c.DisplayBackup)
 
 	c.router.HandleFunc("/summaries", c.GetSummaries)
-	c.router.HandleFunc("/summaries/{id:[0-9]+}/files/{what:[0-9]+}", c.GetChangesLog)
+	c.router.HandleFunc("/summaries/{id:[0-9]+}/changes", c.GetChangesLog)
 
 	c.router.HandleFunc("/assets/{assetType}/{name}", func(w http.ResponseWriter, r *http.Request) {
 		GetAsset(w, r)

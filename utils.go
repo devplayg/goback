@@ -223,3 +223,10 @@ func LoadBackupData(path string, output interface{}, encoding int) error {
 
     return nil
 }
+
+//
+//func GetChangesLogKey(date string, backupId int) string {
+//    key := fmt.Sprintf("%s-%d", date, backupId)
+//    h := md5.Sum([]byte(summary.SrcDir))
+//    suffix := hex.EncodeToString(h[:])
+//}
