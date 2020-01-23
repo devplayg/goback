@@ -1,5 +1,10 @@
 
 {{define "content"}}
+    <style>
+        .pagination .page-link {
+            border-width: 1px;
+        }
+    </style>
     <div class="row">
         <div class="col">
             <div  class="panel ">
@@ -30,12 +35,12 @@
                                 <th data-field="srcDir" data-sortable="true">Backup Dir.</th>
                                 <th data-field="backupType" data-sortable="true" data-formatter="backupTypeFormatter">Type</th>
                                 <th data-field="state" data-sortable="true" data-formatter="backupStateFormatter">Result</th>
-                                <th data-field="execTime" data-sortable="true" data-formatter="toFixed2Formatter">Time(Sec)</th>
+                                <th data-field="execTime" data-sortable="true" data-formatter="toFixedFormatter">Time(Sec)</th>
 
                                 <th data-field="workerCount" data-sortable="true" data-visible="false">Workers</th>
 
-                                <th data-field="totalSize" data-sortable="true" data-formatter="bytesTooltipFormatter">Total Size (B)</th>
                                 <th data-field="totalCount" data-sortable="true" data-formatter="thCommaFormatter">Files</th>
+                                <th data-field="totalSize" data-sortable="true" data-formatter="bytesTooltipFormatter">Total Size (B)</th>
 
                                 <th data-field="countAdded" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Added</th>
                                 <th data-field="sizeAdded" data-sortable="true" data-formatter="bytesTooltipFormatter" data-visible="true">Added (B)</th>
@@ -70,7 +75,7 @@
     </div>
 
 
-    <div class="modal fade" id="modal-files" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal fade" id="modal-backup-changes" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -80,15 +85,73 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <table  id="table-files"
-                            class=" table-sm"
+                    <table  id="table-backup-added"
+                            class="table-data table-sm"
+                            data-toggle="table"
+                            data-search="true"
+                            data-pagination="true"
+                            data-show-export="true"
+                            data-pagination-v-align="both"
+                            data-export-types="['csv', 'txt', 'excel']"
+                            data-side-pagination="client"
+                            data-sort-name="name"
+                            data-page-size="20"
+                            data-sort-order="asc">
+                        <thead>
+                        <tr>
+                            <th data-field="path" data-sortable="true" data-formatter="backupPathFormatter">Name</th>
+                            <th data-field="mtime" data-visible="false">Modified</th>
+                            <th data-field="size" data-sortable="true">Size</th>
+                            <th data-field="result" data-sortable="true">Result</th>
+                        </tr>
+                        </thead>
+                    </table>
+                    <table  id="table-backup-modified"
+                            class="table-data table-sm"
                             data-toggle="table"
                             data-search="true"
                             data-pagination="true"
                             data-show-export="true"
                             data-export-types="['csv', 'txt', 'excel']"
                             data-side-pagination="client"
-                            data-show-columns="true"
+                            data-sort-name="name"
+                            data-page-size="20"
+                            data-sort-order="asc">
+                        <thead>
+                        <tr>
+                            <th data-field="name" data-sortable="true">Name</th>
+                            <th data-field="size" data-sortable="true">Size</th>
+                            <th data-field="result" data-sortable="true">Result</th>
+                        </tr>
+                        </thead>
+                    </table>
+                    <table  id="table-backup-deleted"
+                            class="table-data table-sm"
+                            data-toggle="table"
+                            data-search="true"
+                            data-pagination="true"
+                            data-show-export="true"
+                            data-export-types="['csv', 'txt', 'excel']"
+                            data-side-pagination="client"
+                            data-sort-name="name"
+                            data-page-size="20"
+                            data-sort-order="asc">
+                        <thead>
+                        <tr>
+                            <th data-field="name" data-sortable="true">Name</th>
+                            <th data-field="size" data-sortable="true">Size</th>
+                            <th data-field="result" data-sortable="true">Result</th>
+                        </tr>
+                        </thead>
+                    </table>
+                    <table  id="table-backup-failed"
+                            class="table-data table-sm"
+                            data-toggle="table"
+                            data-search="true"
+                            data-pagination="true"
+                            data-show-export="true"
+                            data-export-types="['csv', 'txt', 'excel']"
+                            data-side-pagination="client"
                             data-sort-name="name"
                             data-page-size="20"
                             data-sort-order="asc">
@@ -113,11 +176,117 @@
 {{define "script"}}
     <script>
 
-        $('#modal-files')
+        $('#modal-backup-changes')
             .on('show.bs.modal', function (e) {
             }).on('hidden.bs.modal', function (e) {
-                $("#table-files").bootstrapTable("removeAll");
+                console.log("333");
+                $(".table-data").bootstrapTable("removeAll");
             });
+
+
+
+        $("#table-backup").on('load-success.bs.table', function (e, data) {
+            $('.has-popover').popover();
+        });
+
+        window.backupOperateEvents = {
+            'click .file': function (e, val, row, idx) {
+                console.log(row);
+                let $btn = $(e.currentTarget);
+                // $("#modal-files .modal-title").text($btn.data("title"));
+
+                // console.log($btn.data("field"));
+                showChangedFiles(row.id, $btn.data("title"), $btn.data("field"));
+                // getBackupFiles(row, $btn.data("field"));
+                // $("#modal-files").modal("show");
+            },
+        };
+
+        function bytesFormatter(val, row, idx) {
+            return bytesToSize(val);
+        }
+        // function dateOnlyFormatter(val, row, idx) {
+        //     return moment(val).format("ll");
+        // }
+        function dateFormatter(val, row, idx) {
+            return moment(val).format("YYYY-MM-DD HH:mm:ss");
+        }
+        function bytesToSize(bytes) {
+            return toHumanizedSize(bytes, true);
+            // let sizes = ['B', 'kB', 'MB', 'GB', 'TB'];
+            // if (bytes == 0) return '0 Byte';
+            // let i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+            // return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
+        }
+
+        function toHumanizedSize(bytes, si) {
+            let thresh = si ? 1000 : 1024;
+            if(Math.abs(bytes) < thresh) {
+                return bytes + ' B';
+            }
+            let units = si
+                ? ['kB','MB','GB','TB','PB','EB','ZB','YB']
+                : ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'];
+            let u = -1;
+            do {
+                bytes /= thresh;
+                ++u;
+            } while(Math.abs(bytes) >= thresh && u < units.length - 1);
+            return bytes.toFixed(1)+' '+units[u];
+        }
+
+        function bytesWithSize(bytes, prefix, suffix) {
+            if (prefix === undefined) {
+                prefix = "";
+            }
+            if (suffix === undefined) {
+                suffix = "";
+            }
+            console.log("==================");
+            console.log(bytes + " B");
+            console.log(bytesToSize(bytes));
+            // console.log((bytes + " B") === bytesToSize(bytes));
+            if ((bytes + " B") == bytesToSize(bytes)) {
+                return bytesToSize(bytes);
+            }
+            return bytesToSize(bytes) + prefix + bytes.toLocaleString() + " B" + suffix;
+        }
+
+        function basename(str)
+        {
+            var base = new String(str).substring(str.lastIndexOf('/') + 1);
+            if(base.lastIndexOf(".") != -1)
+                base = base.substring(0, base.lastIndexOf("."));
+            return base;
+        }
+
+        function dirname(path) {
+            return path.match(/.*\//);
+        }
+
+        function showChangedFiles(id, title, field) {
+            let url = "/summaries/" + id + "/changes";
+            $.ajax({
+                url: url,
+            }).done(function(report) {
+                console.log(report);
+                $("#table-backup-added").bootstrapTable("load", report.added.files);
+                $("#table-backup-modified").bootstrapTable("load", report.modified.files);
+                $("#table-backup-deleted").bootstrapTable("load", report.deleted.files);
+                $("#table-backup-failed").bootstrapTable("load", report.failed.files);
+
+                $("#modal-backup-changes .modal-title").text(title);
+                $("#modal-backup-changes").modal("show");
+            });
+        }
+
+
+        /*
+        * Formatters
+        */
+        function backupPathFormatter(val, row, idx) {
+            return val;
+        }
 
         function backupResultFormatter(val, row, idx, field) {
             let th = $('#table-backup').find("[data-field='" + field + "']");
@@ -149,33 +318,6 @@
             //     '</a>  ',
             // ].join('')
 
-        }
-
-        $("#table-backup").on('load-success.bs.table', function (e, data) {
-            $('.has-popover').popover();
-        });
-
-        window.backupOperateEvents = {
-            'click .file': function (e, val, row, idx) {
-                console.log(row);
-                let $btn = $(e.currentTarget);
-                // $("#modal-files .modal-title").text($btn.data("title"));
-
-                // console.log($btn.data("field"));
-                showModalFiles(row.id, $btn.data("title"), $btn.data("field"));
-                // getBackupFiles(row, $btn.data("field"));
-                // $("#modal-files").modal("show");
-            },
-        };
-
-        function showModalFiles(id, title, field) {
-            let url = "/summaries/" + id + "/files/" + 1;
-            console.log(url);
-            $.ajax({
-                url: url,
-            }).done(function(data) {
-                console.log(data);
-            });
         }
 
         function backupTypeFormatter(val, row, idx) {
@@ -368,7 +510,7 @@
         //     return link[0].outerHTML;
         // }
 
-        function toFixed2Formatter(val, row, idx) {
+        function toFixedFormatter(val, row, idx) {
             return  val.toFixed(2);
         }
         function backupFailedCountFormatter(val, row, idx) {
@@ -399,55 +541,14 @@
             return link[0].outerHTML;
 
         }
-        function bytesFormatter(val, row, idx) {
-            return bytesToSize(val);
-        }
-        // function dateOnlyFormatter(val, row, idx) {
-        //     return moment(val).format("ll");
+
+        // function basename(str, sep) {
+        //     return str.substr(str.lastIndexOf(sep) + 1);
         // }
-        function dateFormatter(val, row, idx) {
-            return moment(val).format("YYYY-MM-DD HH:mm:ss");
-        }
-        function bytesToSize(bytes) {
-            return toHumanizedSize(bytes, true);
-            // let sizes = ['B', 'kB', 'MB', 'GB', 'TB'];
-            // if (bytes == 0) return '0 Byte';
-            // let i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
-            // return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
-        }
-
-        function toHumanizedSize(bytes, si) {
-            let thresh = si ? 1000 : 1024;
-            if(Math.abs(bytes) < thresh) {
-                return bytes + ' B';
-            }
-            let units = si
-                ? ['kB','MB','GB','TB','PB','EB','ZB','YB']
-                : ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'];
-            let u = -1;
-            do {
-                bytes /= thresh;
-                ++u;
-            } while(Math.abs(bytes) >= thresh && u < units.length - 1);
-            return bytes.toFixed(1)+' '+units[u];
-        }
-
-        function  bytesWithSize(bytes, prefix, suffix) {
-            if (prefix === undefined) {
-                prefix = "";
-            }
-            if (suffix === undefined) {
-                suffix = "";
-            }
-            console.log("==================");
-            console.log(bytes + " B");
-            console.log(bytesToSize(bytes));
-            // console.log((bytes + " B") === bytesToSize(bytes));
-            if ((bytes + " B") == bytesToSize(bytes)) {
-                return bytesToSize(bytes);
-            }
-            return bytesToSize(bytes) + prefix + bytes.toLocaleString() + " B" + suffix;
-        }
+        //
+        // function strip_extension(str) {
+        //     return str.substr(0,str.lastIndexOf('.'));
+        // }
 
     </script>
 {{end}}

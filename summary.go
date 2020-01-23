@@ -1,74 +1,72 @@
 package goback
 
 import (
-    "encoding/json"
-    "sync"
-    "time"
+	"encoding/json"
+	"sync"
+	"time"
 )
 
 type Summary struct {
-    Id          int       `json:"id"`
-    BackupId    int       `json:"backupId"`
-    Date        time.Time `json:"date"`
-    SrcDir      string    `json:"srcDir"`
-    DstDir      string    `json:"dstDir"`
-    BackupType  int       `json:"backupType"`
-    State       int       `json:"state"`
-    WorkerCount int       `json:"workerCount"`
+	Id          int       `json:"id"`
+	BackupId    int       `json:"backupId"`
+	Date        time.Time `json:"date"`
+	SrcDir      string    `json:"srcDir"`
+	DstDir      string    `json:"dstDir"`
+	BackupType  int       `json:"backupType"`
+	State       int       `json:"state"`
+	WorkerCount int       `json:"workerCount"`
 
-    // Thread-safe
-    TotalSize     uint64 `json:"totalSize"`
-    TotalCount    int64  `json:"totalCount"`
-    AddedCount    uint64 `json:"countAdded"`
-    AddedSize     uint64 `json:"sizeAdded"`
-    ModifiedCount uint64 `json:"countModified"`
-    ModifiedSize  uint64 `json:"sizeModified"`
-    DeletedCount  uint64 `json:"countDeleted"`
-    DeletedSize   uint64 `json:"sizeDeleted"`
+	// Thread-safe
+	TotalSize     uint64 `json:"totalSize"`
+	TotalCount    int64  `json:"totalCount"`
+	AddedCount    uint64 `json:"countAdded"`
+	AddedSize     uint64 `json:"sizeAdded"`
+	ModifiedCount uint64 `json:"countModified"`
+	ModifiedSize  uint64 `json:"sizeModified"`
+	DeletedCount  uint64 `json:"countDeleted"`
+	DeletedSize   uint64 `json:"sizeDeleted"`
 
-    // Backup
-    FailedCount  uint64 `json:"countFailed"`
-    FailedSize   uint64 `json:"sizeFailed"`
-    SuccessCount uint64 `json:"countSuccess"`
-    SuccessSize  uint64 `json:"sizeSuccess"`
+	// Backup
+	FailedCount  uint64 `json:"countFailed"`
+	FailedSize   uint64 `json:"sizeFailed"`
+	SuccessCount uint64 `json:"countSuccess"`
+	SuccessSize  uint64 `json:"sizeSuccess"`
 
-    ReadingTime    time.Time `json:"readingTime"`    // Step 1
-    ComparisonTime time.Time `json:"comparisonTime"` // Step 2
-    BackupTime     time.Time `json:"backupTime"`     // Step 3
-    LoggingTime    time.Time `json:"loggingTime"`    // Step 4
-    ExecutionTime  float64   `json:"execTime"`       // Result
+	ReadingTime    time.Time `json:"readingTime"`    // Step 1
+	ComparisonTime time.Time `json:"comparisonTime"` // Step 2
+	BackupTime     time.Time `json:"backupTime"`     // Step 3
+	LoggingTime    time.Time `json:"loggingTime"`    // Step 4
+	ExecutionTime  float64   `json:"execTime"`       // Result
 
-    Message string       `json:"message"`
-    Version int          `json:"version"`
-    Report  *StatsReport `json:"report"`
+	Message string       `json:"message"`
+	Version int          `json:"version"`
+	Report  *StatsReport `json:"report"`
 
-    addedFiles    *sync.Map
-    modifiedFiles *sync.Map
-    deletedFiles  *sync.Map
-    failedFiles   *sync.Map
+	addedFiles    *sync.Map
+	modifiedFiles *sync.Map
+	deletedFiles  *sync.Map
+	failedFiles   *sync.Map
 }
 
 func (s *Summary) Marshal() ([]byte, error) {
-    return json.Marshal(s)
+	return json.Marshal(s)
 }
 
 func NewSummary(summaryId, backupId int, srcDir, dstDir string, backupType, workCount, version int, sizeRankMinSize int64) *Summary {
-    return &Summary{
-        Id:            summaryId,
-        BackupId:      backupId,
-        Date:          time.Now(),
-        SrcDir:        srcDir,
-        DstDir:        dstDir,
-        WorkerCount:   workCount,
-        Version:       version,
-        BackupType:    backupType,
-        State:         Started,
-        Report:        NewStatsReport(sizeRankMinSize),
-        addedFiles:    &sync.Map{},
-        modifiedFiles: &sync.Map{},
-        deletedFiles:  &sync.Map{},
-        failedFiles:   &sync.Map{},
-        //ExtensionMap:     make(map[string]int64),
-        //SizeDistribution: make(map[int64]int64),
-    }
+	return &Summary{
+		Id:            summaryId,
+		BackupId:      backupId,
+		Date:          time.Now(),
+		SrcDir:        srcDir,
+		DstDir:        dstDir,
+		WorkerCount:   workCount,
+		Version:       version,
+		BackupType:    backupType,
+		State:         Started,
+		Report:        NewStatsReport(sizeRankMinSize),
+		addedFiles:    &sync.Map{},
+		modifiedFiles: &sync.Map{},
+		deletedFiles:  &sync.Map{},
+		failedFiles:   &sync.Map{},
+	}
 }
