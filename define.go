@@ -20,6 +20,9 @@ const (
 	NormalBackup  = 2
 
 	Failed = -1
+
+	GobEncoding = 1
+	JsonEncoding = 2
 )
 const (
 	Started = iota + 1

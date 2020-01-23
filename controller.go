@@ -66,11 +66,13 @@ func (c *Controller) init() error {
 func (c *Controller) initRouter() error {
 	c.router = mux.NewRouter()
 	c.router.HandleFunc("/", c.DisplayBackup)
+
 	c.router.HandleFunc("/summaries", c.GetSummaries)
+	c.router.HandleFunc("/summaries/{id:[0-9]+}/files/{what:[0-9]+}", c.GetChangesLog)
+
 	c.router.HandleFunc("/assets/{assetType}/{name}", func(w http.ResponseWriter, r *http.Request) {
 		GetAsset(w, r)
 	})
-
 	c.router.HandleFunc("/assets/{u1}/{u2}/{u3}", func(w http.ResponseWriter, r *http.Request) {
 		GetAsset(w, r)
 	})
@@ -118,7 +120,7 @@ func (c *Controller) Stop() error {
 func (c *Controller) loadSummaryDb() error {
 	path := filepath.Join(c.dir, SummaryDbName)
 	var summaries []*Summary
-	if err := LoadBackupData(path, &summaries); err != nil {
+	if err := LoadBackupData(path, &summaries, GobEncoding); err != nil {
 		return err
 	}
 	c.summaries = summaries

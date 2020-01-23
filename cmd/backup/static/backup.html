@@ -157,13 +157,25 @@
 
         window.backupOperateEvents = {
             'click .file': function (e, val, row, idx) {
+                console.log(row);
                 let $btn = $(e.currentTarget);
-                $("#modal-files .modal-title").text($btn.data("title"));
+                // $("#modal-files .modal-title").text($btn.data("title"));
 
-                console.log($btn.data("field"));
-                getBackupFiles(row, $btn.data("field"));
-                $("#modal-files").modal("show");
+                // console.log($btn.data("field"));
+                showModalFiles(row.id, $btn.data("title"), $btn.data("field"));
+                // getBackupFiles(row, $btn.data("field"));
+                // $("#modal-files").modal("show");
             },
+        };
+
+        function showModalFiles(id, title, field) {
+            let url = "/summaries/" + id + "/files/" + 1;
+            console.log(url);
+            $.ajax({
+                url: url,
+            }).done(function(data) {
+                console.log(data);
+            });
         }
 
         function backupTypeFormatter(val, row, idx) {
