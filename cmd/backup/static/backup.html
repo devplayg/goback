@@ -94,15 +94,15 @@
                             data-pagination-v-align="both"
                             data-export-types="['csv', 'txt', 'excel']"
                             data-side-pagination="client"
-                            data-sort-name="name"
+                            data-sort-name="path"
                             data-page-size="20"
                             data-sort-order="asc">
                         <thead>
                         <tr>
-                            <th data-field="path" data-sortable="true" data-formatter="backupPathFormatter">Name</th>
+                            <th data-field="path" data-sortable="true" data-formatter="backupBasenameFormatter">Name</th>
+                            <th data-field="dir" data-sortable="true" data-formatter="backupDirFormatter">Directory</th>
                             <th data-field="mtime" data-visible="false">Modified</th>
-                            <th data-field="size" data-sortable="true">Size</th>
-                            <th data-field="result" data-sortable="true">Result</th>
+                            <th data-field="size" data-sortable="true" data-formatter="sizeFormatter">Size</th>
                         </tr>
                         </thead>
                     </table>
@@ -252,16 +252,17 @@
             return bytesToSize(bytes) + prefix + bytes.toLocaleString() + " B" + suffix;
         }
 
-        function basename(str)
-        {
-            var base = new String(str).substring(str.lastIndexOf('/') + 1);
-            if(base.lastIndexOf(".") != -1)
-                base = base.substring(0, base.lastIndexOf("."));
-            return base;
+        function basename(path) {
+            return path.replace(/^.*[\\\/]/, '');
         }
 
         function dirname(path) {
-            return path.match(/.*\//);
+            // return path.substr(0, basename(path).lastIndexOf('.'));
+
+            return path.substring(0, path.lastIndexOf(basename(path)));
+
+            // return path.replacee
+            // trimEnd(path, basename(path));
         }
 
         function showChangedFiles(id, title, field) {
@@ -280,12 +281,22 @@
             });
         }
 
+        // String.prototype.basename = function(sep) {
+        //     sep = sep || '\\/';
+        //     return this.split(new RegExp("["+sep+"]")).pop();
+        // }
 
         /*
         * Formatters
         */
-        function backupPathFormatter(val, row, idx) {
-            return val;
+        function sizeFormatter(val, row, idx) {
+            return toHumanizedSize(val);
+        }
+        function backupBasenameFormatter(val, row, idx) {
+            return basename(val);
+        }
+        function backupDirFormatter(val, row, idx) {
+            return '<span class="text-muted">' + dirname(row.path) + '</span>';
         }
 
         function backupResultFormatter(val, row, idx, field) {

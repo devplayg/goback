@@ -57,7 +57,8 @@ func (b *Backup) backupFiles() error {
 	}
 
 	log.WithFields(log.Fields{
-		"files": count,
+		"files":   count,
+		"workers": b.workerCount,
 	}).Info("running backup..")
 	wg := sync.WaitGroup{}
 	for i := range fileGroup {
