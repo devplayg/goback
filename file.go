@@ -29,7 +29,7 @@ type ExtensionStats struct {
 	Count int64  `json:"count"`
 }
 
-func NewFileStats(ext string, size int64) *ExtensionStats {
+func NewExtensionStats(ext string, size int64) *ExtensionStats {
 	return &ExtensionStats{
 		Ext:   ext,
 		Size:  size,
@@ -37,21 +37,21 @@ func NewFileStats(ext string, size int64) *ExtensionStats {
 	}
 }
 
-type FileNameStats struct {
+type FilenameStats struct {
 	Name  string   `json:"name"`
 	Size  int64    `json:"size"`
 	Paths []string `json:"paths"`
 	Count int64    `json:"count"`
 }
 
-func NewFileNameStats(file *File) *FileNameStats {
-	stats := FileNameStats{
+func NewFilenameStats(file *File) *FilenameStats {
+	stats := FilenameStats{
 		Name:  filepath.Base(file.Path),
 		Size:  file.Size,
 		Paths: make([]string, 0),
 		Count: 1,
 	}
-	stats.Paths = append(stats.Paths, file.Path)
+	stats.Paths = append(stats.Paths, filepath.Dir(file.Path))
 	return &stats
 }
 
@@ -98,24 +98,33 @@ func NewDirInfo(srcDir, dstDir string) *DirInfo {
 	}
 }
 
-type FileReport struct {
-	Name   string `json:"name"`
-	Dir    string `json:"dir"`
-	Ext    string `json:"ext"`
-	Size   int64  `json:"size"`
-	Result int    `json:"result"`
-	path   string
+type FileInterface interface {
+	Name() string
+	Size() int64
+	Ext() string
+	Path() string
 }
 
-func NewFileReport(fileWrapper *FileWrapper) *FileReport {
-	dir, name := filepath.Split(fileWrapper.Path)
-	report := FileReport{
-		Dir:    dir,
-		Name:   name,
-		Ext:    filepath.Ext(name),
-		Size:   0,
-		Result: 0,
-		path:   fileWrapper.Path,
-	}
-	return &report
-}
+//
+// type FileGrid struct {
+// 	Name    string    `json:"name"`
+// 	Dir     string    `json:"dir"`
+// 	Ext     string    `json:"ext"`
+// 	Size    int64     `json:"size"`
+// 	ModTime time.Time `json:"modTime"`
+// 	Result  int       `json:"result"`
+// }
+//
+//
+// func FileWrapperToGrid(fileWrapper *FileWrapper) *FileGrid {
+// 	dir, name := filepath.Split(fileWrapper.Path)
+// 	file := FileGrid{
+// 		Dir:    dir,
+// 		Name:   name,
+// 		Ext:    strings.ToLower(filepath.Ext(name)),
+// 		Size:   fileWrapper.Size,
+// 		Result: fileWrapper.Result,
+// 		ModTime: fileWrapper.ModTime,
+// 	}
+// 	return &file
+// }

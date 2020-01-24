@@ -74,33 +74,33 @@ func (b *Backup) writeSummary() error {
 func (b *Backup) writeChangesLog(lastFileMap *sync.Map) error {
 	m := make(map[string]*StatsReportWithList)
 
-	added := make([]*FileReport, 0)
+	added := make([]*FileWrapper, 0)
 	b.summary.addedFiles.Range(func(k, v interface{}) bool {
 		file := k.(*FileWrapper)
-		added = append(added, NewFileReport(file))
+		added = append(added, file)
 		return true
 	})
 
-	modified := make([]*FileReport, 0)
+	modified := make([]*FileWrapper, 0)
 	b.summary.modifiedFiles.Range(func(k, v interface{}) bool {
 		file := k.(*FileWrapper)
-		modified = append(modified, NewFileReport(file))
+		modified = append(modified, file)
 		return true
 	})
 
-	failed := make([]*FileReport, 0)
+	failed := make([]*FileWrapper, 0)
 	b.summary.failedFiles.Range(func(k, v interface{}) bool {
 		file := k.(*FileWrapper)
-		failed = append(failed, NewFileReport(file))
+		failed = append(failed, file)
 		return true
 	})
 
 	// The remaining files in LastFileMap are deleted files.
-	deleted := make([]*FileReport, 0)
+	deleted := make([]*FileWrapper, 0)
 	if lastFileMap != nil {
 		b.summary.deletedFiles.Range(func(k, v interface{}) bool {
 			file := k.(*FileWrapper)
-			deleted = append(deleted, NewFileReport(file))
+			deleted = append(deleted, file)
 			return true
 		})
 	}
