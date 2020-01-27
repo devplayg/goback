@@ -22,7 +22,7 @@ type Backup struct {
 	debug bool
 
 	srcDirs   []string
-	srcDirMap map[string]*DirInfo
+	srcDirMap map[string]*dirInfo
 	dstDir    string
 
 	summaryDb        *os.File
@@ -43,7 +43,7 @@ type Backup struct {
 func NewBackup(srcDirs []string, dstDir string, hashComparision, debug bool) *Backup {
 	return &Backup{
 		srcDirs:          srcDirs,
-		srcDirMap:        make(map[string]*DirInfo),
+		srcDirMap:        make(map[string]*dirInfo),
 		dstDir:           dstDir,
 		hashComparision:  hashComparision,
 		debug:            debug,
@@ -52,8 +52,9 @@ func NewBackup(srcDirs []string, dstDir string, hashComparision, debug bool) *Ba
 		version:          1,
 		started:          time.Now(),
 		rank:             50,
-		sizeRankMinSize:  10 * MB,
-		summaryDbPath:    filepath.Join(dstDir, SummaryDbName),
+		//sizeRankMinSize:  10 * MB,
+		//sizeRankMinSize:  10 * MB,
+		summaryDbPath: filepath.Join(dstDir, SummaryDbName),
 	}
 }
 
@@ -143,7 +144,7 @@ func (b *Backup) Start() error {
 func (b *Backup) doBackup(dirToBackup string) error {
 	srcDir, err := IsValidDir(dirToBackup)
 	if err != nil {
-		return errors.New("source directory error: " + err.Error())
+		return fmt.Errorf("invalid source directory: %w", err)
 	}
 
 	if _, have := b.srcDirMap[srcDir]; have {
@@ -151,7 +152,7 @@ func (b *Backup) doBackup(dirToBackup string) error {
 		return nil
 	}
 
-	b.srcDirMap[srcDir] = NewDirInfo(srcDir, b.dstDir)
+	b.srcDirMap[srcDir] = newDirInfo(srcDir, b.dstDir)
 	lastFileMap, err := b.loadLastFileMap(srcDir)
 	if err != nil {
 		return fmt.Errorf("failed to load last backup data for %s: %w", srcDir, err)
@@ -185,7 +186,7 @@ func (b *Backup) loadLastFileMap(dir string) (*sync.Map, error) {
 
 	fileMap := sync.Map{}
 	for _, f := range files {
-		fileMap.Store(f.Path, WrapFile(f))
+		fileMap.Store(f.Path, f.WrapInFileWrapper(true))
 	}
 
 	return &fileMap, nil
@@ -245,7 +246,7 @@ func (b *Backup) loadSummaryDb() error {
 	} else {
 		b.Id = summaries[len(summaries)-1].BackupId + 1
 	}
-	// spew.Dump(summaries)
+	//spew.Dump(summaries)
 
 	b.summaries = summaries
 	return nil
@@ -286,28 +287,28 @@ func (b *Backup) getCurrentFileMaps(dir string) ([]*sync.Map, error) {
 	}
 
 	i := 0
-	err := filepath.Walk(dir, func(path string, file os.FileInfo, err error) error {
-		if file.IsDir() {
+	err := filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
+		if f.IsDir() {
 			return nil
 		}
 
-		if !file.Mode().IsRegular() {
+		if !f.Mode().IsRegular() {
 			return nil
 		}
 
-		fileWrapper := NewFileWrapper(path, file.Size(), file.ModTime())
-		if b.hashComparision {
-			h, err := GetFileHash(path)
-			if err != nil {
-				return err
-			}
-			fileWrapper.Hash = h
-		}
+		fileWrapper := NewFileWrapper(path, f.Size(), f.ModTime())
+		// if b.hashComparision {
+		// 	h, err := GetFileHash(path)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// 	fileWrapper.Hash = h
+		// }
 
 		// Statistics
 		b.summary.TotalSize += uint64(fileWrapper.Size)
 		b.summary.TotalCount++
-		b.summary.Report.addToReport(fileWrapper.File)
+		b.summary.Stats.addToStats(fileWrapper.WrapInFileGrid())
 
 		// Distribute works
 		workerId := i % b.workerCount
@@ -320,7 +321,7 @@ func (b *Backup) getCurrentFileMaps(dir string) ([]*sync.Map, error) {
 		return nil, err
 	}
 
-	b.summary.Report.tune(b.rank)
+	b.summary.Stats.rank(b.rank)
 	b.writeBackupState(Read)
 	log.WithFields(log.Fields{
 		"execTime": b.summary.ReadingTime.Sub(b.summary.Date).Seconds(),

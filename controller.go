@@ -124,6 +124,7 @@ func (c *Controller) loadSummaryDb() error {
 		return err
 	}
 	c.summaries = summaries
+	//spew.Dump(summaries)
 	return nil
 }
 

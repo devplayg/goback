@@ -1,14 +1,18 @@
 package goback
 
 import (
+	"crypto/md5"
 	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 	"hash"
+	"path/filepath"
 )
 
 const (
-	FileModified = 1 << iota // 1
-	FileAdded    = 1 << iota // 2
-	FileDeleted  = 1 << iota // 4
+	FileModified = 1
+	FileAdded    = 2
+	FileDeleted  = 4
 
 	FileBackupFailed    = -1
 	FileBackupSucceeded = 1
@@ -21,7 +25,7 @@ const (
 
 	Failed = -1
 
-	GobEncoding = 1
+	GobEncoding  = 1
 	JsonEncoding = 2
 )
 const (
@@ -65,3 +69,17 @@ var (
 	HashKey     = sha256.Sum256([]byte("goback"))
 	Highwayhash hash.Hash
 )
+
+type dirInfo struct {
+	checksum string
+	dbPath   string
+}
+
+func newDirInfo(srcDir, dstDir string) *dirInfo {
+	b := md5.Sum([]byte(srcDir))
+	checksum := hex.EncodeToString(b[:])
+	return &dirInfo{
+		checksum: checksum,
+		dbPath:   filepath.Join(dstDir, fmt.Sprintf(FilesDbName, checksum)),
+	}
+}

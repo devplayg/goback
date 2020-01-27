@@ -38,9 +38,9 @@ type Summary struct {
 	LoggingTime    time.Time `json:"loggingTime"`    // Step 4
 	ExecutionTime  float64   `json:"execTime"`       // Result
 
-	Message string       `json:"message"`
-	Version int          `json:"version"`
-	Report  *StatsReport `json:"report"`
+	Message string `json:"message"`
+	Version int    `json:"version"`
+	Stats   *Stats `json:"stats"`
 
 	addedFiles    *sync.Map
 	modifiedFiles *sync.Map
@@ -63,7 +63,7 @@ func NewSummary(summaryId, backupId int, srcDir, dstDir string, backupType, work
 		Version:       version,
 		BackupType:    backupType,
 		State:         Started,
-		Report:        NewStatsReport(sizeRankMinSize),
+		Stats:         NewStatsReport(sizeRankMinSize),
 		addedFiles:    &sync.Map{},
 		modifiedFiles: &sync.Map{},
 		deletedFiles:  &sync.Map{},

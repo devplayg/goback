@@ -45,20 +45,28 @@ func (b *Backup) writeFileMaps(fileMaps []*sync.Map) error {
 
 	data, err := converter.EncodeToBytes(files)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to encode file map: %w", err)
 	}
 
 	return ioutil.WriteFile(b.srcDirMap[b.summary.SrcDir].dbPath, data, 0644)
 }
 
 func (b *Backup) writeSummary() error {
+
+	b.summary.Message = fmt.Sprintf("%3.1fs / %3.1fs / %3.1fs / %3.1fs",
+		b.summary.ReadingTime.Sub(b.summary.Date).Seconds(),
+		b.summary.ComparisonTime.Sub(b.summary.ReadingTime).Seconds(),
+		b.summary.BackupTime.Sub(b.summary.ComparisonTime).Seconds(),
+		b.summary.LoggingTime.Sub(b.summary.BackupTime).Seconds(),
+	)
+
 	encoded, err := converter.EncodeToBytes(b.summaries)
 	if err != nil {
 		return fmt.Errorf("failed to encode summary data: %w", err)
 	}
 	compressed, err := compress.Compress(encoded, compress.GZIP)
 	if err != nil {
-		return fmt.Errorf("failed to compress summarydata: %w", err)
+		return fmt.Errorf("failed to compress summary data: %w", err)
 	}
 
 	if err := b.summaryDb.Truncate(0); err != nil {
@@ -74,56 +82,57 @@ func (b *Backup) writeSummary() error {
 func (b *Backup) writeChangesLog(lastFileMap *sync.Map) error {
 	m := make(map[string]*StatsReportWithList)
 
-	added := make([]*FileWrapper, 0)
+	added := make([]*FileGrid, 0)
 	b.summary.addedFiles.Range(func(k, v interface{}) bool {
 		file := k.(*FileWrapper)
-		added = append(added, file)
+		added = append(added, file.WrapInFileGrid())
 		return true
 	})
 
-	modified := make([]*FileWrapper, 0)
+	modified := make([]*FileGrid, 0)
 	b.summary.modifiedFiles.Range(func(k, v interface{}) bool {
 		file := k.(*FileWrapper)
-		modified = append(modified, file)
+		modified = append(modified, file.WrapInFileGrid())
 		return true
 	})
 
-	failed := make([]*FileWrapper, 0)
+	failed := make([]*FileGrid, 0)
 	b.summary.failedFiles.Range(func(k, v interface{}) bool {
 		file := k.(*FileWrapper)
-		failed = append(failed, file)
+		failed = append(failed, file.WrapInFileGrid())
 		return true
 	})
 
 	// The remaining files in LastFileMap are deleted files.
-	deleted := make([]*FileWrapper, 0)
+	deleted := make([]*FileGrid, 0)
 	if lastFileMap != nil {
 		b.summary.deletedFiles.Range(func(k, v interface{}) bool {
 			file := k.(*FileWrapper)
-			deleted = append(deleted, file)
+			deleted = append(deleted, file.WrapInFileGrid())
 			return true
 		})
 	}
 
-	m["added"] = CreateFilesReportWithList(added, 0, b.rank)
-	m["modified"] = CreateFilesReportWithList(modified, 0, b.rank)
-	m["failed"] = CreateFilesReportWithList(failed, 0, b.rank)
-	m["deleted"] = CreateFilesReportWithList(deleted, 0, b.rank)
+	m["added"] = CreateFilesReportWithList(added, b.summary.AddedSize, 0, b.rank)
+	m["modified"] = CreateFilesReportWithList(modified, b.summary.ModifiedSize, 0, b.rank)
+	m["failed"] = CreateFilesReportWithList(failed, b.summary.FailedSize, 0, b.rank)
+	m["deleted"] = CreateFilesReportWithList(deleted, b.summary.DeletedSize, 0, b.rank)
 
-	if err := WriteBackupData(m, filepath.Join(b.tempDir, "changes-"+b.srcDirMap[b.summary.SrcDir].Checksum+".db"), JsonEncoding); err != nil {
+	path := filepath.Join(b.tempDir, "changes-"+b.srcDirMap[b.summary.SrcDir].checksum+".db")
+	if err := WriteBackupData(m, path, JsonEncoding); err != nil {
 		return err
 	}
-	// data, err := converter.EncodeToBytes(m)
-	// if err != nil {
-	//     return fmt.Errorf("failed to encode changes log: %w", err)
-	// }
-	// compressed, err := compress.Compress(data, compress.GZIP)
-	// if err != nil {
-	//     return fmt.Errorf("failed to compress encoded changes log: %w", err)
-	// }
-	// if err := ioutil.WriteFile(filepath.Join(b.tempDir, "changes-"+b.srcDirMap[b.summary.SrcDir].Checksum+".data"), compressed, 0644); err != nil {
-	//     return err
-	// }
+	//	// data, err := converter.EncodeToBytes(m)
+	//	// if err != nil {
+	//	//     return fmt.Errorf("failed to encode changes log: %w", err)
+	//	// }
+	//	// compressed, err := compress.Compress(data, compress.GZIP)
+	//	// if err != nil {
+	//	//     return fmt.Errorf("failed to compress encoded changes log: %w", err)
+	//	// }
+	//	// if err := ioutil.WriteFile(filepath.Join(b.tempDir, "changes-"+b.srcDirMap[b.summary.SrcDir].Checksum+".data"), compressed, 0644); err != nil {
+	//	//     return err
+	//	// }
 
 	return nil
 }

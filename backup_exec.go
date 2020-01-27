@@ -86,7 +86,7 @@ func (b *Backup) backupFiles() error {
 	// 	file := key.(*FileWrapper)
 	// 	return true
 	// })
-
+	//
 	return nil
 }
 
@@ -126,7 +126,7 @@ func (b *Backup) backupFileGroup(workerId int, files []*FileWrapper) error {
 			b.summary.failedFiles.Store(file, nil)
 			atomic.AddUint64(&b.summary.FailedCount, 1)
 			atomic.AddUint64(&b.summary.FailedSize, uint64(file.Size))
-			file.Result = FileBackupFailed
+			file.State = FileBackupFailed
 			file.Message = err.Error()
 			log.WithFields(log.Fields{
 				"workerId": workerId,
@@ -137,8 +137,8 @@ func (b *Backup) backupFileGroup(workerId int, files []*FileWrapper) error {
 		// Success
 		atomic.AddUint64(&b.summary.SuccessCount, 1)
 		atomic.AddUint64(&b.summary.SuccessSize, uint64(file.Size))
-		file.Result = FileBackupSucceeded
-		file.Duration = dur
+		file.State = FileBackupSucceeded
+		file.ExecTime = dur
 		if err := os.Chtimes(path, file.ModTime, file.ModTime); err != nil {
 			log.WithFields(log.Fields{
 				"workerId": workerId,
@@ -208,7 +208,7 @@ func (b *Backup) compareFileMaps(currentFileMaps []*sync.Map, lastFileMap *sync.
 
 func (b *Backup) compareFileMap(workerId int, lastFileMap, currentFileMap *sync.Map) error {
 	var count int64
-	// t := time.Now()
+	//	// t := time.Now()
 	currentFileMap.Range(func(k, v interface{}) bool {
 		count++
 		path := k.(string)
@@ -229,10 +229,10 @@ func (b *Backup) compareFileMap(workerId int, lastFileMap, currentFileMap *sync.
 		b.writeWhatHappened(current, FileAdded)
 		return true
 	})
-	// log.WithFields(log.Fields{
-	// 	"workerId": workerId,
-	// 	"count":    count,
-	// 	"duration": time.Since(t).Seconds(),
-	// }).Debugf("  - comparison is over")
+	//	// log.WithFields(log.Fields{
+	//	// 	"workerId": workerId,
+	//	// 	"count":    count,
+	//	// 	"duration": time.Since(t).Seconds(),
+	//	// }).Debugf("  - comparison is over")
 	return nil
 }
