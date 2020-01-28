@@ -1,4 +1,3 @@
-
 {{define "css"}}
     <link rel="stylesheet" media="screen, print" href="assets/plugins/bootstrap-select/bootstrap-select.min.css">
     <style>
@@ -19,13 +18,7 @@
                 <div class="panel-container show">
                     <div class="panel-content">
                         <div id="toolbar-backup">
-                            <select class="form-control" id="select-srcDirs">
-                                <option>1</option>
-                                <option>2</option>
-                                <option>3</option>
-                                <option>4</option>
-                                <option>5</option>
-                            </select>
+                            <select class="form-control" id="select-srcDirs"></select>
                         </div>
                         <table  id="table-backup"
                                 class="table table-sm"
@@ -47,7 +40,7 @@
                             <tr>
                                 <th data-field="id" data-sortable="true">ID</th>
                                 <th data-field="date" data-sortable="true" data-formatter="dateFormatter">Date</th>
-                                <th data-field="srcDir" data-sortable="true" data-formatter="shortDirFormatter">Source Dir.</th>
+                                <th data-field="srcDir" data-sortable="true" data-formatter="shortDirFormatter">Source</th>
                                 <th data-field="backupType" data-sortable="true" data-formatter="backupTypeFormatter">Type</th>
                                 <th data-field="state" data-sortable="true" data-formatter="backupStateFormatter">State</th>
                                 <th data-field="execTime" data-sortable="true" data-formatter="toFixedFormatter">Time(Sec)</th>
@@ -95,7 +88,7 @@
         <div class="modal-dialog  mw-100 w-75" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2 class="modal-title">Backup logs</h2>
+                    <h2 class="modal-title">Changes log</h2>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true"><i class="fal fa-times"></i></span>
                     </button>
@@ -340,7 +333,7 @@
         //     if (suffix === undefined) {
         //         suffix = "";
         //     }
-        //     console.log("==================");
+        //     console.log("4=============");
         //     console.log(bytes + " B");
         //     console.log(bytesToSize(bytes));
         //     // console.log((bytes + " B") === bytesToSize(bytes));
@@ -368,7 +361,6 @@
             $.ajax({
                 url: url,
             }).done(function(report) {
-                console.log(report);
                 updateBackupStats("added", report.added, "primary");
                 updateBackupStats("modified", report.modified, "success");
                 updateBackupStats("deleted", report.deleted, "warning");
@@ -380,14 +372,12 @@
         }
 
         function updateBackupStats(how, what, colorSuffix) {
-            // console.log(what);
             $("#table-backup-" + how).bootstrapTable("load", what.files);
             $(".stats-" + how).text(what.files.length > 0 ? what.files.length : "");
             $(".stats-" + how + "-size").html(bytesToSize(what.size) + " <i>" + how + "</i>");
 
             let extTags = "",
                 total = what.report.extRanking.length
-            console.log("================");
             $.each(what.report.extRanking, function(i, r) {
                 if (r.ext.length < 1) {
                     r.ext = "-";
@@ -554,14 +544,16 @@
                 $('.has-tooltip').tooltip();
             })
             .on('load-success.bs.table', function(e, rows) {
-                console.log(rows);
                 let srcDir = {};
                 $.each(rows, function(i, s) {
                     srcDir[s.srcDir] = true;
                 });
-                console.log(Object.keys(srcDir).sort());
+                Object.keys(srcDir).sort();
 
                 $("#select-srcDirs").empty();
+                $("<option/>", {
+                    "value": "",
+                }).text("All").appendTo($("#select-srcDirs"));
                 $.each(srcDir, function(dir, r) {
                     $("<option/>", {
                         "value": dir
@@ -580,7 +572,6 @@
 
         window.backupOperateEvents = {
             'click .file': function (e, val, row, idx) {
-                console.log(row);
                 let $btn = $(e.currentTarget);
                 // $("#modal-files .modal-title").text($btn.data("title"));
 
@@ -591,14 +582,23 @@
             },
         };
 
-        // $( "select" )
-        //     .change(function () {
+        $( "#select-srcDirs" ).change(function () {
+            if (this.value.length > 0) {
+                // let dir = this.value;
+                $("#table-backup").bootstrapTable('filterBy', {
+                    srcDir: [this.value]
+                });
+                return;
+            }
+
+            $("#table-backup").bootstrapTable('filterBy',{});
+        });
         //         var str = "";
         //         $( "select option:selected" ).each(function() {
         //             str += $( this ).text() + " ";
         //         });
         //         $( "div" ).text( str );
-        //     })
+        //     });
         //     .change();
         // $("#select-srcDirs").selectpicker();
 
