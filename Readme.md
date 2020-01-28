@@ -12,24 +12,25 @@ files-[dir-checksum].db
 ### display
 
 - page
-    - title change(rtsp -> goback)
-    - backup icon
+    - [ ] title change(rtsp -> goback)
+    - [ ] backup icon
 
 - main table
-    - table col color, failed column,
-    - table msg col, tooltip
-    - select box
-    - long name problem, backup dir
-    - msg: first backup, 2.4s / -9223372036.9s / 0.0s / 9223372036.9s
-    - main table toolbar summary (n backup)
-    - filterBy, https://bootstrap-table.com/docs/api/methods/#filterby
+    - [x] backup dir => source dir
+    - [ ] table col color, failed column,
+    - [ ] table msg col, tooltip
+    - [ ] select box
+    - [x] long name problem, backup dir
+    - [x] msg: first backup, 2.4s / -9223372036.9s / 0.0s / 9223372036.9s
+    - [ ] toolbar summary (n backup)
+    - [ ] filterBy, https://bootstrap-table.com/docs/api/methods/#filterby
     
 - sub table
-    - col seq => name, size, ext, msg***
+    - [ ] col seq => name, size, ext, msg***
 
 - tx
 
-    sftp
+    - [ ]sftp
     
     
     $button.click(function () {

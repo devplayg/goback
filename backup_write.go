@@ -30,6 +30,13 @@ func (b *Backup) writeResult(currentFileMaps []*sync.Map, lastFileMap *sync.Map)
 	}
 
 	b.writeBackupState(Logged)
+
+	b.summary.Message = fmt.Sprintf("%3.1fs / %3.1fs / %3.1fs / %3.1fs",
+		b.summary.ReadingTime.Sub(b.summary.Date).Seconds(),
+		b.summary.ComparisonTime.Sub(b.summary.ReadingTime).Seconds(),
+		b.summary.BackupTime.Sub(b.summary.ComparisonTime).Seconds(),
+		b.summary.LoggingTime.Sub(b.summary.BackupTime).Seconds(),
+	)
 	return nil
 }
 
@@ -52,14 +59,6 @@ func (b *Backup) writeFileMaps(fileMaps []*sync.Map) error {
 }
 
 func (b *Backup) writeSummary() error {
-
-	b.summary.Message = fmt.Sprintf("%3.1fs / %3.1fs / %3.1fs / %3.1fs",
-		b.summary.ReadingTime.Sub(b.summary.Date).Seconds(),
-		b.summary.ComparisonTime.Sub(b.summary.ReadingTime).Seconds(),
-		b.summary.BackupTime.Sub(b.summary.ComparisonTime).Seconds(),
-		b.summary.LoggingTime.Sub(b.summary.BackupTime).Seconds(),
-	)
-
 	encoded, err := converter.EncodeToBytes(b.summaries)
 	if err != nil {
 		return fmt.Errorf("failed to encode summary data: %w", err)

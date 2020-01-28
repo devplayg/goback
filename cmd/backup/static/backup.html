@@ -1,5 +1,6 @@
 
-{{define "content"}}
+{{define "css"}}
+    <link rel="stylesheet" media="screen, print" href="assets/plugins/bootstrap-select/bootstrap-select.min.css">
     <style>
         .pagination .page-link {
             border-width: 1px;
@@ -9,12 +10,22 @@
             margin-right: 3px;
         }
     </style>
+{{end}}
+
+{{define "content"}}
     <div class="row">
         <div class="col">
             <div  class="panel ">
                 <div class="panel-container show">
                     <div class="panel-content">
                         <div id="toolbar-backup">
+                            <select class="form-control" id="select-srcDirs">
+                                <option>1</option>
+                                <option>2</option>
+                                <option>3</option>
+                                <option>4</option>
+                                <option>5</option>
+                            </select>
                         </div>
                         <table  id="table-backup"
                                 class="table table-sm"
@@ -36,35 +47,35 @@
                             <tr>
                                 <th data-field="id" data-sortable="true">ID</th>
                                 <th data-field="date" data-sortable="true" data-formatter="dateFormatter">Date</th>
-                                <th data-field="srcDir" data-sortable="true">Backup Dir.</th>
+                                <th data-field="srcDir" data-sortable="true" data-formatter="shortDirFormatter">Source Dir.</th>
                                 <th data-field="backupType" data-sortable="true" data-formatter="backupTypeFormatter">Type</th>
                                 <th data-field="state" data-sortable="true" data-formatter="backupStateFormatter">State</th>
                                 <th data-field="execTime" data-sortable="true" data-formatter="toFixedFormatter">Time(Sec)</th>
 
                                 <th data-field="workerCount" data-sortable="true" data-visible="false">Workers</th>
 
-                                <th data-field="totalCount" data-sortable="true" data-formatter="thCommaFormatter">Files</th>
-                                <th data-field="totalSize" data-sortable="true" data-formatter="bytesToSize">Total Size</th>
-                                <th data-field="totalSize" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Total Size (B)</th>
+                                <th data-field="totalCount" data-sortable="true" data-formatter="thCommaFormatter" data-align="right">Files</th>
+                                <th data-field="totalSize" data-sortable="true" data-formatter="bytesToSize" data-align="right">Total Size</th>
+                                <th data-field="totalSize" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false" data-align="right">Total Size (B)</th>
 
+                                <th data-field="countAdded" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-align="right">Added</th>
+                                <th data-field="sizeAdded" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="false" data-align="right">Added (B)</th>
+                                <th data-field="_sizeAdded" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-align="right">Added</th>
 
-                                <th data-field="countAdded" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Added</th>
-                                <th data-field="sizeAdded" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="false">Added (B)</th>
-                                <th data-field="_sizeAdded" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Added</th>
+                                <th data-field="countModified" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-align="right">Modified</th>
+                                <th data-field="sizeModified" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="false" data-align="right">Modified (B)</th>
+                                <th data-field="_sizeModified" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-align="right">Modified</th>
 
-                                <th data-field="countModified" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Modified</th>
-                                <th data-field="sizeModified" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="false">Modified (B)</th>
-                                <th data-field="_sizeModified" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Modified</th>
+                                <th data-field="countDeleted" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-align="right">Deleted</th>
+                                <th data-field="sizeDeleted" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="false" data-align="right">Deleted (B)</th>
+                                <th data-field="_sizeDeleted" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-align="right">Deleted</th>
 
-                                <th data-field="countDeleted" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Deleted</th>
-                                <th data-field="sizeDeleted" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="false">Deleted (B)</th>
-                                <th data-field="_sizeDeleted" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Deleted</th>
+                                <th data-field="countFailed" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-align="right">Failed</th>
+                                <th data-field="sizeFailed" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="false" data-align="right">Failed (B)</th>
+                                <th data-field="_sizeFailed" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="true" data-align="right">Failed</th>
 
-                                <th data-field="countFailed" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Failed</th>
-                                <th data-field="sizeFailed" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="false">Failed (B)</th>
-                                <th data-field="_sizeFailed" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="true">Failed</th>
+                                <th data-field="message" data-sortable="true">Msg (Read/Compare/Copy/Write)</th>
 
-                                <th data-field="message" data-sortable="true">Msg(Read/Compare/Copy/Write)</th>
                                 <th data-field="readingTime" data-sortable="true" data-formatter="dateFormatter" data-visible="false">1) Reading </th>
                                 <th data-field="comparisonTime" data-sortable="true" data-formatter="dateFormatter" data-visible="false">2) Compare</th>
                                 <th data-field="backupTime" data-sortable="true" data-formatter="dateFormatter" data-visible="false">3) Backup</th>
@@ -268,33 +279,8 @@
 {{end}}
 
 {{define "script"}}
+    <script src="/assets/plugins/bootstrap-select/bootstrap-select.min.js"></script>
     <script>
-
-        $('#modal-backup-changes')
-            .on('show.bs.modal', function (e) {
-            }).on('hidden.bs.modal', function (e) {
-                $(".table-data").bootstrapTable("removeAll");
-                $(".stats-data").empty();
-            });
-
-        $(".table").on('all.bs.table', function (e, data) {
-            $('.has-tooltip').tooltip();
-        });
-
-        window.backupOperateEvents = {
-            'click .file': function (e, val, row, idx) {
-                console.log(row);
-                let $btn = $(e.currentTarget);
-                // $("#modal-files .modal-title").text($btn.data("title"));
-
-                // console.log($btn.data("field"));
-                showChangedFiles(row.id, $btn.data("title"), $btn.data("field"));
-                // getBackupFiles(row, $btn.data("field"));
-                // $("#modal-files").modal("show");
-            },
-        };
-
-
         function backupRowStyle(row, index) {
             let classes = [
                 'bg-blue',
@@ -364,9 +350,9 @@
         //     return bytesToSize(bytes) + prefix + bytes.toLocaleString() + " B" + suffix;
         // }
 
-        // function basename(path) {
-        //     return path.replace(/^.*[\\\/]/, '');
-        // }
+        function basename(path) {
+            return path.replace(/^.*[\\\/]/, '');
+        }
         //
         // function dirname(path) {
         //     // return path.substr(0, basename(path).lastIndexOf('.'));
@@ -439,6 +425,14 @@
         * Formatters
         */
 
+        function shortDirFormatter(val, row, idx) {
+            if (val.length < 16) {
+                return val;
+            }
+            let dir = basename(val);
+            return '<span class="has-tooltip" title="' + val + '">.. ' + dir + '</span>';
+        }
+
         function sizeBFormatter(val, row, idx) {
             return row.size.toLocaleString();
         }
@@ -465,7 +459,7 @@
             }
 
             return str;
-            //
+
             // if (str.endsWith(" kB")) {
             //     return '<span class="">' + str +'</span>';
             // }
@@ -475,13 +469,13 @@
             // }
         }
 
-        function backupBasenameFormatter(val, row, idx) {
-            return basename(val);
-        }
+        // function backupBasenameFormatter(val, row, idx) {
+        //     return basename(val);
+        // }
 
-        function backupDirFormatter(val, row, idx) {
-            return '<span class="text-muted">' + dirname(row.path) + '</span>';
-        }
+        // function backupDirFormatter(val, row, idx) {
+        //     return '<span class="text-muted">' + dirname(row.path) + '</span>';
+        // }
 
         function backupResultFormatter(val, row, idx, field) {
             let humanized = false;
@@ -520,16 +514,16 @@
 
         function backupTypeFormatter(val, row, idx) {
             if (val === 1) {
-                return 'Initial';
+                return '<span class="badge badge-primary">Initial</span>';
             }
             if (val === 2) {
                 return 'Incremental';
             }
         }
 
-        function backupExtFormatter(val, row, idx) {
-            return '<a href="#" class="extension">Ext</a>';
-        }
+        // function backupExtFormatter(val, row, idx) {
+        //     return '<a href="#" class="extension">Ext</a>';
+        // }
 
         function backupStateFormatter(val, row, idx) {
             if (val === 5) {
@@ -545,6 +539,59 @@
         function thCommaFormatter(val, row, idx) {
             return val.toLocaleString();
         }
+
+        $("#modal-backup-changes")
+            .on('show.bs.modal', function (e) {
+
+            })
+            .on('hidden.bs.modal', function (e) {
+                $(".table-data").bootstrapTable("removeAll");
+                $(".stats-data").empty();
+            });
+
+        $(".table")
+            .on('all.bs.table', function (e, data) {
+                $('.has-tooltip').tooltip();
+            })
+            .on('load-success.bs.table', function(e, rows) {
+                console.log(rows);
+                let srcDir = {};
+                $.each(rows, function(i, s) {
+                    srcDir[s.srcDir] = true;
+                });
+                console.log(Object.keys(srcDir).sort());
+
+                $("#select-srcDirs").empty();
+                $.each(srcDir, function(dir, r) {
+                    $("<option/>", {
+                        "value": dir
+                    }).text(dir).appendTo($("#select-srcDirs"));
+                });
+            });
+
+        ;
+        // let summaries = $("#table-backup").bootstrapTable('getData');
+        // console.log(summaries);
+
+        // let summaries = $("#table-backup").bootstrapTable('getData');
+        // console.log(summaries);
+        //
+        // console.log(srcDir);
+
+        window.backupOperateEvents = {
+            'click .file': function (e, val, row, idx) {
+                console.log(row);
+                let $btn = $(e.currentTarget);
+                // $("#modal-files .modal-title").text($btn.data("title"));
+
+                // console.log($btn.data("field"));
+                showChangedFiles(row.id, $btn.data("title"), $btn.data("field"));
+                // getBackupFiles(row, $btn.data("field"));
+                // $("#modal-files").modal("show");
+            },
+        };
+
+        // $("#select-srcDirs").selectpicker();
 
     </script>
 {{end}}

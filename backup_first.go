@@ -16,6 +16,9 @@ func (b *Backup) generateFirstBackupData(srcDir string) error {
 		return err
 	}
 
+	b.summary.ComparisonTime = b.summary.ReadingTime
+	b.summary.BackupTime = b.summary.ComparisonTime
+
 	// 3. Write result
 	if err := b.writeResult(currentFileMaps, nil); err != nil {
 		return err
