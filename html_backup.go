@@ -15,6 +15,7 @@ func DisplayBackupTest() string {
 
 func DisplayBackup() string {
 	return `
+    {{define "content"}}
     <style>
         .pagination .page-link {
             border-width: 1px;
@@ -562,5 +563,6 @@ func DisplayBackup() string {
         }
 
     </script>
+{{end}}
 `
 }
