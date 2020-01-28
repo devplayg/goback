@@ -68,7 +68,7 @@ func (c *Controller) DisplayBackup(w http.ResponseWriter, r *http.Request) {
     if err != nil {
         Response(w, r, err, http.StatusInternalServerError)
     }
-    if tmpl, err = tmpl.Parse(DisplayBackupTest()); err != nil {
+    if tmpl, err = tmpl.Parse(DisplayBackup()); err != nil {
         Response(w, r, err, http.StatusInternalServerError)
     }
     if err := tmpl.Execute(w, nil); err != nil {
