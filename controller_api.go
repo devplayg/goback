@@ -5,7 +5,6 @@ import (
     "github.com/devplayg/golibs/compress"
     "github.com/devplayg/himma"
     "github.com/gorilla/mux"
-    log "github.com/sirupsen/logrus"
     "html/template"
     "net/http"
     "strconv"
@@ -38,10 +37,10 @@ func (c *Controller) GetChangesLog(w http.ResponseWriter, r *http.Request) {
 
     //b, _ := json.MarshalIndent(logs, "", "  ")
     w.Write(data)
-    log.WithFields(log.Fields{
-        "id":   vars["id"],
-        "what": vars["what"],
-    }).Debug("log")
+    //log.WithFields(log.Fields{
+    //    "id":   vars["id"],
+    //    "what": vars["what"],
+    //}).Debug("log")
 }
 
 func (c *Controller) findSummaryById(id int) *Summary {
@@ -68,7 +67,7 @@ func (c *Controller) DisplayBackup(w http.ResponseWriter, r *http.Request) {
     if err != nil {
         Response(w, r, err, http.StatusInternalServerError)
     }
-    if tmpl, err = tmpl.Parse(DisplayBackupTest()); err != nil {
+    if tmpl, err = tmpl.Parse(DisplayBackup()); err != nil {
         Response(w, r, err, http.StatusInternalServerError)
     }
     if err := tmpl.Execute(w, nil); err != nil {

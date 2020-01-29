@@ -9,7 +9,6 @@ import (
 	"github.com/devplayg/golibs/converter"
 	"github.com/dustin/go-humanize"
 	"github.com/minio/highwayhash"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"os"
@@ -206,7 +205,6 @@ func LoadBackupData(path string, output interface{}, encoding int) error {
 	if err != nil {
 		return err
 	}
-	log.Debug(len(data))
 
 	decompressed, err := compress.Decompress(data, compress.GZIP)
 	if err != nil {

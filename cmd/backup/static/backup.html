@@ -7,7 +7,9 @@
 
         .badge-stats {
             margin-right: 3px;
+            font-weight: 400;
         }
+
     </style>
 {{end}}
 
@@ -129,7 +131,7 @@
                                 <div class="stats-data stats-added-ext"></div>
                             </div>
                             <table  id="table-backup-added"
-                                    class="table table-data table-sm"
+                                    class="table table-changes-log table-sm"
                                     data-toolbar="#toolbar-backup-added"
                                     data-toggle="table"
                                     data-search="true"
@@ -145,12 +147,12 @@
                                     data-sort-order="desc">
                                 <thead>
                                 <tr>
-                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
-                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
                                     <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
+                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
                                     <th data-field="mtime" data-visible="false">ModTime</th>
-                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
-                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
+                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter" data-align="right">Size</th>
+                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter" data-align="right">Size (B)</th>
+                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
                                     <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
                                 </tr>
                                 </thead>
@@ -164,7 +166,7 @@
                                 <div class="stats-data stats-modified-ext"></div>
                             </div>
                             <table  id="table-backup-modified"
-                                    class="table table-data table-sm"
+                                    class="table table-changes-log table-sm"
                                     data-toolbar="#toolbar-backup-modified"
                                     data-toggle="table"
                                     data-search="true"
@@ -180,12 +182,12 @@
                                     data-sort-order="desc">
                                 <thead>
                                 <tr>
-                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
-                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
                                     <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
+                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
                                     <th data-field="mtime" data-visible="false">ModTime</th>
-                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
-                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
+                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter" data-align="right">Size</th>
+                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter" data-align="right">Size (B)</th>
+                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
                                     <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
                                 </tr>
                                 </thead>
@@ -199,7 +201,7 @@
                                 <div class="stats-data stats-deleted-ext"></div>
                             </div>
                             <table  id="table-backup-deleted"
-                                    class="table table-data table-sm"
+                                    class="table table-changes-log table-sm"
                                     data-toolbar="#toolbar-backup-deleted"
                                     data-toggle="table"
                                     data-search="true"
@@ -215,12 +217,12 @@
                                     data-sort-order="desc">
                                 <thead>
                                 <tr>
-                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
-                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
                                     <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
+                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
                                     <th data-field="mtime" data-visible="false">ModTime</th>
-                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
-                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
+                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter" data-align="right">Size</th>
+                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter" data-align="right">Size (B)</th>
+                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
                                     <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
                                 </tr>
                                 </thead>
@@ -234,7 +236,7 @@
                                 <div class="stats-data stats-failed-ext"></div>
                             </div>
                             <table  id="table-backup-failed"
-                                    class="table table-data table-sm"
+                                    class="table table-changes-log table-sm"
                                     data-toolbar="#toolbar-backup-failed"
                                     data-toggle="table"
                                     data-search="true"
@@ -250,12 +252,12 @@
                                     data-sort-order="desc">
                                 <thead>
                                 <tr>
-                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
-                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
                                     <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
+                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
                                     <th data-field="mtime" data-visible="false">ModTime</th>
-                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
-                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
+                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter" data-align="right">Size</th>
+                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter" data-align="right">Size (B)</th>
+                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
                                     <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
                                 </tr>
                                 </thead>
@@ -326,23 +328,6 @@
             return bytes.toFixed(1)+' '+units[u];
         }
 
-        // function bytesWithSize(bytes, prefix, suffix) {
-        //     if (prefix === undefined) {
-        //         prefix = "";
-        //     }
-        //     if (suffix === undefined) {
-        //         suffix = "";
-        //     }
-        //     console.log("4=============");
-        //     console.log(bytes + " B");
-        //     console.log(bytesToSize(bytes));
-        //     // console.log((bytes + " B") === bytesToSize(bytes));
-        //     if ((bytes + " B") == bytesToSize(bytes)) {
-        //         return bytesToSize(bytes);
-        //     }
-        //     return bytesToSize(bytes) + prefix + bytes.toLocaleString() + " B" + suffix;
-        // }
-
         function basename(path) {
             return path.replace(/^.*[\\\/]/, '');
         }
@@ -361,12 +346,14 @@
             $.ajax({
                 url: url,
             }).done(function(report) {
+                // console.log(report);
                 updateBackupStats("added", report.added, "primary");
                 updateBackupStats("modified", report.modified, "success");
                 updateBackupStats("deleted", report.deleted, "warning");
                 updateBackupStats("failed", report.failed, "danger");
 
                 $("#modal-backup-changes").modal("show");
+                console.log($("#table-backup-added" ).bootstrapTable('getOptions'));
                 $('#tabs-backup-changes a[href="#tab-backup-' + getTab(field) + '"]').tab('show');
             });
         }
@@ -379,10 +366,10 @@
             let extTags = "",
                 total = what.report.extRanking.length
             $.each(what.report.extRanking, function(i, r) {
-                if (r.ext.length < 1) {
-                    r.ext = "-";
-                }
-                extTags += '<span class="badge badge-stats bg-' + colorSuffix + '-' + getPer(i, total) + '">'+ r.ext + " / " + bytesToSize(r.size) + '</span>';
+                // if (r.ext.length < 1) {
+                //     r.ext = "";
+                // }
+                extTags += '<a href="#" class="filterFiles" data-cond="' + r.ext + '" data-how="' + how + '"><span class="badge badge-stats bg-' + colorSuffix + '-' + getPer(i, total) + '">'+ r.ext + " / " + bytesToSize(r.size) + '</span></a>';
             });
             $(".stats-" + how + "-ext" ).html(extTags);
         }
@@ -491,7 +478,7 @@
             }
 
             let link = $("<a/>", {
-                href: "#",
+                href: "javascript:void(0);",
                 class: "file",
                 "data-title": th.text(),
                 "data-field": rowName,
@@ -535,8 +522,9 @@
 
             })
             .on('hidden.bs.modal', function (e) {
-                $(".table-data").bootstrapTable("removeAll");
+                $(".table-changes-log").bootstrapTable("removeAll");
                 $(".stats-data").empty();
+                $(".table").bootstrapTable('filterBy',{}); // reset filter
             });
 
         $(".table")
@@ -573,18 +561,12 @@
         window.backupOperateEvents = {
             'click .file': function (e, val, row, idx) {
                 let $btn = $(e.currentTarget);
-                // $("#modal-files .modal-title").text($btn.data("title"));
-
-                // console.log($btn.data("field"));
                 showChangedFiles(row.id, $btn.data("title"), $btn.data("field"));
-                // getBackupFiles(row, $btn.data("field"));
-                // $("#modal-files").modal("show");
             },
         };
 
         $( "#select-srcDirs" ).change(function () {
             if (this.value.length > 0) {
-                // let dir = this.value;
                 $("#table-backup").bootstrapTable('filterBy', {
                     srcDir: [this.value]
                 });
@@ -593,14 +575,14 @@
 
             $("#table-backup").bootstrapTable('filterBy',{});
         });
-        //         var str = "";
-        //         $( "select option:selected" ).each(function() {
-        //             str += $( this ).text() + " ";
-        //         });
-        //         $( "div" ).text( str );
-        //     });
-        //     .change();
-        // $("#select-srcDirs").selectpicker();
+
+        $('body').on('click', 'a.filterFiles', function() {
+            let ext = $(this).data("cond"),
+                how = $(this).data("how");
+            $("#table-backup-" + how).bootstrapTable('filterBy', {
+                ext: [ext]
+            });
+        });
 
     </script>
 {{end}}

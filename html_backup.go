@@ -15,7 +15,8 @@ func DisplayBackupTest() string {
 
 func DisplayBackup() string {
 	return `
-    {{define "content"}}
+    {{define "css"}}
+    <link rel="stylesheet" media="screen, print" href="assets/plugins/bootstrap-select/bootstrap-select.min.css">
     <style>
         .pagination .page-link {
             border-width: 1px;
@@ -23,14 +24,20 @@ func DisplayBackup() string {
 
         .badge-stats {
             margin-right: 3px;
+            font-weight: 400;
         }
+
     </style>
+{{end}}
+
+{{define "content"}}
     <div class="row">
         <div class="col">
             <div  class="panel ">
                 <div class="panel-container show">
                     <div class="panel-content">
                         <div id="toolbar-backup">
+                            <select class="form-control" id="select-srcDirs"></select>
                         </div>
                         <table  id="table-backup"
                                 class="table table-sm"
@@ -52,35 +59,35 @@ func DisplayBackup() string {
                             <tr>
                                 <th data-field="id" data-sortable="true">ID</th>
                                 <th data-field="date" data-sortable="true" data-formatter="dateFormatter">Date</th>
-                                <th data-field="srcDir" data-sortable="true">Backup Dir.</th>
+                                <th data-field="srcDir" data-sortable="true" data-formatter="shortDirFormatter">Source</th>
                                 <th data-field="backupType" data-sortable="true" data-formatter="backupTypeFormatter">Type</th>
                                 <th data-field="state" data-sortable="true" data-formatter="backupStateFormatter">State</th>
                                 <th data-field="execTime" data-sortable="true" data-formatter="toFixedFormatter">Time(Sec)</th>
 
                                 <th data-field="workerCount" data-sortable="true" data-visible="false">Workers</th>
 
-                                <th data-field="totalCount" data-sortable="true" data-formatter="thCommaFormatter">Files</th>
-                                <th data-field="totalSize" data-sortable="true" data-formatter="bytesToSize">Total Size</th>
-                                <th data-field="totalSize" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Total Size (B)</th>
+                                <th data-field="totalCount" data-sortable="true" data-formatter="thCommaFormatter" data-align="right">Files</th>
+                                <th data-field="totalSize" data-sortable="true" data-formatter="bytesToSize" data-align="right">Total Size</th>
+                                <th data-field="totalSize" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false" data-align="right">Total Size (B)</th>
 
+                                <th data-field="countAdded" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-align="right">Added</th>
+                                <th data-field="sizeAdded" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="false" data-align="right">Added (B)</th>
+                                <th data-field="_sizeAdded" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-align="right">Added</th>
 
-                                <th data-field="countAdded" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Added</th>
-                                <th data-field="sizeAdded" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="false">Added (B)</th>
-                                <th data-field="_sizeAdded" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Added</th>
+                                <th data-field="countModified" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-align="right">Modified</th>
+                                <th data-field="sizeModified" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="false" data-align="right">Modified (B)</th>
+                                <th data-field="_sizeModified" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-align="right">Modified</th>
 
-                                <th data-field="countModified" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Modified</th>
-                                <th data-field="sizeModified" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="false">Modified (B)</th>
-                                <th data-field="_sizeModified" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Modified</th>
+                                <th data-field="countDeleted" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-align="right">Deleted</th>
+                                <th data-field="sizeDeleted" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="false" data-align="right">Deleted (B)</th>
+                                <th data-field="_sizeDeleted" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-align="right">Deleted</th>
 
-                                <th data-field="countDeleted" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Deleted</th>
-                                <th data-field="sizeDeleted" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="false">Deleted (B)</th>
-                                <th data-field="_sizeDeleted" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Deleted</th>
+                                <th data-field="countFailed" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-align="right">Failed</th>
+                                <th data-field="sizeFailed" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="false" data-align="right">Failed (B)</th>
+                                <th data-field="_sizeFailed" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="true" data-align="right">Failed</th>
 
-                                <th data-field="countFailed" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents">Failed</th>
-                                <th data-field="sizeFailed" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="false">Failed (B)</th>
-                                <th data-field="_sizeFailed" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupOperateEvents" data-visible="true">Failed</th>
+                                <th data-field="message" data-sortable="true">Msg (Read/Compare/Copy/Write)</th>
 
-                                <th data-field="message" data-sortable="true">Msg(Read/Compare/Copy/Write)</th>
                                 <th data-field="readingTime" data-sortable="true" data-formatter="dateFormatter" data-visible="false">1) Reading </th>
                                 <th data-field="comparisonTime" data-sortable="true" data-formatter="dateFormatter" data-visible="false">2) Compare</th>
                                 <th data-field="backupTime" data-sortable="true" data-formatter="dateFormatter" data-visible="false">3) Backup</th>
@@ -100,7 +107,7 @@ func DisplayBackup() string {
         <div class="modal-dialog  mw-100 w-75" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2 class="modal-title">Backup logs</h2>
+                    <h2 class="modal-title">Changes log</h2>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true"><i class="fal fa-times"></i></span>
                     </button>
@@ -141,7 +148,7 @@ func DisplayBackup() string {
                                 <div class="stats-data stats-added-ext"></div>
                             </div>
                             <table  id="table-backup-added"
-                                    class="table table-data table-sm"
+                                    class="table table-changes-log table-sm"
                                     data-toolbar="#toolbar-backup-added"
                                     data-toggle="table"
                                     data-search="true"
@@ -157,12 +164,12 @@ func DisplayBackup() string {
                                     data-sort-order="desc">
                                 <thead>
                                 <tr>
-                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
-                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
                                     <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
+                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
                                     <th data-field="mtime" data-visible="false">ModTime</th>
-                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
-                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
+                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter" data-align="right">Size</th>
+                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter" data-align="right">Size (B)</th>
+                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
                                     <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
                                 </tr>
                                 </thead>
@@ -176,7 +183,7 @@ func DisplayBackup() string {
                                 <div class="stats-data stats-modified-ext"></div>
                             </div>
                             <table  id="table-backup-modified"
-                                    class="table table-data table-sm"
+                                    class="table table-changes-log table-sm"
                                     data-toolbar="#toolbar-backup-modified"
                                     data-toggle="table"
                                     data-search="true"
@@ -192,12 +199,12 @@ func DisplayBackup() string {
                                     data-sort-order="desc">
                                 <thead>
                                 <tr>
-                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
-                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
                                     <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
+                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
                                     <th data-field="mtime" data-visible="false">ModTime</th>
-                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
-                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
+                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter" data-align="right">Size</th>
+                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter" data-align="right">Size (B)</th>
+                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
                                     <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
                                 </tr>
                                 </thead>
@@ -211,7 +218,7 @@ func DisplayBackup() string {
                                 <div class="stats-data stats-deleted-ext"></div>
                             </div>
                             <table  id="table-backup-deleted"
-                                    class="table table-data table-sm"
+                                    class="table table-changes-log table-sm"
                                     data-toolbar="#toolbar-backup-deleted"
                                     data-toggle="table"
                                     data-search="true"
@@ -227,12 +234,12 @@ func DisplayBackup() string {
                                     data-sort-order="desc">
                                 <thead>
                                 <tr>
-                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
-                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
                                     <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
+                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
                                     <th data-field="mtime" data-visible="false">ModTime</th>
-                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
-                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
+                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter" data-align="right">Size</th>
+                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter" data-align="right">Size (B)</th>
+                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
                                     <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
                                 </tr>
                                 </thead>
@@ -246,7 +253,7 @@ func DisplayBackup() string {
                                 <div class="stats-data stats-failed-ext"></div>
                             </div>
                             <table  id="table-backup-failed"
-                                    class="table table-data table-sm"
+                                    class="table table-changes-log table-sm"
                                     data-toolbar="#toolbar-backup-failed"
                                     data-toggle="table"
                                     data-search="true"
@@ -262,12 +269,12 @@ func DisplayBackup() string {
                                     data-sort-order="desc">
                                 <thead>
                                 <tr>
-                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
-                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
                                     <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
+                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
                                     <th data-field="mtime" data-visible="false">ModTime</th>
-                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
-                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
+                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter" data-align="right">Size</th>
+                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter" data-align="right">Size (B)</th>
+                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
                                     <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
                                 </tr>
                                 </thead>
@@ -284,33 +291,8 @@ func DisplayBackup() string {
 {{end}}
 
 {{define "script"}}
+    <script src="/assets/plugins/bootstrap-select/bootstrap-select.min.js"></script>
     <script>
-
-        $('#modal-backup-changes')
-            .on('show.bs.modal', function (e) {
-            }).on('hidden.bs.modal', function (e) {
-                $(".table-data").bootstrapTable("removeAll");
-                $(".stats-data").empty();
-            });
-
-        $(".table").on('all.bs.table', function (e, data) {
-            $('.has-tooltip').tooltip();
-        });
-
-        window.backupOperateEvents = {
-            'click .file': function (e, val, row, idx) {
-                console.log(row);
-                let $btn = $(e.currentTarget);
-                // $("#modal-files .modal-title").text($btn.data("title"));
-
-                // console.log($btn.data("field"));
-                showChangedFiles(row.id, $btn.data("title"), $btn.data("field"));
-                // getBackupFiles(row, $btn.data("field"));
-                // $("#modal-files").modal("show");
-            },
-        };
-
-
         function backupRowStyle(row, index) {
             let classes = [
                 'bg-blue',
@@ -363,26 +345,9 @@ func DisplayBackup() string {
             return bytes.toFixed(1)+' '+units[u];
         }
 
-        // function bytesWithSize(bytes, prefix, suffix) {
-        //     if (prefix === undefined) {
-        //         prefix = "";
-        //     }
-        //     if (suffix === undefined) {
-        //         suffix = "";
-        //     }
-        //     console.log("==================");
-        //     console.log(bytes + " B");
-        //     console.log(bytesToSize(bytes));
-        //     // console.log((bytes + " B") === bytesToSize(bytes));
-        //     if ((bytes + " B") == bytesToSize(bytes)) {
-        //         return bytesToSize(bytes);
-        //     }
-        //     return bytesToSize(bytes) + prefix + bytes.toLocaleString() + " B" + suffix;
-        // }
-
-        // function basename(path) {
-        //     return path.replace(/^.*[\\\/]/, '');
-        // }
+        function basename(path) {
+            return path.replace(/^.*[\\\/]/, '');
+        }
         //
         // function dirname(path) {
         //     // return path.substr(0, basename(path).lastIndexOf('.'));
@@ -398,31 +363,30 @@ func DisplayBackup() string {
             $.ajax({
                 url: url,
             }).done(function(report) {
-                console.log(report);
+                // console.log(report);
                 updateBackupStats("added", report.added, "primary");
                 updateBackupStats("modified", report.modified, "success");
                 updateBackupStats("deleted", report.deleted, "warning");
                 updateBackupStats("failed", report.failed, "danger");
 
                 $("#modal-backup-changes").modal("show");
+                console.log($("#table-backup-added" ).bootstrapTable('getOptions'));
                 $('#tabs-backup-changes a[href="#tab-backup-' + getTab(field) + '"]').tab('show');
             });
         }
 
         function updateBackupStats(how, what, colorSuffix) {
-            // console.log(what);
             $("#table-backup-" + how).bootstrapTable("load", what.files);
             $(".stats-" + how).text(what.files.length > 0 ? what.files.length : "");
             $(".stats-" + how + "-size").html(bytesToSize(what.size) + " <i>" + how + "</i>");
 
             let extTags = "",
                 total = what.report.extRanking.length
-            console.log("================");
             $.each(what.report.extRanking, function(i, r) {
-                if (r.ext.length < 1) {
-                    r.ext = "-";
-                }
-                extTags += '<span class="badge badge-stats bg-' + colorSuffix + '-' + getPer(i, total) + '">'+ r.ext + " / " + bytesToSize(r.size) + '</span>';
+                // if (r.ext.length < 1) {
+                //     r.ext = "";
+                // }
+                extTags += '<a href="#" class="filterFiles" data-cond="' + r.ext + '" data-how="' + how + '"><span class="badge badge-stats bg-' + colorSuffix + '-' + getPer(i, total) + '">'+ r.ext + " / " + bytesToSize(r.size) + '</span></a>';
             });
             $(".stats-" + how + "-ext" ).html(extTags);
         }
@@ -455,6 +419,14 @@ func DisplayBackup() string {
         * Formatters
         */
 
+        function shortDirFormatter(val, row, idx) {
+            if (val.length < 16) {
+                return val;
+            }
+            let dir = basename(val);
+            return '<span class="has-tooltip" title="' + val + '">.. ' + dir + '</span>';
+        }
+
         function sizeBFormatter(val, row, idx) {
             return row.size.toLocaleString();
         }
@@ -481,7 +453,7 @@ func DisplayBackup() string {
             }
 
             return str;
-            //
+
             // if (str.endsWith(" kB")) {
             //     return '<span class="">' + str +'</span>';
             // }
@@ -491,13 +463,13 @@ func DisplayBackup() string {
             // }
         }
 
-        function backupBasenameFormatter(val, row, idx) {
-            return basename(val);
-        }
+        // function backupBasenameFormatter(val, row, idx) {
+        //     return basename(val);
+        // }
 
-        function backupDirFormatter(val, row, idx) {
-            return '<span class="text-muted">' + dirname(row.path) + '</span>';
-        }
+        // function backupDirFormatter(val, row, idx) {
+        //     return '<span class="text-muted">' + dirname(row.path) + '</span>';
+        // }
 
         function backupResultFormatter(val, row, idx, field) {
             let humanized = false;
@@ -523,7 +495,7 @@ func DisplayBackup() string {
             }
 
             let link = $("<a/>", {
-                href: "#",
+                href: "javascript:void(0);",
                 class: "file",
                 "data-title": th.text(),
                 "data-field": rowName,
@@ -536,16 +508,16 @@ func DisplayBackup() string {
 
         function backupTypeFormatter(val, row, idx) {
             if (val === 1) {
-                return 'Initial';
+                return '<span class="badge badge-primary">Initial</span>';
             }
             if (val === 2) {
                 return 'Incremental';
             }
         }
 
-        function backupExtFormatter(val, row, idx) {
-            return '<a href="#" class="extension">Ext</a>';
-        }
+        // function backupExtFormatter(val, row, idx) {
+        //     return '<a href="#" class="extension">Ext</a>';
+        // }
 
         function backupStateFormatter(val, row, idx) {
             if (val === 5) {
@@ -561,6 +533,73 @@ func DisplayBackup() string {
         function thCommaFormatter(val, row, idx) {
             return val.toLocaleString();
         }
+
+        $("#modal-backup-changes")
+            .on('show.bs.modal', function (e) {
+
+            })
+            .on('hidden.bs.modal', function (e) {
+                $(".table-changes-log").bootstrapTable("removeAll");
+                $(".stats-data").empty();
+                $(".table").bootstrapTable('filterBy',{}); // reset filter
+            });
+
+        $(".table")
+            .on('all.bs.table', function (e, data) {
+                $('.has-tooltip').tooltip();
+            })
+            .on('load-success.bs.table', function(e, rows) {
+                let srcDir = {};
+                $.each(rows, function(i, s) {
+                    srcDir[s.srcDir] = true;
+                });
+                Object.keys(srcDir).sort();
+
+                $("#select-srcDirs").empty();
+                $("<option/>", {
+                    "value": "",
+                }).text("All").appendTo($("#select-srcDirs"));
+                $.each(srcDir, function(dir, r) {
+                    $("<option/>", {
+                        "value": dir
+                    }).text(dir).appendTo($("#select-srcDirs"));
+                });
+            });
+
+        ;
+        // let summaries = $("#table-backup").bootstrapTable('getData');
+        // console.log(summaries);
+
+        // let summaries = $("#table-backup").bootstrapTable('getData');
+        // console.log(summaries);
+        //
+        // console.log(srcDir);
+
+        window.backupOperateEvents = {
+            'click .file': function (e, val, row, idx) {
+                let $btn = $(e.currentTarget);
+                showChangedFiles(row.id, $btn.data("title"), $btn.data("field"));
+            },
+        };
+
+        $( "#select-srcDirs" ).change(function () {
+            if (this.value.length > 0) {
+                $("#table-backup").bootstrapTable('filterBy', {
+                    srcDir: [this.value]
+                });
+                return;
+            }
+
+            $("#table-backup").bootstrapTable('filterBy',{});
+        });
+
+        $('body').on('click', 'a.filterFiles', function() {
+            let ext = $(this).data("cond"),
+                how = $(this).data("how");
+            $("#table-backup-" + how).bootstrapTable('filterBy', {
+                ext: [ext]
+            });
+        });
 
     </script>
 {{end}}
