@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	appName    = "backup"
-	appVersion = "2.0.0"
+	appName    = "goback"
+	appVersion = "1.0.1"
 )
 
 var (
@@ -51,9 +51,11 @@ func init() {
 		fs.PrintDefaults()
 	}
 	_ = fs.Parse(os.Args[1:])
-	if *version {
-		fmt.Printf("%s %s\n", appName, appVersion)
-		return
+	if *version || (len(*web) < 1 && len(*srcDirs) < 1 && len(*dstDir) < 1) {
+		//fmt.Printf("%s %s\n", appName, appVersion)
+		fmt.Printf("ex) goback -s /dir/to/backup -d /dir/to/be/saved\n")
+		fmt.Printf("ex) goback -s /dir/to/backup1 -s /dir/to/backup2 -d /dir/to/be/saved\n")
+		os.Exit(0)
 	}
 
 	initLogger()
