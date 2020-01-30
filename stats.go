@@ -1,9 +1,7 @@
 package goback
 
 import (
-	"math"
 	"sort"
-	"strconv"
 )
 
 type ExtStats struct {
@@ -111,13 +109,12 @@ func (s *Stats) addToSizeStats(file *FileGrid) {
 		return
 	}
 
-	n := math.Pow10(len(strconv.FormatInt(file.Size, 10)))
-	if n/2 > float64(file.Size) {
-		s.SizeDistribution[int64(n/2)]++
-		return
+	for i := 1; i < len(fileSizeCategories); i++ {
+		if file.Size <= fileSizeCategories[i] {
+			s.SizeDistribution[fileSizeCategories[i]]++
+			return
+		}
 	}
-
-	s.SizeDistribution[int64(n)]++
 }
 
 func (s *Stats) rank(rank int) {

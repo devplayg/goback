@@ -17,17 +17,14 @@ files-[dir-checksum].db
 
 - main table
     - [x] backup dir => source dir
-    - [ ] table col color, failed column,
-    - [ ] table msg col, tooltip
+    - [x] table col color, failed column,
+    - [x] table msg col, tooltip
     - [x] select box
     - [x] long name problem, backup dir
     - [x] msg: first backup, 2.4s / -9223372036.9s / 0.0s / 9223372036.9s
-    - [ ] toolbar summary (n backup)
-    - [ ] filterBy, https://bootstrap-table.com/docs/api/methods/#filterby
+    - [x] toolbar summary (n backup)
+    - [x] filterBy, https://bootstrap-table.com/docs/api/methods/#filterby
     
-- sub table
-    - [ ] col seq => name, size, ext, msg***
-
 - tx
 
     - [ ]sftp

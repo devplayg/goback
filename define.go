@@ -43,26 +43,16 @@ const (
 )
 
 var fileSizeCategories = []int64{
-	1 * kB,
 	5 * kB,
-	10 * kB,
 	50 * kB,
-	100 * kB,
 	500 * kB,
 
-	1 * MB,
 	5 * MB,
-	10 * MB,
 	50 * MB,
-	100 * MB,
 	500 * MB,
 
-	1 * GB,
 	5 * GB,
-	10 * GB,
 	50 * GB,
-	100 * GB,
-	500 * GB,
 }
 
 var (
