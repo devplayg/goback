@@ -9,8 +9,16 @@
             margin-right: 3px;
             font-weight: 400;
         }
-
     </style>
+{{end}}
+
+{{define "sidebar"}}
+    <li>
+        <a href="/" title="Live">
+            <i class="far fa-database"></i>
+            <span class="nav-link-text">Backup</span>
+        </a>
+    </li>
 {{end}}
 
 {{define "content"}}
@@ -98,25 +106,25 @@
                 <div class="modal-body">
                     <ul id="tabs-backup-changes" class="nav nav-tabs" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link fs-lg" data-toggle="tab" href="#tab-backup-added" role="tab"><i class="far fa-plus text-info"></i>
+                            <a class="nav-link fs-lg" data-toggle="tab" href="#tab-backup-added" role="tab">
                                 Added
                                 <span class="badge border border-info rounded-pill bg-primary-500 stats-data stats-added"></span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link fs-lg" data-toggle="tab" href="#tab-backup-modified" role="tab"><i class="far fa-pen text-success"></i>
+                            <a class="nav-link fs-lg" data-toggle="tab" href="#tab-backup-modified" role="tab">
                                 Modified
                                 <span class="badge border border-info rounded-pill bg-success-500 stats-data stats-modified"></span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link fs-lg" data-toggle="tab" href="#tab-backup-deleted" role="tab"><i class="far fa-minus text-warning"></i>
+                            <a class="nav-link fs-lg" data-toggle="tab" href="#tab-backup-deleted" role="tab">
                                 Deleted
                                 <span class="badge border border-warning rounded-pill bg-warning-500 stats-data stats-deleted"></span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link fs-lg" data-toggle="tab" href="#tab-backup-failed" role="tab"><i class="far fa-times text-danger"></i>
+                            <a class="nav-link fs-lg" data-toggle="tab" href="#tab-backup-failed" role="tab">
                                 Failed
                                 <span class="badge border border-danger rounded-pill bg-danger-500 stats-data stats-failed"></span>
                             </a>
@@ -575,10 +583,19 @@
 
             $("#table-backup").bootstrapTable('filterBy',{});
         });
-
+        let filteredChecker = {};
         $('body').on('click', 'a.filterFiles', function() {
             let ext = $(this).data("cond"),
                 how = $(this).data("how");
+
+            if (filteredChecker[how] !== undefined) {
+                if (filteredChecker[how] === ext) {
+                    $("#table-backup-" + how).bootstrapTable('filterBy', {} );
+                    filteredChecker[how] = null;
+                    return;
+                }
+            }
+            filteredChecker[how] = ext;
             $("#table-backup-" + how).bootstrapTable('filterBy', {
                 ext: [ext]
             });

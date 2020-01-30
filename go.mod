@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/devplayg/golibs v1.0.1
-	github.com/devplayg/himma v1.0.6
+	github.com/devplayg/himma v1.0.7
 	github.com/dustin/go-humanize v1.0.0
 	github.com/gorilla/mux v1.7.3
 	github.com/minio/highwayhash v1.0.0
