@@ -45,17 +45,16 @@ func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	fs.Usage = func() {
 		fmt.Printf("backup v%s\n", appVersion)
-		fmt.Println("Description: Incremental backup")
-		fmt.Println("Usage: backup -s [directory to backup] -d [directory where backup files will be stored]")
-		fmt.Println("Usage: backup -s /data -d /backup")
 		fs.PrintDefaults()
+		//fmt.Println("\n  usage) backup -s [directory to backup] -d [directory where backup files will be stored]")
+		fmt.Printf("\n  ex) goback -s /dir/to/backup -d /dir/to/be/saved\n")
+		fmt.Printf("  ex) goback -s /dir/to/backup1 -s /dir/to/backup2 -d /dir/to/be/saved\n")
+		os.Exit(0)
 	}
 	_ = fs.Parse(os.Args[1:])
+
 	if *version || (len(*web) < 1 && len(*srcDirs) < 1 && len(*dstDir) < 1) {
-		//fmt.Printf("%s %s\n", appName, appVersion)
-		fmt.Printf("ex) goback -s /dir/to/backup -d /dir/to/be/saved\n")
-		fmt.Printf("ex) goback -s /dir/to/backup1 -s /dir/to/backup2 -d /dir/to/be/saved\n")
-		os.Exit(0)
+		fs.Usage()
 	}
 
 	initLogger()
