@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/devplayg/golibs/compress"
 	"github.com/devplayg/himma"
-	"github.com/devplayg/himma/asset"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"mime"
@@ -26,16 +25,17 @@ type Controller struct {
 	addr      string
 	dir       string
 	version   string
-
+	app       *himma.Application
 	summaries []*Summary
 }
 
-func NewController(dir, addr, version string) *Controller {
+func NewController(dir, addr string, app *himma.Application) *Controller {
 	return &Controller{
 		addr:      addr,
 		dir:       dir,
 		summaries: make([]*Summary, 0),
-		version:   version,
+		version:   app.Version,
+		app:       app,
 	}
 }
 
@@ -44,18 +44,18 @@ func (c *Controller) init() error {
 		return err
 	}
 	uiAssetMap, err := himma.GetAssetMap(
-		asset.Bootstrap4,
-		asset.BootstrapDatepicker_1_9_0,
-		asset.BootstrapSelect_1_13_9,
-		asset.BootstrapTable_1_15_5,
-		asset.Holder_2_9,
-		asset.JqueryMask_1_14_16,
-		asset.JqueryValidation_1_19_1,
-		asset.JsCookie_2_2_1,
-		asset.Moment_2_24_0,
-		asset.ProgressbarJs_1_0_1,
-		asset.VideoJs_7_7_4,
-		asset.WaitMe_31_10_17,
+		himma.Bootstrap4,
+		himma.BootstrapDatepicker_1_9_0,
+		himma.BootstrapSelect_1_13_9,
+		himma.BootstrapTable_1_15_5,
+		himma.Holder_2_9,
+		himma.JqueryMask_1_14_16,
+		himma.JqueryValidation_1_19_1,
+		himma.JsCookie_2_2_1,
+		himma.Moment_2_24_0,
+		himma.ProgressbarJs_1_0_1,
+		himma.VideoJs_7_7_4,
+		himma.WaitMe_31_10_17,
 	)
 	if err != nil {
 		return err
@@ -129,7 +129,7 @@ func (c *Controller) loadSummaryDb() error {
 		return err
 	}
 	c.summaries = summaries
-	//spew.Dump(summaries)
+	// spew.Dump(summaries)
 	return nil
 }
 

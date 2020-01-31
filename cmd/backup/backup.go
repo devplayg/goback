@@ -3,15 +3,17 @@ package main
 import (
 	"fmt"
 	"github.com/devplayg/goback"
+	"github.com/devplayg/himma"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"os"
 	"runtime"
+	"time"
 )
 
 const (
 	appName    = "goback"
-	appVersion = "1.0.3"
+	appVersion = "1.0.5"
 )
 
 var (
@@ -28,7 +30,17 @@ var (
 
 func main() {
 	if len(*web) > 0 { // Web UI
-		c := goback.NewController(*web, *addr, appVersion)
+		app := himma.Application{
+			AppName:     "SecuBACKUP",
+			Description: "INCREMENTAL BACKUP ",
+			Url:         "https://devplayg.com",
+			Phrase1:     "KEEP YOUR DATA SAFE",
+			Phrase2:     "Powered by Go",
+			Year:        time.Now().Year(),
+			Version:     appVersion,
+			Company:     "SECUSOLUTION",
+		}
+		c := goback.NewController(*web, *addr, &app)
 		if err := c.Start(); err != nil {
 			log.Error(err)
 		}
@@ -46,7 +58,7 @@ func init() {
 	fs.Usage = func() {
 		fmt.Printf("backup v%s\n", appVersion)
 		fs.PrintDefaults()
-		//fmt.Println("\n  usage) backup -s [directory to backup] -d [directory where backup files will be stored]")
+		// fmt.Println("\n  usage) backup -s [directory to backup] -d [directory where backup files will be stored]")
 		fmt.Printf("\n  ex) goback -s /dir/to/backup -d /dir/to/be/saved\n")
 		fmt.Printf("  ex) goback -s /dir/to/backup1 -s /dir/to/backup2 -d /dir/to/be/saved\n")
 		os.Exit(0)

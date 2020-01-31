@@ -50,7 +50,7 @@ func NewBackup(srcDirs []string, dstDir string, hashComparision, debug bool) *Ba
 		started:          time.Now(),
 		rank:             50,
 		summaryDbPath:    filepath.Join(dstDir, SummaryDbName),
-		//sizeRankMinSize:  10 * MB,
+		sizeRankMinSize:  10 * MB,
 	}
 }
 
@@ -242,7 +242,7 @@ func (b *Backup) loadSummaryDb() error {
 	} else {
 		b.Id = summaries[len(summaries)-1].BackupId + 1
 	}
-	//spew.Dump(summaries)
+	// spew.Dump(summaries)
 
 	b.summaries = summaries
 	return nil

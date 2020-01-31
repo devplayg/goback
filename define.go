@@ -40,9 +40,12 @@ const (
 	kB = 1000
 	MB = 1000000
 	GB = 1000000000
+	TB = 1000000000000
 )
 
 var fileSizeCategories = []int64{
+	0,
+
 	5 * kB,
 	50 * kB,
 	500 * kB,
@@ -53,6 +56,8 @@ var fileSizeCategories = []int64{
 
 	5 * GB,
 	50 * GB,
+
+	5 * TB,
 }
 
 var (

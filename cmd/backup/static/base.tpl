@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>
-        {{.Title}}
+        {{.AppName}}
     </title>
     <meta name="description" content="Page Titile">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -41,7 +41,7 @@
             <div class="page-logo">
                 <a href="/" class="page-logo-link press-scale-down d-flex align-items-center position-relative">
                     <img style="width: 30px;" src="data:image/png;base64,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" class=" rounded-circle" alt="" aria-roledescription="logo">
-                    <span class="page-logo-text mr-1"> {{.Title}}</span>
+                    <span class="page-logo-text mr-1"> {{.AppName}}</span>
                     <span class="position-absolute text-white opacity-50 small pos-top pos-right mr-2 mt-n2"></span>
                 </a>
             </div>
@@ -78,8 +78,8 @@
                 -->
                 <ul class="list-table m-auto nav-footer-buttons">
                     <li>
-                        <a href="javascript:void(0);" data-toggle="tooltip" data-placement="top" title="" data-original-title="Chat logs">
-                            v{{.AppVersion}}
+                        <a href="javascript:void(0);" class="fs-sm" data-toggle="tooltip" data-placement="top" title="" data-original-title="">
+                            {{.Year}} &copy; {{.Company}}
                         </a>
                     </li>
                 </ul>
@@ -94,7 +94,7 @@
                 <div class="page-logo">
                     <a href="#" class="page-logo-link press-scale-down d-flex align-items-center position-relative">
                         <img src="img/logo.png" alt="RTSP Stream" aria-roledescription="logo">
-                        <span class="page-logo-text mr-1">{{.Title}}</span>
+                        <span class="page-logo-text mr-1">{{.AppName}}</span>
                         <span class="position-absolute text-white opacity-50 small pos-top pos-right mr-2 mt-n2"></span>
                         <i class="fal fa-angle-down d-inline-block ml-1 fs-lg color-primary-300"></i>
                     </a>
@@ -123,22 +123,17 @@
 
             <footer class="page-footer" role="contentinfo">
                 <div class="d-flex align-items-center flex-1 text-muted">
-                    <span class="hidden-md-down fw-700">
-                        {{.Year}} &copy;
+                    <span class="hidden-md-down ">
                         <a href="{{.Url}}" class="text-primary fw-500" title="gotbootstrap.com" target="_blank">
-                            {{.Title}}
                         </a>
                     </span>
                 </div>
-                <!--
                 <div>
                     <ul class="list-table m-0">
-                        <li><a href="intel_introduction.html" class="text-secondary fw-700">About</a></li>
-                        <li class="pl-3"><a href="info_app_licensing.html" class="text-secondary fw-700">License</a></li>
-                        <li class="pl-3"><a href="info_app_docs.html" class="text-secondary fw-700">Documentation</a></li>
-                        <li class="pl-3 fs-xl"><a href="https://wrapbootstrap.com/user/MyOrange" class="text-secondary" target="_blank"><i class="fal fa-question-circle" aria-hidden="true"></i></a></li>
+                        <li><a href="intel_introduction.html fs-sm" class="text-secondary">{{.AppName}} v{{.Version}}</a></li>
                     </ul>
                 </div>
+                <!--
                 -->
             </footer>
 
@@ -223,17 +218,11 @@
     <a href="#" class="menu-item btn" data-toggle="tooltip" data-placement="left" title="Scroll Top">
         <i class="fal fa-arrow-up"></i>
     </a>
-    <a href="page_login_alt.html" class="menu-item btn" data-toggle="tooltip" data-placement="left" title="Logout">
-        <i class="fal fa-sign-out"></i>
-    </a>
     <a href="#" class="menu-item btn" data-action="app-fullscreen" data-toggle="tooltip" data-placement="left" title="Full Screen">
         <i class="fal fa-expand"></i>
     </a>
     <a href="#" class="menu-item btn" data-action="app-print" data-toggle="tooltip" data-placement="left" title="Print page">
         <i class="fal fa-print"></i>
-    </a>
-    <a href="#" class="menu-item btn" data-action="app-voice" data-toggle="tooltip" data-placement="left" title="Voice command">
-        <i class="fal fa-microphone"></i>
     </a>
 </nav>
 <!-- END Quick Menu -->

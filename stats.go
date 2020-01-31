@@ -10,11 +10,11 @@ type ExtStats struct {
 	Count int64  `json:"count"`
 }
 
-func NewExtensionStats(ext string, size int64) *ExtStats {
+func NewExtensionStats(ext string, size, count int64) *ExtStats {
 	return &ExtStats{
 		Ext:   ext,
 		Size:  size,
-		Count: 1,
+		Count: count,
 	}
 }
 
@@ -36,26 +36,43 @@ func NewNameStats(file *FileGrid) *NameStats {
 	return &stats
 }
 
-type Stats struct {
-	ExtRanking       []*ExtStats     `json:"extRanking"`
-	NameRanking      []*NameStats    `json:"nameRanking"`
-	SizeDistribution map[int64]int64 `json:"sizeDistribution"`
-	SizeRanking      []*FileGrid     `json:"sizeRanking"`
+type SizeDistStats struct {
+	SizeDist int64 `json:"sizeDist"`
+	Size     int64 `json:"size"`
+	Count    int64 `json:"count"`
+}
 
-	extension       map[string]*ExtStats
+func NewSizeDistStats(sizeDist, size, count int64) *SizeDistStats {
+	return &SizeDistStats{
+		SizeDist: sizeDist,
+		Size:     size,
+		Count:    count,
+	}
+}
+
+type Stats struct {
+	ExtRanking  []*ExtStats      `json:"extRanking"`
+	NameRanking []*NameStats     `json:"nameRanking"`
+	SizeRanking []*FileGrid      `json:"sizeRanking"`
+	SizeDist    []*SizeDistStats `json:"sizeDist"`
+
+	extMap          map[string]*ExtStats
 	nameMap         map[string]*NameStats
+	sizeDistMap     map[int64]*SizeDistStats
 	sizeRankMinSize int64
 }
 
 func NewStatsReport(sizeRankMinSize int64) *Stats {
 	return &Stats{
-		ExtRanking:       make([]*ExtStats, 0),
-		extension:        make(map[string]*ExtStats),
-		SizeDistribution: NewSizeDistribution(),
-		SizeRanking:      make([]*FileGrid, 0),  // path: size, path
-		NameRanking:      make([]*NameStats, 0), // name: count, size, name
-		nameMap:          make(map[string]*NameStats),
-		sizeRankMinSize:  sizeRankMinSize,
+		ExtRanking:  make([]*ExtStats, 0),
+		SizeRanking: make([]*FileGrid, 0),  // path: size, path
+		NameRanking: make([]*NameStats, 0), // name: count, size, name
+
+		extMap:      make(map[string]*ExtStats),
+		sizeDistMap: NewSizeDistMap(),
+		nameMap:     make(map[string]*NameStats),
+
+		sizeRankMinSize: sizeRankMinSize,
 	}
 
 }
@@ -67,12 +84,12 @@ func (s *Stats) addToStats(file *FileGrid) {
 }
 
 func (s *Stats) addToExtStats(file *FileGrid) {
-	if _, have := s.extension[file.Ext]; !have {
-		s.extension[file.Ext] = NewExtensionStats(file.Ext, file.Size)
+	if _, have := s.extMap[file.Ext]; !have {
+		s.extMap[file.Ext] = NewExtensionStats(file.Ext, file.Size, 1)
 		return
 	}
-	s.extension[file.Ext].Count++
-	s.extension[file.Ext].Size += file.Size
+	s.extMap[file.Ext].Count++
+	s.extMap[file.Ext].Size += file.Size
 }
 
 func (s *Stats) addToNameStats(file *FileGrid) {
@@ -91,27 +108,10 @@ func (s *Stats) addToSizeStats(file *FileGrid) {
 		s.SizeRanking = append(s.SizeRanking, file)
 	}
 
-	// Size-zero file
-	if file.Size == 0 {
-		s.SizeDistribution[0]++
-		return
-	}
-
-	// Small file
-	if file.Size < fileSizeCategories[0] {
-		s.SizeDistribution[fileSizeCategories[0]]++
-		return
-	}
-
-	// Big file
-	if file.Size > fileSizeCategories[len(fileSizeCategories)-1] {
-		s.SizeDistribution[file.Size]++
-		return
-	}
-
 	for i := 1; i < len(fileSizeCategories); i++ {
 		if file.Size <= fileSizeCategories[i] {
-			s.SizeDistribution[fileSizeCategories[i]]++
+			s.sizeDistMap[fileSizeCategories[i]].Count++
+			s.sizeDistMap[fileSizeCategories[i]].Size += file.Size
 			return
 		}
 	}
@@ -141,7 +141,7 @@ func (s *Stats) rank(rank int) {
 	}
 
 	// Extension (keep all)
-	for _, stats := range s.extension {
+	for _, stats := range s.extMap {
 		s.ExtRanking = append(s.ExtRanking, stats)
 	}
 	sort.Slice(s.ExtRanking, func(i, j int) bool {
@@ -151,6 +151,13 @@ func (s *Stats) rank(rank int) {
 	//    s.ExtensionRanking = s.ExtensionRanking[0:rank]
 	//    return
 	// }
+
+	for _, stats := range s.sizeDistMap {
+		s.SizeDist = append(s.SizeDist, stats)
+	}
+	sort.Slice(s.SizeDist, func(i, j int) bool {
+		return s.SizeDist[i].SizeDist > s.SizeDist[j].SizeDist
+	})
 }
 
 type StatsReportWithList struct {
@@ -159,11 +166,11 @@ type StatsReportWithList struct {
 	Report *Stats      `json:"report"`
 }
 
-func CreateFilesReportWithList(files []*FileGrid, size uint64, minSizeTorank int64, rank int) *StatsReportWithList {
+func CreateFilesReportWithList(files []*FileGrid, size uint64, minSizeToRank int64, rank int) *StatsReportWithList {
 	r := StatsReportWithList{
 		Files:  files,
 		Size:   size,
-		Report: NewStatsReport(minSizeTorank),
+		Report: NewStatsReport(minSizeToRank),
 	}
 	for _, f := range files {
 		r.Report.addToStats(f)

@@ -6,7 +6,7 @@ import (
 )
 
 func DisplayBackupTest() string {
-	b, err := ioutil.ReadFile("static/backup.html")
+	b, err := ioutil.ReadFile("static/backup.tpl")
 	if err != nil {
 		log.Error(err)
 	}
@@ -25,6 +25,8 @@ func DisplayBackup() string {
             margin-right: 3px;
             font-weight: 400;
         }
+
+        @media print{@page {size: landscape}}
     </style>
 {{end}}
 
@@ -83,7 +85,7 @@ func DisplayBackup() string {
                         <th data-field="workerCount" data-sortable="true" data-visible="false">Workers</th>
 
                         <th data-field="totalCount" data-sortable="true" data-formatter="backupTotalCountFormatter" data-events="backupStatsEvents">Files</th>
-                        <th data-field="totalSize" data-sortable="true" data-formatter="bytesToSize">Total Size</th>
+                        <th data-field="totalSize" data-sortable="true" data-formatter="byteSizeFormatter">Total Size</th>
 
                         <th data-field="countAdded" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupStatsEvents">Added</th>
                         <th data-field="sizeAdded" data-sortable="true" data-formatter="byteSizeFormatter">Added</th>
@@ -367,7 +369,7 @@ func DisplayBackup() string {
                                             <thead>
                                             <tr>
                                                 <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
-                                                <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
+                                                <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Total Size</th>
                                                 <th data-field="count" data-formatter="thCommaFormatter" data-sortable="true">Count</th>
                                             </tr>
                                             </thead>
@@ -403,13 +405,14 @@ func DisplayBackup() string {
                                                 data-pagination-v-align="bottom"
                                                 data-export-types="['csv', 'txt', 'excel']"
                                                 data-side-pagination="client"
-                                                data-sort-name="size"
+                                                data-sort-name="sizeDist"
                                                 data-page-size="15"
                                                 data-sort-order="desc">
                                             <thead>
                                             <tr>
-                                                <th data-field="size" data-sortable="true" data-formatter="backupStatsSizeDistFormatter">Size</th>
-                                                <th data-field="count" data-formatter="thCommaFormatter"  data-sortable="true">Count</th>
+                                                <th data-field="sizeDist" data-sortable="true" data-formatter="backupStatsSizeDistFormatter">Size</th>
+                                                <th data-field="size" data-formatter="byteSizeFormatter" data-sortable="true">Total Size</th>
+                                                <th data-field="count" data-formatter="thCommaFormatter" data-sortable="true">Count</th>
                                             </tr>
                                             </thead>
                                         </table>
@@ -463,10 +466,10 @@ func DisplayBackup() string {
         }
 
         function bytesToSize(bytes) {
-            return humanizedSize(bytes, true);
+            return humanizedSize(bytes, true, 1);
         }
 
-        function humanizedSize(bytes, si) {
+        function humanizedSize(bytes, si, toFixed) {
             let thresh = si ? 1000 : 1024;
             if(Math.abs(bytes) < thresh) {
                 return bytes + ' B';
@@ -479,13 +482,12 @@ func DisplayBackup() string {
                 bytes /= thresh;
                 ++u;
             } while(Math.abs(bytes) >= thresh && u < units.length - 1);
-            return bytes.toFixed(1)+' '+units[u];
+            return bytes.toFixed(toFixed)+' '+units[u];
         }
 
         function basename(path) {
             return path.replace(/^.*[\\\/]/, '');
         }
-        //
         // function dirname(path) {
         //     // return path.substr(0, basename(path).lastIndexOf('.'));
         //
@@ -512,11 +514,7 @@ func DisplayBackup() string {
 
         function showStats(backup) {
             $("#table-backup-stats-ext").bootstrapTable("load", backup.stats.extRanking);
-            let arr = [];
-            $.each(backup.stats.sizeDistribution, function(k, v) {
-                arr.push({size: parseInt(k, 10), count: v});
-            });
-            $("#table-backup-stats-size").bootstrapTable("load", arr);
+            $("#table-backup-stats-size").bootstrapTable("load", backup.stats.sizeDist);
             $("#modal-backup-stats").modal("show");
         }
 
@@ -561,7 +559,13 @@ ss
         */
 
         function backupStatsSizeDistFormatter(val, row, idx) {
-            return '<span class="has-tooltip" title="' + bytesToSize(val / 10) + ' ~ ' +  bytesToSize(val) + '">' +  val.toLocaleString() + '</span>';
+            if (val >= 5000000000000) {
+                return "Big file";
+            }
+            if (val === 0) {
+                return val;
+            }
+            return '<span class="has-tooltip" title="' + bytesToSize(val / 10) + ' ~ ' +  bytesToSize(val) + '">' + humanizedSize(val / 10, true, 0) + " ~ " +  humanizedSize(val, true, 0) + '</span>';
         }
 
         function backupTotalCountFormatter(val, row, idx) {
@@ -592,10 +596,13 @@ ss
             return '<span class="has-tooltip" title="' + row.dir + '">' + val + '</span>';
         }
         function byteSizeFormatter(val, row, idx) {
-            if (val < 1000) {
-                return humanizedSize(val, true);
+            if (val === 0) {
+                return '<span class="text-muted ">' + bytesToSize(val) + '</span>';
             }
-            return '<span class="has-tooltip" title="' + val.toLocaleString() + ' Bytes">' + humanizedSize(val, true) + '</span>';
+            if (val < 1000) {
+                return bytesToSize(val);
+            }
+            return '<span class="has-tooltip" title="' + val.toLocaleString() + ' Bytes">' + bytesToSize(val) + '</span>';
 
 
 

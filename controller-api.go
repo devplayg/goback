@@ -8,7 +8,6 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 func (c *Controller) GetSummaries(w http.ResponseWriter, r *http.Request) {
@@ -31,17 +30,17 @@ func (c *Controller) GetChangesLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//w.Header().Set("Content-Type", DetectContentType(filepath.Ext(r.RequestURI)))
-	//w.Header().Set("Content-Length", strconv.FormatInt(int64(len(content)), 10))
+	// w.Header().Set("Content-Type", DetectContentType(filepath.Ext(r.RequestURI)))
+	// w.Header().Set("Content-Length", strconv.FormatInt(int64(len(content)), 10))
 	w.Header().Set("Content-Encoding", compress.GZIP)
 	w.Header().Add("Content-Type", "application/json")
 
-	//b, _ := json.MarshalIndent(logs, "", "  ")
+	// b, _ := json.MarshalIndent(logs, "", "  ")
 	w.Write(data)
-	//log.WithFields(log.Fields{
+	// log.WithFields(log.Fields{
 	//    "id":   vars["id"],
 	//    "what": vars["what"],
-	//}).Debug("log")
+	// }).Debug("log")
 }
 
 func (c *Controller) findSummaryById(id int) *Summary {
@@ -71,17 +70,7 @@ func (c *Controller) DisplayBackup(w http.ResponseWriter, r *http.Request) {
 	if tmpl, err = tmpl.Parse(DisplayBackup()); err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
 	}
-
-	app := himma.Application{
-		Title:       "GoBack",
-		Description: "FULL/INCREMENTAL BACKUP ",
-		Url:         "https://devplayg.com",
-		Phrase1:     "KEEP YOUR DATA SAFE",
-		Phrase2:     "Powered by Go",
-		Year:        time.Now().Year(),
-		AppVersion:  c.version,
-	}
-	if err := tmpl.Execute(w, app); err != nil {
+	if err := tmpl.Execute(w, c.app); err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
 	}
 }

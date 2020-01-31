@@ -61,55 +61,6 @@ func GetFileHash(path string) (string, error) {
 	return hex.EncodeToString(checksum), nil
 }
 
-//
-//func GetFileMap(dir string, hashComparision bool) (*sync.Map, *FilesReport, int64, uint64, error) {
-//    fileMap := sync.Map{}
-//    report := NewFilesReport()
-//
-//    var size uint64
-//    var count int64
-//
-//    err := filepath.Walk(dir, func(path string, file os.FileInfo, err error) error {
-//        if file.IsDir() {
-//            return nil
-//        }
-//
-//        if !file.Mode().IsRegular() {
-//            return nil
-//        }
-//
-//        fi := NewFileWrapper(path, file.Size(), file.ModTime())
-//        if hashComparision {
-//            h, err := GetFileHash(path)
-//            if err != nil {
-//                return err
-//            }
-//            fi.Hash = h
-//        }
-//
-//        // Statistics
-//        report.addExtension(file.Name(), file.Size())
-//        report.addSize(file)
-//        size += uint64(fi.Size)
-//        count++
-//
-//        fileMap.Store(path, fi)
-//        return nil
-//    })
-//
-//    return &fileMap, report, count, size, err
-//}
-//
-//func GetFileSizeCategory(size int64) int64 {
-//    for i := range fileSizeCategories {
-//        if size <= fileSizeCategories[i] {
-//            return fileSizeCategories[i]
-//        }
-//    }
-//    return -1
-//
-//}
-
 func BackupFile(srcPath, tempDir string) (string, float64, error) {
 	// Set source
 	t := time.Now()
@@ -161,10 +112,10 @@ func LoadOrCreateDatabase(path string) (*os.File, error) {
 	return db, nil
 }
 
-func NewSizeDistribution() map[int64]int64 {
-	m := make(map[int64]int64)
-	for _, size := range fileSizeCategories {
-		m[size] = 0
+func NewSizeDistMap() map[int64]*SizeDistStats {
+	m := make(map[int64]*SizeDistStats)
+	for _, sizeDist := range fileSizeCategories {
+		m[sizeDist] = NewSizeDistStats(sizeDist, 0, 0)
 	}
 	return m
 }
@@ -225,13 +176,6 @@ func LoadBackupData(path string, output interface{}, encoding int) error {
 
 	return nil
 }
-
-//
-//func GetChangesLogKey(date string, backupId int) string {
-//    key := fmt.Sprintf("%s-%d", date, backupId)
-//    h := md5.Sum([]byte(summary.SrcDir))
-//    suffix := hex.EncodeToString(h[:])
-//}
 
 func GetFileNameKey(name string, size int64) string {
 	return fmt.Sprintf("%s-%d", name, size)
