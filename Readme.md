@@ -1,7 +1,7 @@
 goback
 ------
 
-The `goback` makes incremental backups of directories.
+The `goback` makes incremental backups of directories and supports Web UI.
 
     ./goback -s /dir/to/backup -d /dir/to/be/saved
     
