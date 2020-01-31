@@ -11,7 +11,7 @@ import (
 
 const (
 	appName    = "goback"
-	appVersion = "1.0.2"
+	appVersion = "1.0.3"
 )
 
 var (
@@ -28,7 +28,7 @@ var (
 
 func main() {
 	if len(*web) > 0 { // Web UI
-		c := goback.NewController(*web, *addr)
+		c := goback.NewController(*web, *addr, appVersion)
 		if err := c.Start(); err != nil {
 			log.Error(err)
 		}

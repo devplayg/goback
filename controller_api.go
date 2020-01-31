@@ -1,86 +1,87 @@
 package goback
 
 import (
-    "encoding/json"
-    "github.com/devplayg/golibs/compress"
-    "github.com/devplayg/himma"
-    "github.com/gorilla/mux"
-    "html/template"
-    "net/http"
-    "strconv"
-    "time"
+	"encoding/json"
+	"github.com/devplayg/golibs/compress"
+	"github.com/devplayg/himma"
+	"github.com/gorilla/mux"
+	"html/template"
+	"net/http"
+	"strconv"
+	"time"
 )
 
 func (c *Controller) GetSummaries(w http.ResponseWriter, r *http.Request) {
-    b, err := json.Marshal(c.summaries)
-    if err != nil {
-        Response(w, r, err, http.StatusInternalServerError)
-    }
+	b, err := json.Marshal(c.summaries)
+	if err != nil {
+		Response(w, r, err, http.StatusInternalServerError)
+	}
 
-    w.Header().Add("Content-Type", "application/json")
-    w.Write(b)
+	w.Header().Add("Content-Type", "application/json")
+	w.Write(b)
 }
 
 func (c *Controller) GetChangesLog(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
-    id, _ := strconv.Atoi(vars["id"])
-    data, err := c.getChangesLog(id)
-    if err != nil {
-        w.WriteHeader(http.StatusInternalServerError)
-        w.Write([]byte(err.Error()))
-        return
-    }
+	vars := mux.Vars(r)
+	id, _ := strconv.Atoi(vars["id"])
+	data, err := c.getChangesLog(id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
 
-    //w.Header().Set("Content-Type", DetectContentType(filepath.Ext(r.RequestURI)))
-    //w.Header().Set("Content-Length", strconv.FormatInt(int64(len(content)), 10))
-    w.Header().Set("Content-Encoding", compress.GZIP)
-    w.Header().Add("Content-Type", "application/json")
+	//w.Header().Set("Content-Type", DetectContentType(filepath.Ext(r.RequestURI)))
+	//w.Header().Set("Content-Length", strconv.FormatInt(int64(len(content)), 10))
+	w.Header().Set("Content-Encoding", compress.GZIP)
+	w.Header().Add("Content-Type", "application/json")
 
-    //b, _ := json.MarshalIndent(logs, "", "  ")
-    w.Write(data)
-    //log.WithFields(log.Fields{
-    //    "id":   vars["id"],
-    //    "what": vars["what"],
-    //}).Debug("log")
+	//b, _ := json.MarshalIndent(logs, "", "  ")
+	w.Write(data)
+	//log.WithFields(log.Fields{
+	//    "id":   vars["id"],
+	//    "what": vars["what"],
+	//}).Debug("log")
 }
 
 func (c *Controller) findSummaryById(id int) *Summary {
-    if c.summaries == nil || len(c.summaries) < 1 {
-        return nil
-    }
-    if len(c.summaries) >= id {
-        if c.summaries[id-1].Id == id {
-            return c.summaries[id-1]
-        }
-    }
-    for _, s := range c.summaries {
-        if s.Id == id {
-            return s
-        }
-    }
+	if c.summaries == nil || len(c.summaries) < 1 {
+		return nil
+	}
+	if len(c.summaries) >= id {
+		if c.summaries[id-1].Id == id {
+			return c.summaries[id-1]
+		}
+	}
+	for _, s := range c.summaries {
+		if s.Id == id {
+			return s
+		}
+	}
 
-    return nil
+	return nil
 }
 
 func (c *Controller) DisplayBackup(w http.ResponseWriter, r *http.Request) {
-    tmpl := template.New("streams")
-    tmpl, err := tmpl.Parse(himma.Base())
-    if err != nil {
-        Response(w, r, err, http.StatusInternalServerError)
-    }
-    if tmpl, err = tmpl.Parse(DisplayBackup()); err != nil {
-        Response(w, r, err, http.StatusInternalServerError)
-    }
+	tmpl := template.New("streams")
+	tmpl, err := tmpl.Parse(himma.Base())
+	if err != nil {
+		Response(w, r, err, http.StatusInternalServerError)
+	}
+	if tmpl, err = tmpl.Parse(DisplayBackup()); err != nil {
+		Response(w, r, err, http.StatusInternalServerError)
+	}
 
-    app := himma.Application{
-        Title:       "GoBack",
-        Description: "BACKUP SOFTWARE",
-        Url:         "https://devplayg.com",
-        Phrase1:     "KEEP YOUR DATA SAFE",
-        Phrase2:     "& ENJOY YOUR JOB",
-        Year:        time.Now().Year(),
-    }
-    if err := tmpl.Execute(w, app); err != nil {
-        Response(w, r, err, http.StatusInternalServerError)
-    }
+	app := himma.Application{
+		Title:       "GoBack",
+		Description: "FULL/INCREMENTAL BACKUP ",
+		Url:         "https://devplayg.com",
+		Phrase1:     "KEEP YOUR DATA SAFE",
+		Phrase2:     "Powered by Go",
+		Year:        time.Now().Year(),
+		AppVersion:  c.version,
+	}
+	if err := tmpl.Execute(w, app); err != nil {
+		Response(w, r, err, http.StatusInternalServerError)
+	}
 }

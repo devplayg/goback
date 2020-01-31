@@ -18,13 +18,11 @@ import (
 )
 
 type Backup struct {
-	Id    int
-	debug bool
-
-	srcDirs   []string
-	srcDirMap map[string]*dirInfo
-	dstDir    string
-
+	Id               int
+	debug            bool
+	srcDirs          []string
+	srcDirMap        map[string]*dirInfo
+	dstDir           string
 	summaryDb        *os.File
 	summaryDbPath    string
 	summary          *Summary
@@ -33,11 +31,10 @@ type Backup struct {
 	workerCount      int
 	fileBackupEnable bool
 	tempDir          string
-
-	version         int
-	started         time.Time
-	rank            int
-	sizeRankMinSize int64
+	version          int
+	started          time.Time
+	rank             int
+	sizeRankMinSize  int64
 }
 
 func NewBackup(srcDirs []string, dstDir string, hashComparision, debug bool) *Backup {
@@ -52,9 +49,8 @@ func NewBackup(srcDirs []string, dstDir string, hashComparision, debug bool) *Ba
 		version:          1,
 		started:          time.Now(),
 		rank:             50,
+		summaryDbPath:    filepath.Join(dstDir, SummaryDbName),
 		//sizeRankMinSize:  10 * MB,
-		//sizeRankMinSize:  10 * MB,
-		summaryDbPath: filepath.Join(dstDir, SummaryDbName),
 	}
 }
 
