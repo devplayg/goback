@@ -27,12 +27,14 @@ Screenshots
 
 Logs
 
-<img src="img/goback-log.jpg">
-
-![텍스트](img/goback-log.jpg)
+![logs](img/goback-log.png)
 
 Changes
 
+![changes](img/goback-changes.png)
+
 Statistics
+
+![changes](img/goback-stats.png)
 
 
