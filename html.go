@@ -6,7 +6,7 @@ import (
 )
 
 func DisplayBackupTest() string {
-	b, err := ioutil.ReadFile("static/backup.tpl")
+	b, err := ioutil.ReadFile("static/backup.html")
 	if err != nil {
 		log.Error(err)
 	}
