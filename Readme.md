@@ -1,5 +1,6 @@
 goback
 ------
+[![Build Status](https://travis-ci.org/devplayg/goback.svg?branch=master)](https://travis-ci.org/devplayg/goback)
 
 The `goback` makes incremental backups of directories and supports Web UI.
 
