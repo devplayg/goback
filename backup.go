@@ -35,6 +35,7 @@ type Backup struct {
 	started          time.Time
 	rank             int
 	sizeRankMinSize  int64
+	keeper           Keeper
 }
 
 func NewBackup(srcDirs []string, dstDir string, hashComparision, debug bool) *Backup {
@@ -51,6 +52,7 @@ func NewBackup(srcDirs []string, dstDir string, hashComparision, debug bool) *Ba
 		rank:             50,
 		summaryDbPath:    filepath.Join(dstDir, SummaryDbName),
 		sizeRankMinSize:  10 * MB,
+		keeper:           NewKeeper(dstDir),
 	}
 }
 

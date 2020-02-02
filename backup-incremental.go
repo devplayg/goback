@@ -1,16 +1,14 @@
 package goback
 
 import (
-	"fmt"
 	log "github.com/sirupsen/logrus"
-	"os"
 	"sync"
 	"sync/atomic"
 )
 
 func (b *Backup) startBackup(srcDir string, lastFileMap *sync.Map) error {
 	// 1. Issue summary
-	b.issueSummary(srcDir, NormalBackup)
+	b.issueSummary(srcDir, Incremental)
 
 	// 2. Collect files in source directories
 	currentFileMaps, err := b.getCurrentFileMaps(srcDir)
@@ -24,11 +22,11 @@ func (b *Backup) startBackup(srcDir string, lastFileMap *sync.Map) error {
 	}
 
 	// 4. Backup added or changed files
-	if err := b.backupFiles(); err != nil {
+	if err := b.backupFilesToLocal(); err != nil {
 		return err
 	}
 
-	// 4. Write result
+	// 5. Write result
 	if err := b.writeResult(currentFileMaps, lastFileMap); err != nil {
 		return err
 	}
@@ -36,59 +34,6 @@ func (b *Backup) startBackup(srcDir string, lastFileMap *sync.Map) error {
 	return nil
 }
 
-func (b *Backup) backupFiles() error {
-	fileGroup, count, err := b.createBackupFileGroup()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		b.writeBackupState(Copied)
-		if count > 0 {
-			log.WithFields(log.Fields{
-				"execTime": b.summary.BackupTime.Sub(b.summary.ComparisonTime).Seconds(),
-				"success":  b.summary.SuccessCount,
-				"failed":   b.summary.FailedCount,
-				"dir":      b.summary.SrcDir,
-			}).Info("directory backup done")
-		}
-	}()
-	if count < 1 {
-		return nil
-	}
-
-	log.WithFields(log.Fields{
-		"files":   count,
-		"workers": b.workerCount,
-	}).Info("running backup..")
-	wg := sync.WaitGroup{}
-	for i := range fileGroup {
-		if len(fileGroup[i]) < 1 {
-			continue
-		}
-
-		wg.Add(1)
-		go func(workerId int) {
-			defer wg.Done()
-			// t := time.Now()
-			if err := b.backupFileGroup(workerId, fileGroup[workerId]); err != nil {
-				log.Error(err)
-			}
-			// log.WithFields(log.Fields{
-			//     "workerId":  workerId,
-			//     "processed": len(fileGroup[workerId]),
-			//     "duration":  time.Since(t).Seconds(),
-			// }).Debug("worker backup done")
-		}(i)
-	}
-	wg.Wait()
-
-	// b.failedFiles.Range(func(key, value interface{}) bool {
-	// 	file := key.(*FileWrapper)
-	// 	return true
-	// })
-	//
-	return nil
-}
 
 // Added or modified files will be backed up
 func (b *Backup) createBackupFileGroup() ([][]*FileWrapper, uint64, error) {
@@ -118,36 +63,6 @@ func (b *Backup) createBackupFileGroup() ([][]*FileWrapper, uint64, error) {
 	return fileGroup, i, nil
 }
 
-// Thread-safe
-func (b *Backup) backupFileGroup(workerId int, files []*FileWrapper) error {
-	for _, file := range files {
-		path, dur, err := BackupFile(file.Path, b.tempDir)
-		if err != nil { // failed to backup
-			b.summary.failedFiles.Store(file, nil)
-			atomic.AddUint64(&b.summary.FailedCount, 1)
-			atomic.AddUint64(&b.summary.FailedSize, uint64(file.Size))
-			file.State = FileBackupFailed
-			file.Message = err.Error()
-			log.WithFields(log.Fields{
-				"workerId": workerId,
-			}).Error(fmt.Errorf("failed to backup: %s; %w", file.Path, err))
-			continue
-		}
-
-		// Success
-		atomic.AddUint64(&b.summary.SuccessCount, 1)
-		atomic.AddUint64(&b.summary.SuccessSize, uint64(file.Size))
-		file.State = FileBackupSucceeded
-		file.ExecTime = dur
-		if err := os.Chtimes(path, file.ModTime, file.ModTime); err != nil {
-			log.WithFields(log.Fields{
-				"workerId": workerId,
-			}).Error(fmt.Errorf("failed to change file modification time: %s; %w", file.Path, err))
-			continue
-		}
-	}
-	return nil
-}
 
 func (b *Backup) writeWhatHappened(file *FileWrapper, whatHappened int) {
 	file.WhatHappened = whatHappened

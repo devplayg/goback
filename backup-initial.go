@@ -8,7 +8,7 @@ func (b *Backup) generateFirstBackupData(srcDir string) error {
 	log.Infof("generating source data from %s", srcDir)
 
 	// 1. Issue summary
-	b.issueSummary(srcDir, InitialBackup)
+	b.issueSummary(srcDir, Initial)
 
 	// 2. Collect files in source directories
 	currentFileMaps, err := b.getCurrentFileMaps(srcDir)

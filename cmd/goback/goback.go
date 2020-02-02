@@ -56,10 +56,11 @@ func main() {
 func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	fs.Usage = func() {
-		fmt.Printf("backup v%s\n", appVersion)
+		fmt.Printf("%s v%s\n", appName, appVersion)
 		fs.PrintDefaults()
 		// fmt.Println("\n  usage) backup -s [directory to backup] -d [directory where backup files will be stored]")
-		fmt.Printf("\n  ex) goback -s /dir/to/backup -d /dir/to/be/saved\n")
+		fmt.Println("")
+		fmt.Printf("  ex) goback -s /dir/to/backup -d /dir/to/be/saved\n")
 		fmt.Printf("  ex) goback -s /dir/to/backup1 -s /dir/to/backup2 -d /dir/to/be/saved\n")
 		os.Exit(0)
 	}

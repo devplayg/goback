@@ -13,9 +13,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
-	"strings"
-	"time"
 )
 
 var ErrorBucketNotFound = errors.New("bucket not found")
@@ -59,39 +56,6 @@ func GetFileHash(path string) (string, error) {
 
 	checksum := highwayhash.Sum(nil)
 	return hex.EncodeToString(checksum), nil
-}
-
-func BackupFile(srcPath, tempDir string) (string, float64, error) {
-	// Set source
-	t := time.Now()
-	srcFile, err := os.Open(srcPath)
-	if err != nil {
-		return "", 0.0, err
-
-	}
-	defer srcFile.Close()
-
-	// Set destination
-	if runtime.GOOS == "windows" {
-		srcPath = strings.ReplaceAll(srcPath, ":", "")
-	}
-	dstPath := filepath.Join(tempDir, srcPath)
-	if err := os.MkdirAll(filepath.Dir(dstPath), 0644); err != nil {
-		return "", 0.0, err
-	}
-	dstFile, err := os.OpenFile(dstPath, os.O_RDWR|os.O_CREATE, 0600)
-	if err != nil {
-		return "", 0.0, err
-	}
-	defer dstFile.Close()
-
-	// Copy
-	_, err = io.Copy(dstFile, srcFile)
-	if err != nil {
-		return "", 0.0, err
-	}
-
-	return dstPath, time.Since(t).Seconds(), err
 }
 
 func GetHumanizedSize(size uint64) string {

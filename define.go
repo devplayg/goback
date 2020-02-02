@@ -20,10 +20,14 @@ const (
 	FilesDbName   = "files-%s.db"
 	SummaryDbName = "summary.db"
 
-	InitialBackup = 1
-	NormalBackup  = 2
+	Initial     = 1
+	Incremental = 2
 
-	Failed = -1
+	LocalDisk = 1
+	Ftp       = 3
+	Sftp      = 4
+
+	// Failed = -1
 
 	GobEncoding  = 1
 	JsonEncoding = 2
