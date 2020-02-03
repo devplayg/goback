@@ -26,12 +26,10 @@ func NewKeeper(dst string) Keeper {
 	return LocalKeeper{}
 }
 
-// host,port, user, pass
-// LocalKeeper.Connected/Save
-// FtpSender.Connected/Send
-// SftpSender.OK/Send
-type LocalKeeper struct {}
+// LocalKeeper saves added or modified files in local disk.
+type LocalKeeper struct{}
 
+// Copy file
 func (k LocalKeeper) Keep(srcPath, dstDir string) (string, float64, error) {
 	// Set source
 	t := time.Now()
@@ -67,11 +65,48 @@ func (k LocalKeeper) Keep(srcPath, dstDir string) (string, float64, error) {
 	return dstPath, time.Since(t).Seconds(), err
 }
 
-type FtpKeeper struct{}
+// FtpKeeper saves added or modified files to remote server via FTP
+type FtpKeeper struct {
+	addr     string
+	username string
+	password string
+}
 
-type SftpKeeper struct{}
+func NewFtpKeeper(addr, username, password string) *FtpKeeper {
+	return &FtpKeeper{
+		addr:     addr,
+		username: username,
+		password: password,
+	}
+}
 
+func (k FtpKeeper) Keep(srcPath, dstDir string) (string, float64, error) {
+	return "", 0, nil
+}
 
+// SftpKeeper saves added or modified files to remote server via SFTP
+type SftpKeeper struct {
+	addr     string
+	username string
+	password string
+}
+
+func NewSftpKeeper(addr, username, password string) *SftpKeeper {
+	return &SftpKeeper{
+		addr:     addr,
+		username: username,
+		password: password,
+	}
+}
+
+func (k SftpKeeper) Keep(srcPath, dstDir string) (string, float64, error) {
+	return "", 0, nil
+}
+
+// host,port, user, pass
+// LocalKeeper.Connected/Save
+// FtpSender.Connected/Send
+// SftpSender.OK/Send
 
 // func BackupFile(srcPath, destDir string) (string, float64, error) {
 // 	// Set source

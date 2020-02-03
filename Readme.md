@@ -41,3 +41,8 @@ Statistics
 ![changes](img/goback-stats.png)
 
 
+What if `goback` runs as service...
+
+- [ ] selecting directories to backup
+- [ ] selecting backup type (SFTP/FTP/Local choice options)
+- [ ] Scheduling
