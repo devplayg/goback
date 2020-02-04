@@ -1,3 +1,4 @@
+github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/devplayg/eggcrate v1.0.2 h1:nqmY7Cr7qagOI+gItpf6E4akzRklxDYVJUTpJG+nq7Y=
 github.com/devplayg/eggcrate v1.0.2/go.mod h1:23+NELeqZ2XuiEPddo2Ai/2S+5BkY14Uaouve+UWcjo=
 github.com/devplayg/golibs v1.0.1 h1:CRJY0ITDLM33KuxkKS0h2RgpRPZSK5N4sCx+YUqXXPM=
