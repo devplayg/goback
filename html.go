@@ -180,9 +180,9 @@ func DisplayBackup() string {
                                         <tr>
                                             <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
                                             <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
-                                            <th data-field="mtime" data-visible="false">ModTime</th>
                                             <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
                                             <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
+                                            <th data-field="mtime" data-visible="false" data-formatter="dateFormatter">ModTime</th>
                                             <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
                                             <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
                                         </tr>
@@ -220,9 +220,9 @@ func DisplayBackup() string {
                                         <tr>
                                             <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
                                             <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
-                                            <th data-field="mtime" data-visible="false">ModTime</th>
                                             <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
                                             <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
+                                            <th data-field="mtime" data-visible="false" data-formatter="dateFormatter">ModTime</th>
                                             <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
                                             <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
                                         </tr>
@@ -260,9 +260,9 @@ func DisplayBackup() string {
                                         <tr>
                                             <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
                                             <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
-                                            <th data-field="mtime" data-visible="false">ModTime</th>
                                             <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
                                             <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
+                                            <th data-field="mtime" data-visible="false" data-formatter="dateFormatter">ModTime</th>
                                             <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
                                             <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
                                         </tr>
@@ -300,9 +300,9 @@ func DisplayBackup() string {
                                         <tr>
                                             <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
                                             <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
-                                            <th data-field="mtime" data-visible="false">ModTime</th>
                                             <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
                                             <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
+                                            <th data-field="mtime" data-visible="false" data-formatter="dateFormatter">ModTime</th>
                                             <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
                                             <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
                                         </tr>
@@ -603,37 +603,7 @@ ss
                 return bytesToSize(val);
             }
             return '<span class="has-tooltip" title="' + val.toLocaleString() + ' Bytes">' + bytesToSize(val) + '</span>';
-
-
-
-
-            // let str = humanizedSize(val, true);
-            // if (val < 1000) {
-            //     return '<span class="text-muted">' + str +'</span>';
-            // }
-            //
-            // if (val >= 10000000) {
-            //     return '<span class="text-danger">' + str +'</span>';
-            // }
-            //
-            // return str;
-
-            // if (str.endsWith(" kB")) {
-            //     return '<span class="">' + str +'</span>';
-            // }
-            //
-            // if (str.endsWith(" MB")) {
-            //     return '<span class="text-danger">' + str +'</span>';
-            // }
         }
-
-        // function backupBasenameFormatter(val, row, idx) {
-        //     return basename(val);
-        // }
-
-        // function backupDirFormatter(val, row, idx) {
-        //     return '<span class="text-muted">' + dirname(row.path) + '</span>';
-        // }
 
         function backupResultFormatter(val, row, idx, field) {
             if (val === 0) {
@@ -692,8 +662,8 @@ ss
             })
             .on('hidden.bs.modal', function (e) {
                 $(".table-data").bootstrapTable("load", []);
+                $(".table-data").bootstrapTable("filterBy", {}); // reset filter
                 $(".stats-data").empty();
-                $(".table").bootstrapTable( 'filterBy',{} ); // reset filter
             });
 
         $(".table")
@@ -731,30 +701,6 @@ ss
                 showChangedFiles(row.id, $btn.data("field"));
             },
         };
-
-        // window.backupResultOperateEvents = {
-        //     'click .changed': function (e, val, row, idx) {
-        //         console.log(e);
-                // let $btn = $(e.currentTarget);
-                // console.log(row);
-                // showChangedFiles(row.id, $btn.data("field"));
-            // },
-        //     'click .stats': function (e, val, row, idx) {
-        //         let $btn = $(e.currentTarget);
-        //         $("#modal-backup-stats .modal-title .summary").html('Backup ID: ' + row.id + ' / <b class="text-primary">' + row.totalCount.toLocaleString() + ' files</b> / ' + bytesToSize(row.totalSize) + '');
-        //         $("#modal-backup-stats .stats-srcDir").text(row.srcDir);
-        //         showStats(row);
-        //     },
-        // };
-        //
-        // window.backupOperateEvents2 = {
-        //     'click .file': function (e, val, row, idx) {
-        //
-        //         let $btn = $(e.currentTarget);
-        //         console.log(row);
-        //         showChangedFiles(row.id, $btn.data("title"), $btn.data("field"));
-        //     },
-        // };
 
         $( "#select-srcDirs" ).change(function () {
             if (this.value.length > 0) {

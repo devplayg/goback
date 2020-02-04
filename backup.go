@@ -11,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -23,6 +22,7 @@ type Backup struct {
 	srcDirs          []string
 	srcDirMap        map[string]*dirInfo
 	dstDir           string
+	backupDir        string
 	summaryDb        *os.File
 	summaryDbPath    string
 	summary          *Summary
@@ -39,6 +39,7 @@ type Backup struct {
 }
 
 func NewBackup(srcDirs []string, dstDir string, hashComparision, debug bool) *Backup {
+	t := time.Now()
 	return &Backup{
 		srcDirs:          srcDirs,
 		srcDirMap:        make(map[string]*dirInfo),
@@ -47,12 +48,13 @@ func NewBackup(srcDirs []string, dstDir string, hashComparision, debug bool) *Ba
 		debug:            debug,
 		workerCount:      runtime.NumCPU(),
 		fileBackupEnable: true,
-		version:          1,
-		started:          time.Now(),
+		version:          2,
+		started:          t,
 		rank:             50,
 		summaryDbPath:    filepath.Join(dstDir, SummaryDbName),
 		sizeRankMinSize:  10 * MB,
 		keeper:           NewKeeper(dstDir),
+		backupDir:        FindProperBackupDirName(dstDir, t.Format("20060102")),
 	}
 }
 
@@ -192,7 +194,7 @@ func (b *Backup) loadLastFileMap(dir string) (*sync.Map, error) {
 
 func (b *Backup) issueSummary(dir string, backupType int) {
 	summaryId := len(b.summaries) + 1
-	summary := NewSummary(summaryId, b.Id, dir, b.dstDir, backupType, b.workerCount, b.version, b.sizeRankMinSize)
+	summary := NewSummary(summaryId, backupType, dir, b)
 	b.summaries = append(b.summaries, summary)
 	b.summary = summary
 
@@ -204,15 +206,15 @@ func (b *Backup) issueSummary(dir string, backupType int) {
 }
 
 func (b *Backup) Stop() error {
+	dstDir := FindProperBackupDirName(b.dstDir, b.summary.Date.Format("20060102"))
+	if err := os.Rename(b.tempDir, dstDir); err != nil {
+		return err
+	}
+	b.summary.DstDir = dstDir
 	if err := b.writeSummary(); err != nil {
 		return err
 	}
 	if err := b.summaryDb.Close(); err != nil {
-		return err
-	}
-
-	dstDir := filepath.Join(b.dstDir, b.summary.Date.Format("20060102")+"-"+strconv.Itoa(b.summary.BackupId))
-	if err := os.Rename(b.tempDir, dstDir); err != nil {
 		return err
 	}
 

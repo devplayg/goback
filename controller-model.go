@@ -13,15 +13,22 @@ import (
 func (c *Controller) getChangesLog(id int) ([]byte, error) {
 	summary := c.findSummaryById(id)
 	if summary == nil {
-		return nil, errors.New("summry not found")
+		return nil, errors.New("summary not found")
 	}
-	key := fmt.Sprintf("%s-%d", summary.Date.Format("20060102"), summary.BackupId)
+
 	h := md5.Sum([]byte(summary.SrcDir))
 	suffix := hex.EncodeToString(h[:])
-	path := filepath.Join(c.dir, key, "changes-"+suffix+".db")
-	if _, err := os.Stat(path); os.IsNotExist(err) {
+	var logPath string
+	if summary.Version == 1 {
+		key := fmt.Sprintf("%s-%d", summary.Date.Format("20060102"), summary.BackupId)
+		logPath = filepath.Join(c.dir, key, "changes-"+suffix+".db")
+	} else {
+		// key = fmt.Sprintf("%s-%d", summary.Date.Format("20060102"), summary.BackupId)
+		logPath = filepath.Join(summary.BackupDir, "changes-"+suffix+".db")
+	}
+	if _, err := os.Stat(logPath); os.IsNotExist(err) {
 		return nil, err
 	}
 
-	return ioutil.ReadFile(path)
+	return ioutil.ReadFile(logPath)
 }

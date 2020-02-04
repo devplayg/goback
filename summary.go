@@ -11,7 +11,8 @@ type Summary struct {
 	BackupId    int       `json:"backupId"`
 	Date        time.Time `json:"date"`
 	SrcDir      string    `json:"srcDir"`
-	DstDir      string    `json:"dstDir"`
+	DstDir      string    `json:"-"`
+	BackupDir   string    `json:"-"`
 	BackupType  int       `json:"backupType"`
 	State       int       `json:"state"`
 	WorkerCount int       `json:"workerCount"`
@@ -39,7 +40,7 @@ type Summary struct {
 	ExecutionTime  float64   `json:"execTime"`       // Result
 
 	Message string `json:"message"`
-	Version int    `json:"version"`
+	Version int    `json:"-"`
 	Stats   *Stats `json:"stats"`
 
 	addedFiles    *sync.Map
@@ -52,21 +53,23 @@ func (s *Summary) Marshal() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func NewSummary(summaryId, backupId int, srcDir, dstDir string, backupType, workCount, version int, sizeRankMinSize int64) *Summary {
+// func NewSummary(summaryId, backupId int, srcDir, dstDir string, backupType, workCount, version int, sizeRankMinSize int64) *Summary {
+func NewSummary(summaryId, backupType int, srcDir string, b *Backup) *Summary {
 	return &Summary{
 		Id:            summaryId,
-		BackupId:      backupId,
+		BackupId:      b.Id,
 		Date:          time.Now(),
 		SrcDir:        srcDir,
-		DstDir:        dstDir,
-		WorkerCount:   workCount,
-		Version:       version,
+		DstDir:        b.dstDir,
+		WorkerCount:   b.workerCount,
+		Version:       b.version,
 		BackupType:    backupType,
 		State:         Started,
-		Stats:         NewStatsReport(sizeRankMinSize),
+		Stats:         NewStatsReport(b.sizeRankMinSize),
 		addedFiles:    &sync.Map{},
 		modifiedFiles: &sync.Map{},
 		deletedFiles:  &sync.Map{},
 		failedFiles:   &sync.Map{},
+		BackupDir:     b.backupDir,
 	}
 }

@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 var ErrorBucketNotFound = errors.New("bucket not found")
@@ -143,4 +144,20 @@ func LoadBackupData(path string, output interface{}, encoding int) error {
 
 func GetFileNameKey(name string, size int64) string {
 	return fmt.Sprintf("%s-%d", name, size)
+}
+
+func FindProperBackupDirName(dir, date string) string {
+	i := 0
+	for {
+		var d string
+		if i < 1 {
+			d = filepath.Join(dir, date)
+		} else {
+			d = filepath.Join(dir, date + "-" + strconv.Itoa(i))
+		}
+		if _, err := os.Stat(d); os.IsNotExist(err) {
+			return d
+		}
+		i++
+	}
 }
