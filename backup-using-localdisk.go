@@ -54,11 +54,6 @@ func (b *Backup) backupFilesToLocal() error {
 	}
 	wg.Wait()
 
-	// b.failedFiles.Range(func(key, value interface{}) bool {
-	// 	file := key.(*FileWrapper)
-	// 	return true
-	// })
-	//
 	return nil
 }
 

@@ -21,6 +21,7 @@ type Backup struct {
 	debug            bool
 	srcDirs          []string
 	srcDirMap        map[string]*dirInfo
+	remoteSite       *RemoteSite
 	dstDir           string
 	backupDir        string
 	summaryDb        *os.File
