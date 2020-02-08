@@ -1,19 +1,14 @@
 package goback
 
-import (
-	"github.com/pkg/sftp"
-	log "github.com/sirupsen/logrus"
-)
-
-type SftpKeeper struct {
-	Protocol int // FTP, SFTP
-	Host     string
-	Port     int
-	Dir      string
-	Username string
-	password string
-	conn     *sftp.Client
-}
+// type SftpKeeper struct {
+// 	Protocol int // FTP, SFTP
+// 	Host     string
+// 	Port     int
+// 	Dir      string
+// 	Username string
+// 	password string
+// 	conn     *sftp.Client
+// }
 //
 // func newFtpSite(protocol int, host string, port int, dir, username, password string) *SftpKeeper {
 // 	return &SftpKeeper{
@@ -26,22 +21,22 @@ type SftpKeeper struct {
 // 	}
 // }
 
-func (k *SftpKeeper) Open() error {
-	log.Debug("sftp open")
-	return nil
-}
-func (k *SftpKeeper) Close() error {
-	log.Debug("sftp close")
-	return nil
-}
-func (k *SftpKeeper) Test() error {
-	log.Debug("sftp test")
-	return nil
-}
-func (k *SftpKeeper) Keep(srcPath, dstDir string) (string, float64, error) {
-	log.Debug("sftp keep")
-	return "", 0, nil
-}
+// func (k *SftpKeeper) Open() error {
+// 	log.Debug("sftp open")
+// 	return nil
+// }
+// func (k *SftpKeeper) Close() error {
+// 	log.Debug("sftp close")
+// 	return nil
+// }
+// func (k *SftpKeeper) Test() error {
+// 	log.Debug("sftp test")
+// 	return nil
+// }
+// func (k *SftpKeeper) Keep(srcPath, dstDir string) (string, float64, error) {
+// 	log.Debug("sftp keep")
+// 	return "", 0, nil
+// }
 
 // func (f *FtpSite) Open() error {
 // 	var auths []ssh.AuthMethod

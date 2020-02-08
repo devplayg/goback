@@ -22,6 +22,7 @@ const (
 
 	Initial     = 1
 	Incremental = 2
+	Full        = 10
 
 	LocalDisk = 1
 	Ftp       = 3
