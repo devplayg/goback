@@ -53,7 +53,6 @@ func (s *Summary) Marshal() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-// func NewSummary(summaryId, backupId int, srcDir, dstDir string, backupType, workCount, version int, sizeRankMinSize int64) *Summary {
 func NewSummary(summaryId, backupType int, srcDir string, b *Backup) *Summary {
 	return &Summary{
 		Id:            summaryId,

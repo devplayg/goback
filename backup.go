@@ -21,7 +21,6 @@ type Backup struct {
 	debug            bool
 	srcDirs          []string
 	srcDirMap        map[string]*dirInfo
-	remoteSite       *FtpSite
 	dstDir           string
 	backupDir        string
 	summaryDb        *os.File
@@ -40,7 +39,6 @@ type Backup struct {
 }
 
 func NewBackup(srcDirs []string, dstDir string, hashComparision, debug bool) *Backup {
-	t := time.Now()
 	return &Backup{
 		srcDirs:          srcDirs,
 		srcDirMap:        make(map[string]*dirInfo),
@@ -50,12 +48,12 @@ func NewBackup(srcDirs []string, dstDir string, hashComparision, debug bool) *Ba
 		workerCount:      runtime.NumCPU(),
 		fileBackupEnable: true,
 		version:          2,
-		started:          t,
+		started:          time.Now(),
 		rank:             50,
 		summaryDbPath:    filepath.Join(dstDir, SummaryDbName),
 		sizeRankMinSize:  10 * MB,
 		keeper:           NewKeeper(dstDir),
-		backupDir:        FindProperBackupDirName(dstDir, t.Format("20060102")),
+		backupDir:        "",
 	}
 }
 
@@ -68,6 +66,9 @@ func (b *Backup) init() error {
 		return err
 	}
 	if err := b.loadSummaryDb(); err != nil {
+		return err
+	}
+	if err := b.initKeeper(); err != nil {
 		return err
 	}
 
@@ -102,6 +103,19 @@ func (b *Backup) initDatabase() error {
 	return nil
 }
 
+func (b *Backup) initKeeper() error {
+	tempDir, backupDir, err := b.keeper.Open(b.started, b.dstDir)
+	if err != nil {
+		return fmt.Errorf("failed to open keeper: %w", err)
+	}
+	b.tempDir = tempDir
+	b.backupDir = backupDir
+	if err := b.keeper.Test(); err != nil {
+		return fmt.Errorf("failed to test keeper: %w", err)
+	}
+	return nil
+}
+
 // Start backup
 func (b *Backup) Start() error {
 	if err := b.init(); err != nil {
@@ -119,13 +133,6 @@ func (b *Backup) Start() error {
 			"backupId": b.Id,
 		}).Info("backup process done")
 	}()
-
-	// Create temp directory
-	tempDir, err := ioutil.TempDir(b.dstDir, "backup-")
-	if err != nil {
-		return err
-	}
-	b.tempDir = tempDir
 
 	// Backup directory sequentially
 	for _, dir := range b.srcDirs {
@@ -207,11 +214,9 @@ func (b *Backup) issueSummary(dir string, backupType int) {
 }
 
 func (b *Backup) Stop() error {
-	dstDir := FindProperBackupDirName(b.dstDir, b.summary.Date.Format("20060102"))
-	if err := os.Rename(b.tempDir, dstDir); err != nil {
+	if err := b.keeper.Close(); err != nil {
 		return err
 	}
-	b.summary.DstDir = dstDir
 	if err := b.writeSummary(); err != nil {
 		return err
 	}

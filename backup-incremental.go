@@ -26,6 +26,10 @@ func (b *Backup) startBackup(srcDir string, lastFileMap *sync.Map) error {
 		return err
 	}
 
+	// b.ftpSite = newFtpSite(Sftp, "127.0.0.1", 22, "/backup/", "devplayg", "devplayg123!@#")
+	// b.sendChangedFiles()
+
+
 	// 5. Write result
 	if err := b.writeResult(currentFileMaps, lastFileMap); err != nil {
 		return err
@@ -36,7 +40,7 @@ func (b *Backup) startBackup(srcDir string, lastFileMap *sync.Map) error {
 
 
 // Added or modified files will be backed up
-func (b *Backup) createBackupFileGroup() ([][]*FileWrapper, uint64, error) {
+func (b *Backup) createBackupFileGroup() ([][]*FileWrapper, uint64) {
 	fileGroup := make([][]*FileWrapper, b.workerCount)
 	for i := range fileGroup {
 		fileGroup[i] = make([]*FileWrapper, 0)
@@ -60,7 +64,7 @@ func (b *Backup) createBackupFileGroup() ([][]*FileWrapper, uint64, error) {
 		return true
 	})
 
-	return fileGroup, i, nil
+	return fileGroup, i
 }
 
 

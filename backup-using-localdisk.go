@@ -9,10 +9,7 @@ import (
 )
 
 func (b *Backup) backupFilesToLocal() error {
-	fileGroup, count, err := b.createBackupFileGroup()
-	if err != nil {
-		return err
-	}
+	fileGroup, count := b.createBackupFileGroup()
 	defer func() {
 		b.writeBackupState(Copied)
 		if count > 0 {

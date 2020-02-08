@@ -1,33 +1,48 @@
 package goback
 
-// type RemoteSite interface {
-// 	Open() error
-// 	Close() error
-// 	Send(srcPath, dstPath string) error
-// 	Test() error
-// }
+import (
+	"github.com/pkg/sftp"
+	log "github.com/sirupsen/logrus"
+)
+
+type SftpKeeper struct {
+	Protocol int // FTP, SFTP
+	Host     string
+	Port     int
+	Dir      string
+	Username string
+	password string
+	conn     *sftp.Client
+}
 //
-// type FtpSite struct {
-// 	Protocol int // FTP, SFTP
-// 	Host     string
-// 	Port     int
-// 	Dir      string
-// 	Username string
-// 	Password string
-// 	conn     *sftp.Client
-// }
-//
-// func newFtpSite(protocol int, host string, port int, dir, username, password string) *FtpSite {
-// 	return &FtpSite{
+// func newFtpSite(protocol int, host string, port int, dir, username, password string) *SftpKeeper {
+// 	return &SftpKeeper{
 // 		Protocol: protocol,
 // 		Host:     host,
 // 		Port:     port,
 // 		Dir:      dir,
 // 		Username: username,
-// 		Password: password,
+// 		password: password,
 // 	}
 // }
-//
+
+func (k *SftpKeeper) Open() error {
+	log.Debug("sftp open")
+	return nil
+}
+func (k *SftpKeeper) Close() error {
+	log.Debug("sftp close")
+	return nil
+}
+func (k *SftpKeeper) Test() error {
+	log.Debug("sftp test")
+	return nil
+}
+func (k *SftpKeeper) Keep(srcPath, dstDir string) (string, float64, error) {
+	log.Debug("sftp keep")
+	return "", 0, nil
+}
+
 // func (f *FtpSite) Open() error {
 // 	var auths []ssh.AuthMethod
 // 	if aconn, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
