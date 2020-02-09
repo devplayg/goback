@@ -1,8 +1,15 @@
 goback
 ------
+
 [![Build Status](https://travis-ci.org/devplayg/goback.svg?branch=master)](https://travis-ci.org/devplayg/goback)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/devplayg/goback?color=439DB1)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/devplayg/goback)
+
+
+- Full backup
+- Incremental backup
+    - initial backup
+
 
 The `goback` makes incremental backups of directories and supports embedded web UI.
 

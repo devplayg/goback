@@ -11,7 +11,6 @@ type Summary struct {
 	BackupId    int       `json:"backupId"`
 	Date        time.Time `json:"date"`
 	SrcDir      string    `json:"srcDir"`
-	DstDir      string    `json:"-"`
 	BackupDir   string    `json:"-"`
 	BackupType  int       `json:"backupType"`
 	State       int       `json:"state"`
@@ -39,9 +38,10 @@ type Summary struct {
 	LoggingTime    time.Time `json:"loggingTime"`    // Step 4
 	ExecutionTime  float64   `json:"execTime"`       // Result
 
-	Message string `json:"message"`
-	Version int    `json:"-"`
-	Stats   *Stats `json:"stats"`
+	Message string        `json:"message"`
+	Version int           `json:"-"`
+	Stats   *Stats        `json:"stats"`
+	Keepers []*KeeperDesc `json:"keepers"`
 
 	addedFiles    *sync.Map
 	modifiedFiles *sync.Map
@@ -54,12 +54,15 @@ func (s *Summary) Marshal() ([]byte, error) {
 }
 
 func NewSummary(summaryId, backupType int, srcDir string, b *Backup) *Summary {
+	keepers := make([]*KeeperDesc, 0)
+	for _, k := range b.keepers {
+		keepers = append(keepers, k.Description())
+	}
 	return &Summary{
 		Id:            summaryId,
 		BackupId:      b.Id,
 		Date:          time.Now(),
 		SrcDir:        srcDir,
-		DstDir:        b.dstDir,
 		WorkerCount:   b.workerCount,
 		Version:       b.version,
 		BackupType:    backupType,
@@ -70,5 +73,6 @@ func NewSummary(summaryId, backupType int, srcDir string, b *Backup) *Summary {
 		deletedFiles:  &sync.Map{},
 		failedFiles:   &sync.Map{},
 		BackupDir:     b.backupDir,
+		Keepers:       keepers,
 	}
 }

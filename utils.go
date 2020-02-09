@@ -1,15 +1,12 @@
 package goback
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/devplayg/golibs/compress"
 	"github.com/devplayg/golibs/converter"
 	"github.com/dustin/go-humanize"
-	"github.com/minio/highwayhash"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -40,24 +37,25 @@ func IsValidDir(dir string) (string, error) {
 	return absDir, nil
 }
 
-func GetFileHash(path string) (string, error) {
-	highwayhash, err := highwayhash.New(HashKey[:])
-	if err != nil {
-		return "", err
-	}
-	file, err := os.Open(path) // specify your file here
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	if _, err = io.Copy(highwayhash, file); err != nil {
-		return "", err
-	}
-
-	checksum := highwayhash.Sum(nil)
-	return hex.EncodeToString(checksum), nil
-}
+//
+// func GetFileHash(path string) (string, error) {
+// 	highwayhash, err := highwayhash.New(HashKey[:])
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	file, err := os.Open(path) // specify your file here
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	defer file.Close()
+//
+// 	if _, err = io.Copy(highwayhash, file); err != nil {
+// 		return "", err
+// 	}
+//
+// 	checksum := highwayhash.Sum(nil)
+// 	return hex.EncodeToString(checksum), nil
+// }
 
 func GetHumanizedSize(size uint64) string {
 	humanized := humanize.Bytes(size)

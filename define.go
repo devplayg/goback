@@ -19,10 +19,11 @@ const (
 
 	FilesDbName   = "files-%s.db"
 	SummaryDbName = "summary.db"
+	ChangesDbName = "changes-%s.db"
 
 	Initial     = 1
 	Incremental = 2
-	Full        = 10
+	Full        = 4
 
 	LocalDisk = 1
 	Ftp       = 3
@@ -75,11 +76,11 @@ type dirInfo struct {
 	dbPath   string
 }
 
-func newDirInfo(srcDir, dstDir string) *dirInfo {
+func newDirInfo(srcDir, dbDir string) *dirInfo {
 	b := md5.Sum([]byte(srcDir))
 	checksum := hex.EncodeToString(b[:])
 	return &dirInfo{
 		checksum: checksum,
-		dbPath:   filepath.Join(dstDir, fmt.Sprintf(FilesDbName, checksum)),
+		dbPath:   filepath.Join(dbDir, fmt.Sprintf(FilesDbName, checksum)),
 	}
 }

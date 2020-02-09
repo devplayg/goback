@@ -22,15 +22,16 @@ func (b *Backup) startBackup(srcDir string, lastFileMap *sync.Map) error {
 	}
 
 	// 4. Backup added or changed files
-	if err := b.backupFilesToLocal(); err != nil {
+	if err := b.backupFiles(); err != nil {
 		return err
 	}
 
 	// b.ftpSite = newFtpSite(Sftp, "127.0.0.1", 22, "/backup/", "devplayg", "devplayg123!@#")
 	// b.sendChangedFiles()
 
-
 	// 5. Write result
+	// bb, _ := json.MarshalIndent(b.summary, "", "  ")
+	// fmt.Println(string(bb))
 	if err := b.writeResult(currentFileMaps, lastFileMap); err != nil {
 		return err
 	}
@@ -38,9 +39,8 @@ func (b *Backup) startBackup(srcDir string, lastFileMap *sync.Map) error {
 	return nil
 }
 
-
 // Added or modified files will be backed up
-func (b *Backup) createBackupFileGroup() ([][]*FileWrapper, uint64) {
+func (b *Backup) getBackupFileGroup() ([][]*FileWrapper, uint64) {
 	fileGroup := make([][]*FileWrapper, b.workerCount)
 	for i := range fileGroup {
 		fileGroup[i] = make([]*FileWrapper, 0)
@@ -66,7 +66,6 @@ func (b *Backup) createBackupFileGroup() ([][]*FileWrapper, uint64) {
 
 	return fileGroup, i
 }
-
 
 func (b *Backup) writeWhatHappened(file *FileWrapper, whatHappened int) {
 	file.WhatHappened = whatHappened

@@ -1,36 +1,5 @@
 package goback
 
-import (
-	"strings"
-	"time"
-)
-
-type Keeper interface {
-	Open(date time.Time, dir string) (string, string, error)
-	Close() error
-	Test() error
-	Keep(string, string) (string, float64, error)
-}
-
-func NewKeeper(dst string) Keeper {
-	// return &SftpKeeper{
-	// 	Protocol: 0,
-	// 	Host:     "127.0.0.1",
-	// 	Port:     22,
-	// 	Dir:      "/backup",
-	// 	Username: "devplayg",
-	// 	password: "devplayg123!@#",
-	// }
-	d := strings.ToLower(dst)
-	if strings.HasPrefix(d, "ftp://") {
-		return nil
-	}
-	if strings.HasPrefix(d, "sftp://") {
-		return nil
-	}
-	return &LocalKeeper{}
-}
-
 // FtpKeeper saves added or modified files to remote server via FTP
 // type FtpKeeper struct {
 // 	addr     string

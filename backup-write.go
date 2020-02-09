@@ -2,6 +2,7 @@ package goback
 
 import (
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/devplayg/golibs/compress"
 	"github.com/devplayg/golibs/converter"
 	"io/ioutil"
@@ -87,6 +88,7 @@ func (b *Backup) writeChangesLog(lastFileMap *sync.Map) error {
 		added = append(added, file.WrapInFileGrid())
 		return true
 	})
+	spew.Dump(added)
 
 	modified := make([]*FileGrid, 0)
 	b.summary.modifiedFiles.Range(func(k, v interface{}) bool {
@@ -117,21 +119,10 @@ func (b *Backup) writeChangesLog(lastFileMap *sync.Map) error {
 	m["failed"] = CreateFilesReportWithList(failed, b.summary.FailedSize, 0, b.rank)
 	m["deleted"] = CreateFilesReportWithList(deleted, b.summary.DeletedSize, 0, b.rank)
 
-	path := filepath.Join(b.tempDir, "changes-"+b.srcDirMap[b.summary.SrcDir].checksum+".db")
+	path := filepath.Join(b.DbDir, fmt.Sprintf(ChangesDbName, b.srcDirMap[b.summary.SrcDir].checksum))
 	if err := WriteBackupData(m, path, JsonEncoding); err != nil {
 		return err
 	}
-	//	// data, err := converter.EncodeToBytes(m)
-	//	// if err != nil {
-	//	//     return fmt.Errorf("failed to encode changes log: %w", err)
-	//	// }
-	//	// compressed, err := compress.Compress(data, compress.GZIP)
-	//	// if err != nil {
-	//	//     return fmt.Errorf("failed to compress encoded changes log: %w", err)
-	//	// }
-	//	// if err := ioutil.WriteFile(filepath.Join(b.tempDir, "changes-"+b.srcDirMap[b.summary.SrcDir].Checksum+".data"), compressed, 0644); err != nil {
-	//	//     return err
-	//	// }
 
 	return nil
 }

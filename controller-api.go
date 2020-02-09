@@ -29,18 +29,9 @@ func (c *Controller) GetChangesLog(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-
-	// w.Header().Set("Content-Type", DetectContentType(filepath.Ext(r.RequestURI)))
-	// w.Header().Set("Content-Length", strconv.FormatInt(int64(len(content)), 10))
 	w.Header().Set("Content-Encoding", compress.GZIP)
 	w.Header().Add("Content-Type", "application/json")
-
-	// b, _ := json.MarshalIndent(logs, "", "  ")
 	w.Write(data)
-	// log.WithFields(log.Fields{
-	//    "id":   vars["id"],
-	//    "what": vars["what"],
-	// }).Debug("log")
 }
 
 func (c *Controller) findSummaryById(id int) *Summary {

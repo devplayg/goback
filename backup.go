@@ -21,39 +21,36 @@ type Backup struct {
 	debug            bool
 	srcDirs          []string
 	srcDirMap        map[string]*dirInfo
-	dstDir           string
 	backupDir        string
 	summaryDb        *os.File
-	summaryDbPath    string
 	summary          *Summary
 	summaries        []*Summary
-	hashComparision  bool
 	workerCount      int
 	fileBackupEnable bool
-	tempDir          string
 	version          int
 	started          time.Time
 	rank             int
 	sizeRankMinSize  int64
-	keeper           Keeper
+	keepers          []Keeper
+	workingDir       string
+	DbDir            string
+	backupType       int
 }
 
-func NewBackup(srcDirs []string, dstDir string, hashComparision, debug bool) *Backup {
+func NewBackup(srcDirs []string, keepers []Keeper, backupType int, debug bool) *Backup {
 	return &Backup{
 		srcDirs:          srcDirs,
 		srcDirMap:        make(map[string]*dirInfo),
-		dstDir:           dstDir,
-		hashComparision:  hashComparision,
 		debug:            debug,
 		workerCount:      runtime.NumCPU(),
 		fileBackupEnable: true,
 		version:          2,
 		started:          time.Now(),
 		rank:             50,
-		summaryDbPath:    filepath.Join(dstDir, SummaryDbName),
 		sizeRankMinSize:  10 * MB,
-		keeper:           NewKeeper(dstDir),
+		keepers:          keepers,
 		backupDir:        "",
+		backupType:       backupType,
 	}
 }
 
@@ -81,21 +78,38 @@ func (b *Backup) initDirectories() error {
 		return errors.New("source directories not found")
 	}
 
-	// Check if destination is valid
-	if len(b.dstDir) < 1 {
-		return errors.New("backup directory not found")
-	}
-	dstDir, err := IsValidDir(b.dstDir)
+	// Working directory
+	workingDir, err := filepath.Abs(os.Args[0])
 	if err != nil {
-		return errors.New("destination directory error: " + err.Error())
+		return err
 	}
-	b.dstDir = dstDir
+	b.workingDir = filepath.Dir(workingDir)
+
+	// Database directory
+	dbDir := filepath.Join(b.workingDir, "db")
+	if _, err := os.Stat(dbDir); os.IsNotExist(err) {
+		if err := os.Mkdir(dbDir, 0600); err != nil {
+			return fmt.Errorf("unable to create database directory: %w", err)
+		}
+	}
+	b.DbDir = dbDir
+
+	// Check if destination is valid
+	// if len(b.dstDir) < 1 {
+	// 	return errors.New("backup directory not found")
+	// }
+	// dstDir, err := IsValidDir(b.dstDir)
+	// if err != nil {
+	// 	return errors.New("destination directory error: " + err.Error())
+	// }
+	// b.dstDir = dstDir
 	return nil
 }
 
 // Initialize database
 func (b *Backup) initDatabase() error {
-	summaryDb, err := LoadOrCreateDatabase(b.summaryDbPath)
+	path := filepath.Join(b.DbDir, SummaryDbName)
+	summaryDb, err := LoadOrCreateDatabase(path)
 	if err != nil {
 		return fmt.Errorf("failed to load summary database: %w", err)
 	}
@@ -104,15 +118,26 @@ func (b *Backup) initDatabase() error {
 }
 
 func (b *Backup) initKeeper() error {
-	tempDir, backupDir, err := b.keeper.Open(b.started, b.dstDir)
-	if err != nil {
-		return fmt.Errorf("failed to open keeper: %w", err)
+	for _, k := range b.keepers {
+		if err := k.Init(b.started); err != nil {
+			log.WithFields(log.Fields{
+				"protocol": k.Description().Protocol,
+				"host":     k.Description().Host,
+			}).Errorf("failed to initialize the keeper: %s", err.Error())
+			return err
+		}
 	}
-	b.tempDir = tempDir
-	b.backupDir = backupDir
-	if err := b.keeper.Test(); err != nil {
-		return fmt.Errorf("failed to test keeper: %w", err)
-	}
+
+	// tempDir, backupDir, err := b.keeper.Open(b.started, b.dstDir)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to open keeper: %w", err)
+	// }
+	// b.tempDir = tempDir
+	// b.backupDir = backupDir
+	// if err := b.keeper.Test(); err != nil {
+	// 	return fmt.Errorf("failed to test keeper: %w", err)
+	// }
+
 	return nil
 }
 
@@ -156,16 +181,21 @@ func (b *Backup) doBackup(dirToBackup string) error {
 	}
 
 	if _, have := b.srcDirMap[srcDir]; have {
-		// return errors.New("duplicate source directory: " + srcDir)
 		return nil
 	}
+	b.srcDirMap[srcDir] = newDirInfo(srcDir, b.DbDir)
 
-	b.srcDirMap[srcDir] = newDirInfo(srcDir, b.dstDir)
 	lastFileMap, err := b.loadLastFileMap(srcDir)
 	if err != nil {
 		return fmt.Errorf("failed to load last backup data for %s: %w", srcDir, err)
 	}
 
+	// Full backup
+	if b.backupType == Full {
+		return nil
+	}
+
+	// Incremental backup
 	if lastFileMap == nil { // First backup
 		return b.generateFirstBackupData(srcDir)
 	}
@@ -214,8 +244,14 @@ func (b *Backup) issueSummary(dir string, backupType int) {
 }
 
 func (b *Backup) Stop() error {
-	if err := b.keeper.Close(); err != nil {
-		return err
+	// if err := b.keeper.Close(); err != nil {
+	// 	return err
+	// }
+
+	for _, k := range b.keepers {
+		if err := k.Close(); err != nil {
+			log.Error(err)
+		}
 	}
 	if err := b.writeSummary(); err != nil {
 		return err

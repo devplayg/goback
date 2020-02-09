@@ -1,42 +1,156 @@
 package goback
 
-// type SftpKeeper struct {
-// 	Protocol int // FTP, SFTP
-// 	Host     string
-// 	Port     int
-// 	Dir      string
-// 	Username string
-// 	password string
-// 	conn     *sftp.Client
-// }
-//
-// func newFtpSite(protocol int, host string, port int, dir, username, password string) *SftpKeeper {
-// 	return &SftpKeeper{
-// 		Protocol: protocol,
-// 		Host:     host,
-// 		Port:     port,
-// 		Dir:      dir,
-// 		Username: username,
-// 		password: password,
-// 	}
-// }
+import (
+	"fmt"
+	"github.com/pkg/sftp"
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
+	"io"
+	"net"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
+	"time"
+)
 
-// func (k *SftpKeeper) Open() error {
-// 	log.Debug("sftp open")
-// 	return nil
-// }
-// func (k *SftpKeeper) Close() error {
-// 	log.Debug("sftp close")
-// 	return nil
-// }
-// func (k *SftpKeeper) Test() error {
-// 	log.Debug("sftp test")
-// 	return nil
-// }
-// func (k *SftpKeeper) Keep(srcPath, dstDir string) (string, float64, error) {
-// 	log.Debug("sftp keep")
-// 	return "", 0, nil
-// }
+type SftpKeeper struct {
+	*KeeperDesc
+	host      string
+	port      int
+	dstDir    string
+	username  string
+	password  string
+	conn      *sftp.Client
+	active    bool
+	date      time.Time
+	backupDir string
+}
+
+func NewSftpKeeper(host string, port int, username, password, dstDir string) *SftpKeeper {
+	return &SftpKeeper{
+		host:     host,
+		port:     port,
+		dstDir:   dstDir,
+		username: username,
+		password: password,
+		conn:     nil,
+		active:   false,
+		KeeperDesc: &KeeperDesc{
+			Protocol: Sftp,
+			Host:     host,
+			Dir:      dstDir,
+		},
+	}
+}
+
+func (k *SftpKeeper) Init(t time.Time) error {
+	k.date = t
+	var auths []ssh.AuthMethod
+	if aconn, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
+		auths = append(auths, ssh.PublicKeysCallback(agent.NewClient(aconn).Signers))
+	}
+	auths = append(auths, ssh.Password(k.password))
+	config := ssh.ClientConfig{
+		User:            k.username,
+		Auth:            auths,
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+	conn, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", k.host, k.port), &config)
+	if err != nil {
+		return fmt.Errorf("failed to connect to SFTP server: %w", err)
+	}
+
+	size := 1 << 15
+	ftpConn, err := sftp.NewClient(conn, sftp.MaxPacket(size))
+	if err != nil {
+		return fmt.Errorf("failed to create to SFTP client: %w", err)
+	}
+
+	k.conn = ftpConn
+	k.active = true
+	k.backupDir = k.FindProperBackupDirName(filepath.Join(k.dstDir, k.date.Format("20060102")))
+	return nil
+}
+
+func (k *SftpKeeper) Active() bool {
+	return k.active
+}
+
+func (k *SftpKeeper) Close() error {
+	return k.conn.Close()
+}
+
+func (k *SftpKeeper) Chtimes(name string, atime time.Time, mtime time.Time) error {
+	return nil
+}
+
+func (k *SftpKeeper) Description() *KeeperDesc {
+	return k.KeeperDesc
+}
+
+func (k *SftpKeeper) FindProperBackupDirName(dir string) string {
+	dir = filepath.ToSlash(dir)
+	i := 0
+	for {
+		var d string
+		if i < 1 {
+			d = dir
+		} else {
+			d = dir + "-" + strconv.Itoa(i)
+		}
+		if _, err := k.conn.Stat(d); os.IsNotExist(err) {
+			return d
+		}
+		i++
+	}
+}
+
+func (k *SftpKeeper) keep(path string) (string, float64, error) {
+	// time.Sleep(5 * time.Second)
+	t := time.Now()
+
+	p := path
+	if runtime.GOOS == "windows" {
+		//  /BACKUP_DIR/C:/TEMP/DATA => error
+		//  /BACKUP_DIR/C/TEMP/DATA => OK
+		p = strings.ReplaceAll(path, ":", "")
+	}
+	dstPath := filepath.ToSlash(filepath.Join(k.backupDir, p))
+	dstDir := filepath.ToSlash(filepath.Dir(dstPath))
+	if err := k.conn.MkdirAll(dstDir); err != nil {
+		return dstPath, 0, err
+	}
+	dstFile, err := k.conn.OpenFile(dstPath, os.O_CREATE|os.O_RDWR|os.O_TRUNC)
+	if err != nil {
+		return "", 0, err
+	}
+	defer dstFile.Close()
+
+	localFile, err := os.Open(path)
+	if err != nil {
+		return "", 0, err
+	}
+	defer localFile.Close()
+	fi, err := localFile.Stat()
+	if err != nil {
+		return "", 0, err
+	}
+	size := fi.Size()
+	// log.Debugf("writing %v bytes", size)
+	t1 := time.Now()
+	n, err := io.Copy(dstFile, io.LimitReader(localFile, size))
+	if err != nil {
+		return "", 0, err
+	}
+	if n != size {
+		return "", 0, fmt.Errorf("copy: expected %v bytes, got %d", size, n)
+	}
+	log.Debugf("wrote %v bytes in %s", size, time.Since(t1))
+	return dstPath, time.Since(t).Seconds(), nil
+}
 
 // func (f *FtpSite) Open() error {
 // 	var auths []ssh.AuthMethod

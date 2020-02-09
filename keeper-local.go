@@ -12,49 +12,66 @@ import (
 
 // LocalKeeper saves added or modified files in local disk.
 type LocalKeeper struct {
-	date   time.Time
-	dstDir string
+	*KeeperDesc
+	date      time.Time
+	dstDir    string
 	tempDir   string
 	backupDir string
 }
 
-func (k *LocalKeeper) Open(date time.Time, dstDir string) (string, string, error) {
-	k.date = date
-	k.dstDir = dstDir
+func NewLocalKeeper(dstDir string) *LocalKeeper {
+	return &LocalKeeper{
+		dstDir: dstDir,
+		KeeperDesc: &KeeperDesc{
+			Protocol: LocalDisk,
+			Host:     "local",
+			Dir:      dstDir,
+		},
+	}
+}
+
+func (k *LocalKeeper) Init(t time.Time) error {
+	// k.date = date
+	// // k.DstDir = dstDir
+	k.date = t
 	tempDir, err := ioutil.TempDir(k.dstDir, "backup-")
 	if err != nil {
-		return "", "", err
+		return err
 	}
 	k.tempDir = tempDir
 	k.backupDir = FindProperBackupDirName(filepath.Join(k.dstDir, k.date.Format("20060102")))
-	return k.tempDir, k.backupDir, nil
+	// return k.tempDir, k.backupDir, nil
+	return nil
+}
+
+func (k *LocalKeeper) Active() bool {
+	return true
 }
 
 func (k *LocalKeeper) Close() error {
 	return os.Rename(k.tempDir, k.backupDir)
 }
-func (k *LocalKeeper) Test() error {
-	return nil
+
+func (k *LocalKeeper) Chtimes(name string, atime time.Time, mtime time.Time) error {
+	return os.Chtimes(name, atime, mtime)
+}
+
+func (k *LocalKeeper) Description() *KeeperDesc {
+	return k.KeeperDesc
 }
 
 // Copy file
-func (k *LocalKeeper) Keep(srcPath, dstDir string) (string, float64, error) {
-	// Set source
+func (k *LocalKeeper) keep(path string) (string, float64, error) {
 	t := time.Now()
-	srcFile, err := os.Open(srcPath)
-	if err != nil {
-		return "", 0.0, err
-
-	}
-	defer srcFile.Close()
 
 	// Set destination
+	p := path
 	if runtime.GOOS == "windows" {
 		//  /BACKUP_DIR/C:/TEMP/DATA => error
 		//  /BACKUP_DIR/C/TEMP/DATA => OK
-		srcPath = strings.ReplaceAll(srcPath, ":", "")
+		p = strings.ReplaceAll(path, ":", "")
 	}
-	dstPath := filepath.Join(dstDir, srcPath)
+	dstPath := filepath.Join(k.tempDir, p)
 	if err := os.MkdirAll(filepath.Dir(dstPath), 0644); err != nil {
 		return "", 0.0, err
 	}
@@ -63,6 +80,14 @@ func (k *LocalKeeper) Keep(srcPath, dstDir string) (string, float64, error) {
 		return "", 0.0, err
 	}
 	defer dstFile.Close()
+
+	// Set source
+	srcFile, err := os.Open(path)
+	if err != nil {
+		return "", 0.0, err
+
+	}
+	defer srcFile.Close()
 
 	// Copy
 	_, err = io.Copy(dstFile, srcFile)
