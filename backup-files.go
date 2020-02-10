@@ -13,6 +13,9 @@ func (b *Backup) backupFiles() error {
 	}
 
 	for i := range b.keepers {
+		if !b.keepers[i].Active() {
+			continue
+		}
 		if err := b.backupFileGroup(fileGroup, i); err != nil {
 			log.Error(fmt.Errorf("failed to do backup: %w", err))
 			continue

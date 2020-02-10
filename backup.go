@@ -124,9 +124,11 @@ func (b *Backup) initKeeper() error {
 				"protocol": k.Description().Protocol,
 				"host":     k.Description().Host,
 			}).Errorf("failed to initialize the keeper: %s", err.Error())
-			return err
+
+			// return fmt.Errorf("failed to initialize the keeper(%s/%d): %w", k.Description().Host, k.Description().Protocol, err)
 		}
 	}
+	// return nil
 
 	// tempDir, backupDir, err := b.keeper.Open(b.started, b.dstDir)
 	// if err != nil {
@@ -249,6 +251,9 @@ func (b *Backup) Stop() error {
 	// }
 
 	for _, k := range b.keepers {
+		if !k.Active() {
+			continue
+		}
 		if err := k.Close(); err != nil {
 			log.Error(err)
 		}

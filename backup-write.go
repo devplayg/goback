@@ -2,7 +2,6 @@ package goback
 
 import (
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/devplayg/golibs/compress"
 	"github.com/devplayg/golibs/converter"
 	"io/ioutil"
@@ -26,9 +25,9 @@ func (b *Backup) writeResult(currentFileMaps []*sync.Map, lastFileMap *sync.Map)
 		}
 	}
 
-	if err := b.writeFileMaps(currentFileMaps); err != nil {
-		return err
-	}
+	// if err := b.writeFileMaps(currentFileMaps); err != nil {
+	// 	return err
+	// }
 
 	b.writeBackupState(Logged)
 
@@ -88,7 +87,6 @@ func (b *Backup) writeChangesLog(lastFileMap *sync.Map) error {
 		added = append(added, file.WrapInFileGrid())
 		return true
 	})
-	spew.Dump(added)
 
 	modified := make([]*FileGrid, 0)
 	b.summary.modifiedFiles.Range(func(k, v interface{}) bool {
