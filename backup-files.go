@@ -4,6 +4,7 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"sync"
+	"sync/atomic"
 )
 
 func (b *Backup) backupFiles() error {
@@ -12,6 +13,7 @@ func (b *Backup) backupFiles() error {
 		return nil
 	}
 
+	// Backup
 	for i := range b.keepers {
 		if !b.keepers[i].Active() {
 			continue
@@ -19,6 +21,23 @@ func (b *Backup) backupFiles() error {
 		if err := b.backupFileGroup(fileGroup, i); err != nil {
 			log.Error(fmt.Errorf("failed to do backup: %w", err))
 			continue
+		}
+	}
+
+	// Check result
+	successVal := 1<<3 - 1
+	log.Debug(successVal)
+	for i := range fileGroup {
+		for j := range fileGroup[i] {
+			if fileGroup[i][j].State == successVal {
+				atomic.AddUint64(&b.summary.SuccessCount, 1)
+				atomic.AddUint64(&b.summary.SuccessSize, uint64(fileGroup[i][j].Size))
+				continue
+			}
+
+			b.summary.failedFiles.Store(fileGroup[i][j], nil)
+			atomic.AddUint64(&b.summary.FailedCount, 1)
+			atomic.AddUint64(&b.summary.FailedSize, uint64(fileGroup[i][j].Size))
 		}
 	}
 
@@ -31,17 +50,15 @@ func (b *Backup) backupFileGroup(fileGroup [][]*FileWrapper, keeperIdx int) erro
 		"host":     b.keepers[keeperIdx].Description().Host,
 		"keepers":  fmt.Sprintf("%d/%d", keeperIdx+1, len(b.keepers)),
 	}).Debug("backup")
-	// 	defer func() {
-	// 		b.writeBackupState(Copied)
-	// 		if count > 0 {
-	// 			log.WithFields(log.Fields{
-	// 				"execTime": b.summary.BackupTime.Sub(b.summary.ComparisonTime).Seconds(),
-	// 				"success":  b.summary.SuccessCount,
-	// 				"failed":   b.summary.FailedCount,
-	// 				"dir":      b.summary.SrcDir,
-	// 			}).Info("directory backup done")
-	// 		}
-	// 	}()
+	defer func() {
+		b.writeBackupState(Copied)
+		log.WithFields(log.Fields{
+			"execTime": b.summary.BackupTime.Sub(b.summary.ComparisonTime).Seconds(),
+			"success":  b.summary.SuccessCount,
+			"failed":   b.summary.FailedCount,
+			"dir":      b.summary.SrcDir,
+		}).Info("directory backup done")
+	}()
 
 	// 	log.WithFields(log.Fields{
 	// 		"files":   count,

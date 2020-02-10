@@ -25,9 +25,9 @@ func (b *Backup) writeResult(currentFileMaps []*sync.Map, lastFileMap *sync.Map)
 		}
 	}
 
-	// if err := b.writeFileMaps(currentFileMaps); err != nil {
-	// 	return err
-	// }
+	if err := b.writeFileMaps(currentFileMaps); err != nil {
+		return err
+	}
 
 	b.writeBackupState(Logged)
 
@@ -111,6 +111,7 @@ func (b *Backup) writeChangesLog(lastFileMap *sync.Map) error {
 			return true
 		})
 	}
+	// spew.Dump(failed)
 
 	m["added"] = CreateFilesReportWithList(added, b.summary.AddedSize, 0, b.rank)
 	m["modified"] = CreateFilesReportWithList(modified, b.summary.ModifiedSize, 0, b.rank)

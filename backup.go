@@ -124,21 +124,8 @@ func (b *Backup) initKeeper() error {
 				"protocol": k.Description().Protocol,
 				"host":     k.Description().Host,
 			}).Errorf("failed to initialize the keeper: %s", err.Error())
-
-			// return fmt.Errorf("failed to initialize the keeper(%s/%d): %w", k.Description().Host, k.Description().Protocol, err)
 		}
 	}
-	// return nil
-
-	// tempDir, backupDir, err := b.keeper.Open(b.started, b.dstDir)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to open keeper: %w", err)
-	// }
-	// b.tempDir = tempDir
-	// b.backupDir = backupDir
-	// if err := b.keeper.Test(); err != nil {
-	// 	return fmt.Errorf("failed to test keeper: %w", err)
-	// }
 
 	return nil
 }
