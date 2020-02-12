@@ -19,7 +19,7 @@ const (
 
 	FilesDbName   = "files-%s.db"
 	SummaryDbName = "summary.db"
-	ChangesDbName = "changes-%s.db"
+	ChangesDbName = "changes-%s-%d.db"
 
 	Initial     = 1
 	Incremental = 2

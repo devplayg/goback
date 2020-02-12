@@ -17,15 +17,8 @@ func (c *Controller) getChangesLog(id int) ([]byte, error) {
 	}
 
 	h := md5.Sum([]byte(summary.SrcDir))
-	suffix := hex.EncodeToString(h[:])
-	var logPath string
-	if summary.Version == 1 {
-		key := fmt.Sprintf("%s-%d", summary.Date.Format("20060102"), summary.BackupId)
-		logPath = filepath.Join(c.dir, key, "changes-"+suffix+".db")
-	} else {
-		// key = fmt.Sprintf("%s-%d", summary.Date.Format("20060102"), summary.BackupId)
-		logPath = filepath.Join(summary.BackupDir, "changes-"+suffix+".db")
-	}
+	key := hex.EncodeToString(h[:])
+	logPath := filepath.Join(c.dir, fmt.Sprintf(ChangesDbName, key, summary.BackupId))
 	if _, err := os.Stat(logPath); os.IsNotExist(err) {
 		return nil, err
 	}

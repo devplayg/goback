@@ -1,0 +1,43 @@
+backup:
+  - dir: c:\temp
+    schedule:
+      full:
+        - 0 0 1 * *
+      incremental:
+        - 0 0 * * *
+    storages:
+      - dir: /backup
+      - host: sftp://127.0.0.1
+        username: devplayg
+        password: devplayg123!@#
+        dir: /backup1
+        port: 22
+      - host: ftp://127.0.0.1
+        username: devplayg
+        password: devplayg123!@#
+        dir: /backup2
+        port: 21
+    ignore:
+  - dir: d:\data
+    schedule:
+      full:
+        - 0 0 1 * *
+      incremental:
+        - 0 0 * * *
+    method:
+      - dir: /backup1
+      - host: sftp://127.0.0.1
+        user: devplayg
+        pass: devplayg123!@#
+        dir: /backup1
+        port: 22
+      - host: ftp://127.0.0.1
+        user: devplayg
+        pass: devplayg123!@#
+        dir: /backup2
+        port: 21
+    ignore:
+
+
+
+
