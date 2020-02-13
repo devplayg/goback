@@ -1,8 +1,8 @@
 package goback
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/devplayg/golibs/compress"
 	"github.com/devplayg/himma"
 	"github.com/gorilla/mux"
@@ -27,10 +27,12 @@ type Controller struct {
 	version   string
 	app       *himma.Application
 	summaries []*Summary
+	server    *Server
 }
 
-func NewController(dir, addr string, app *himma.Application) *Controller {
+func NewController(server *Server, dir, addr string, app *himma.Application) *Controller {
 	return &Controller{
+		server:    server,
 		addr:      addr,
 		dir:       dir,
 		summaries: make([]*Summary, 0),
@@ -71,11 +73,9 @@ func (c *Controller) init() error {
 func (c *Controller) initRouter() error {
 	c.router = mux.NewRouter()
 	c.router.HandleFunc("/", c.DisplayBackup)
-
 	c.router.HandleFunc("/summaries", c.GetSummaries)
 	c.router.HandleFunc("/summaries/{id:[0-9]+}/changes", c.GetChangesLog)
-
-	c.router.HandleFunc("/assets/{assetType}/{name}", func(w http.ResponseWriter, r *http.Request) {
+	c.router.HandleFunc("/assets/{u1}/{u2}", func(w http.ResponseWriter, r *http.Request) {
 		GetAsset(w, r)
 	})
 	c.router.HandleFunc("/assets/{u1}/{u2}/{u3}", func(w http.ResponseWriter, r *http.Request) {
@@ -84,25 +84,21 @@ func (c *Controller) initRouter() error {
 	c.router.HandleFunc("/assets/{u1}}/{u2}/{u3}/{u4}", func(w http.ResponseWriter, r *http.Request) {
 		GetAsset(w, r)
 	})
-	// c.router.HandleFunc("/assets/plugins/{pluginName}/{kind}/{name}", func(w http.ResponseWriter, r *http.Request) {
-	// 	GetAsset(w, r)
-	// })
-	//
-	// c.router.HandleFunc("/assets/modules/{moduleName}/{name}", func(w http.ResponseWriter, r *http.Request) {
-	// 	GetAsset(w, r)
-	// })
 	http.Handle("/", c.router)
 
-	srv := &http.Server{
-		Handler:      c.router,
-		Addr:         c.addr,
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
-	}
-	go func() {
-		log.WithFields(log.Fields{}).Infof("listen on %s", c.addr)
-		log.Fatal(srv.ListenAndServe())
-	}()
+	//srv := &http.Server{
+	//	Handler:      c.router,
+	//	Addr:         c.addr,
+	//	WriteTimeout: 15 * time.Second,
+	//	ReadTimeout:  15 * time.Second,
+	//}
+	//go func() {
+	//	log.WithFields(log.Fields{}).Infof("listen on %s", c.addr)
+	//	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+	//		log.Fatalf("HTTP server ListenAndServe: %v", err)
+	//	}
+	//
+	//}()
 
 	return nil
 }
@@ -111,10 +107,36 @@ func (c *Controller) Start() error {
 	if err := c.init(); err != nil {
 		return err
 	}
-
 	defer c.Stop()
 
-	fmt.Scanln()
+	srv := &http.Server{
+		Handler:      c.router,
+		Addr:         c.addr,
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
+	}
+	idleConnsClosed := make(chan struct{})
+	go func() {
+		<-c.server.Done
+		c.server.Log.Info("2) got stop sig")
+		// Error from closing listeners, or context timeout:
+		//log.Printf("HTTP server Shutdown: %v", err)
+		//}
+		//close(idleConnsClosed)
+		if err := srv.Shutdown(context.Background()); err != nil {
+			// Error from closing listeners, or context timeout:
+			c.server.Log.Info("HTTP server Shutdown: %v", err)
+		}
+		close(idleConnsClosed)
+
+	}()
+
+	c.server.Log.Infof("1) listen on %s", c.addr)
+	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+		log.Fatalf("HTTP server ListenAndServe: %v", err)
+	}
+	<-idleConnsClosed
+	c.server.Log.Info("3) http server has been stopped")
 	return nil
 }
 

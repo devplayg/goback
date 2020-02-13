@@ -3,18 +3,31 @@ package goback
 import (
 	"github.com/devplayg/himma"
 	"github.com/devplayg/hippo/v2"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
 type Server struct {
 	hippo.Launcher // DO NOT REMOVE
-	himmaConfig    *Config
-	addr           string
+	appConfig      *AppConfig
 }
 
-func NewServer(himmaConfig himma.Application addr string) *Server {
+func NewServer(appConfig *AppConfig) *Server {
 	return &Server{
+		appConfig: appConfig,
 	}
+}
+
+func NewEngine(appConfig *AppConfig) *hippo.Engine {
+	server := NewServer(appConfig)
+	engine := hippo.NewEngine(server, &hippo.Config{
+		Name:        appConfig.Name,
+		Description: appConfig.Description,
+		Version:     appConfig.Version,
+		Debug:       appConfig.Debug,
+		Trace:       appConfig.Trace,
+	})
+	return engine
 }
 
 func (s *Server) Start() error {
@@ -22,7 +35,7 @@ func (s *Server) Start() error {
 		return err
 	}
 
-	if err != s.startWeb(); err != nil {
+	if err := s.startWeb(); err != nil {
 		return err
 	}
 
@@ -40,20 +53,21 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) startWeb() error {
-	//app := himma.Application{
-	//	AppName:     "SecuBACKUP",
-	//	Description: "INCREMENTAL BACKUP ",
-	//	Url:         "https://devplayg.com",
-	//	Phrase1:     "KEEP YOUR DATA SAFE",
-	//	Phrase2:     "Powered by Go",
-	//	Year:        time.Now().Year(),
-	//	Version:     appVersion,
-	//	Company:     "SECUSOLUTION",
-	//}
-	//c := goback.NewController(backup.DbDir, "127.0.0.1:8000", &app)
-	//if err := c.Start(); err != nil {
-	//	log.Error(err)
-	//}
+	app := himma.Application{
+		AppName:     s.appConfig.Name,
+		Description: s.appConfig.Description,
+		Url:         s.appConfig.Url,
+		Phrase1:     s.appConfig.Text1,
+		Phrase2:     s.appConfig.Text2,
+		Year:        s.appConfig.Year,
+		Version:     s.appConfig.Version,
+		Company:     s.appConfig.Company,
+	}
+	controller := NewController(s, "db", s.appConfig.Addr, &app)
+	if err := controller.Start(); err != nil {
+		log.Error(err)
+	}
+	return nil
 }
 
 func (s *Server) Stop() error {

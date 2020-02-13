@@ -2,30 +2,37 @@ package main
 
 import (
 	"github.com/devplayg/goback"
-	"github.com/devplayg/himma"
-	"github.com/devplayg/hippo/v2"
 	"time"
 )
 
 func main() {
-	config := &hippo.Config{
-		Name:        "goback",
-		Description: "smart backup",
-		Version:     "beta",
-		Debug:       true,
-	}
-	himmaConfig := himma.Application{
-		AppName:     config.Name,
-		Description: config.Description,
-		Url:         "https://devplayg.com",
-		Phrase1:     "KEEP YOUR DATA SAFE",
-		Phrase2:     "Powered by Go",
-		Year:        time.Now().Year(),
-		Version:     config.Version,
-		Company:     "SECUSOLUTION",
-	}
+	//config := &hippo.Config{
+	//	Name:        "goback",
+	//	Description: "smart backup",
+	//	Version:     "beta",
+	//	Url:         "https://devplayg.com",
+	//	Phrase1:     "KEEP YOUR DATA SAFE",
+	//	Phrase2:     "Powered by Go",
+	//	Year:        time.Now().Year(),
+	//	Version:     config.Version,
+	//	Company:     "SECUSOLUTION",
+	//	Debug:       true,
+	//}
 
-	engine := hippo.NewEngine(goback.NewServer(himmaConfig, ":8000"), config)
+	config := goback.AppConfig{
+		Name:        "goback",
+		Description: "smart bak",
+		Version:     "service beta",
+		Url:         "https://",
+		Text1:       "ph1",
+		Text2:       "ph2",
+		Year:        time.Now().Year(),
+		Company:     "dev",
+		Debug:       true,
+		Trace:       false,
+		Addr:        ":8000",
+	}
+	engine := goback.NewEngine(&config)
 	if err := engine.Start(); err != nil {
 		panic(err)
 	}

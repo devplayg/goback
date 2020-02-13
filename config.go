@@ -5,11 +5,9 @@ import (
 	"io/ioutil"
 )
 
-type Config struct {
-	appName string
-	appDesc string
-	version string
-	Backup  []BackupDir `json:"backup"`
+type SystemConfig struct {
+	App    AppConfig
+	Backup []BackupDir `json:"backup"`
 }
 
 type BackupDir struct {
@@ -30,7 +28,7 @@ type BackupStorage struct {
 	Dir      string `json:"dir"`
 }
 
-func (c *Config) Save() error {
+func (c *SystemConfig) Save() error {
 	b, err := yaml.Marshal(c)
 	if err != nil {
 		return err
@@ -39,13 +37,27 @@ func (c *Config) Save() error {
 	return ioutil.WriteFile("config_.yaml", b, 0644)
 }
 
-func loadConfig(path string) (*Config, error) {
+func loadConfig(path string) (*SystemConfig, error) {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	var config Config
+	var config SystemConfig
 	err = yaml.Unmarshal(b, &config)
 	return &config, err
+}
+
+type AppConfig struct {
+	Name        string
+	Description string
+	Version     string
+	Url         string
+	Text1       string
+	Text2       string
+	Year        int
+	Company     string
+	Debug       bool
+	Trace       bool
+	Addr        string
 }
