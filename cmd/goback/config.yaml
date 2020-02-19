@@ -1,4 +1,4 @@
-backup:
+jobs:
   - dir: c:\temp
     schedule:
       full:
@@ -18,6 +18,8 @@ backup:
         dir: /backup2
         port: 21
     ignore:
+      - .jpg
+      - .iso
   - dir: d:\data
     schedule:
       full:

@@ -5,22 +5,22 @@ import (
 	"io/ioutil"
 )
 
-type SystemConfig struct {
-	App    AppConfig
-	Backup []BackupDir `json:"backup"`
+type Config struct {
+	App  AppConfig
+	Jobs []Job `json:"job"`
 }
 
-type BackupDir struct {
+type Job struct {
 	Dir      string `json:"dir"`
 	Schedule struct {
 		Full        []string `json:"full"`
 		Incremental []string `json:"incremental"`
 	}
-	Storages []BackupStorage `json:"storages"`
-	Ignore   []string        `json:"ignore"`
+	Storage []Storage `json:"storage"`
+	Ignore  []string  `json:"ignore"`
 }
 
-type BackupStorage struct {
+type Storage struct {
 	Host     string `json:"host"`
 	Port     int    `json:"port"`
 	Username string `json:"username"`
@@ -28,7 +28,7 @@ type BackupStorage struct {
 	Dir      string `json:"dir"`
 }
 
-func (c *SystemConfig) Save() error {
+func (c *Config) Save() error {
 	b, err := yaml.Marshal(c)
 	if err != nil {
 		return err
@@ -37,13 +37,13 @@ func (c *SystemConfig) Save() error {
 	return ioutil.WriteFile("config_.yaml", b, 0644)
 }
 
-func loadConfig(path string) (*SystemConfig, error) {
+func loadConfig(path string) (*Config, error) {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	var config SystemConfig
+	var config Config
 	err = yaml.Unmarshal(b, &config)
 	return &config, err
 }

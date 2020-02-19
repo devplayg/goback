@@ -35,24 +35,52 @@ func (s *Server) Start() error {
 		return err
 	}
 
-	if err := s.startWeb(); err != nil {
-		return err
-	}
+	// if err := s.startHttpServer(); err != nil {
+	// 	return err
+	// }
+	//
+	// for {
+	// 	s.Log.Info("server is working on it")
+	//
+	// 	// return errors.New("intentional error")
+	//
+	// 	select {
+	// 	case <-s.Ctx.Done(): // for gracefully shutdown
+	// 		return nil
+	// 	case <-time.After(2 * time.Second):
+	// 	}
+	// }
+
+	ch := make(chan struct{})
+	go func() {
+		if err := s.startHttpServer(); err != nil {
+			s.Log.Error(err)
+		}
+		close(ch)
+	}()
+
+	defer func() {
+		<-ch
+	}()
 
 	for {
+		// Do your repetitive jobs
 		s.Log.Info("server is working on it")
 
+		// Intentional error
+		// s.Cancel() // send cancel signal to engine
 		// return errors.New("intentional error")
 
 		select {
-		case <-s.Done: // for gracefully shutdown
+		case <-s.Ctx.Done(): // for gracefully shutdown
+			s.Log.Debug("server canceled; no longer works")
 			return nil
 		case <-time.After(2 * time.Second):
 		}
 	}
 }
 
-func (s *Server) startWeb() error {
+func (s *Server) startHttpServer() error {
 	app := himma.Application{
 		AppName:     s.appConfig.Name,
 		Description: s.appConfig.Description,

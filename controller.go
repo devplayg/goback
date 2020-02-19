@@ -115,29 +115,47 @@ func (c *Controller) Start() error {
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-	idleConnsClosed := make(chan struct{})
+	ch := make(chan struct{})
 	go func() {
-		<-c.server.Done
-		c.server.Log.Info("2) got stop sig")
-		// Error from closing listeners, or context timeout:
-		//log.Printf("HTTP server Shutdown: %v", err)
-		//}
-		//close(idleConnsClosed)
+		<-c.server.Ctx.Done()
+		c.server.Log.Info("2) got stop signal from engine")
 		if err := srv.Shutdown(context.Background()); err != nil {
-			// Error from closing listeners, or context timeout:
-			c.server.Log.Info("HTTP server Shutdown: %v", err)
+			c.server.Log.Error(err)
 		}
-		close(idleConnsClosed)
-
+		close(ch)
 	}()
 
-	c.server.Log.Infof("1) listen on %s", c.addr)
+	c.server.Log.Debug("1) HTTP server has been started")
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-		log.Fatalf("HTTP server ListenAndServe: %v", err)
+		c.server.Log.Fatalf("HTTP server ListenAndServe: %v", err)
 	}
-	<-idleConnsClosed
-	c.server.Log.Info("3) http server has been stopped")
+	<-ch
+	c.server.Log.Debug("3) HTTP server has been stopped")
 	return nil
+
+	// ch := make(chan struct{})
+	// go func() {
+	// 	<-c.server.Ctx.Done()
+	// 	c.server.Log.Info("2) got stop sig")
+	// 	// Error from closing listeners, or context timeout:
+	// 	//log.Printf("HTTP server Shutdown: %v", err)
+	// 	//}
+	// 	//close(idleConnsClosed)
+	// 	if err := srv.Shutdown(context.Background()); err != nil {
+	// 		// Error from closing listeners, or context timeout:
+	// 		c.server.Log.Error("HTTP server Shutdown: %v", err)
+	// 	}
+	// 	close(ch)
+	//
+	// }()
+	//
+	// c.server.Log.Infof("1) listen on %s", c.addr)
+	// if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+	// 	log.Fatalf("HTTP server ListenAndServe: %v", err)
+	// }
+	// <-ch
+	// c.server.Log.Info("3) http server has been stopped")
+	// return nil
 }
 
 func (c *Controller) Stop() error {
@@ -146,6 +164,10 @@ func (c *Controller) Stop() error {
 
 func (c *Controller) loadSummaryDb() error {
 	path := filepath.Join(c.dir, SummaryDbName)
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		c.server.Log.Warnf("database not found: %s", path)
+		return nil
+	}
 	var summaries []*Summary
 	if err := LoadBackupData(path, &summaries, GobEncoding); err != nil {
 		return err
