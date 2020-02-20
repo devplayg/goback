@@ -1,15 +1,18 @@
 package goback
 
 import (
+	"github.com/davecgh/go-spew/spew"
 	"github.com/devplayg/himma"
 	"github.com/devplayg/hippo/v2"
 	log "github.com/sirupsen/logrus"
+	"runtime"
 	"time"
 )
 
 type Server struct {
 	hippo.Launcher // DO NOT REMOVE
 	appConfig      *AppConfig
+	config         *Config
 }
 
 func NewServer(appConfig *AppConfig) *Server {
@@ -34,6 +37,8 @@ func (s *Server) Start() error {
 	if err := s.init(); err != nil {
 		return err
 	}
+
+	spew.Dump(s.config.Jobs)
 
 	// if err := s.startHttpServer(); err != nil {
 	// 	return err
@@ -104,10 +109,13 @@ func (s *Server) Stop() error {
 }
 
 func (s *Server) init() error {
-	//config, err := loadConfig(s.)
-	//if err != nil {
-	//	return err
-	//}
-	//s.config = config
+	config, err := loadConfig(ConfigFileName)
+	if err != nil {
+		return err
+	}
+	s.config = config
+
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	return nil
 }

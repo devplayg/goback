@@ -14,42 +14,19 @@ func (b *Backup) backupFiles() error {
 	}
 
 	// Backup
-	for i := range b.keepers {
-		if !b.keepers[i].Active() {
-			continue
-		}
-		if err := b.backupFileGroup(fileGroup, i); err != nil {
-			log.Error(fmt.Errorf("failed to do backup: %w", err))
-			continue
-		}
-	}
-
-	// Check result
-	successVal := 1<<3 - 1
-	log.Debug(successVal)
-	for i := range fileGroup {
-		for j := range fileGroup[i] {
-			if fileGroup[i][j].State == successVal {
-				atomic.AddUint64(&b.summary.SuccessCount, 1)
-				atomic.AddUint64(&b.summary.SuccessSize, uint64(fileGroup[i][j].Size))
-				continue
-			}
-
-			b.summary.failedFiles.Store(fileGroup[i][j], nil)
-			atomic.AddUint64(&b.summary.FailedCount, 1)
-			atomic.AddUint64(&b.summary.FailedSize, uint64(fileGroup[i][j].Size))
-		}
+	if err := b.backupFileGroup(fileGroup); err != nil {
+		log.Error(fmt.Errorf("failed to do backup: %w", err))
 	}
 
 	return nil
 }
 
-func (b *Backup) backupFileGroup(fileGroup [][]*FileWrapper, keeperIdx int) error {
+func (b *Backup) backupFileGroup(fileGroup [][]*FileWrapper) error {
 	log.WithFields(log.Fields{
-		"protocol": b.keepers[keeperIdx].Description().Protocol,
-		"host":     b.keepers[keeperIdx].Description().Host,
-		"keepers":  fmt.Sprintf("%d/%d", keeperIdx+1, len(b.keepers)),
+		"protocol": b.keeper.Description().Protocol,
+		"host":     b.keeper.Description().Host,
 	}).Debug("backup")
+
 	defer func() {
 		b.writeBackupState(Copied)
 		log.WithFields(log.Fields{
@@ -74,7 +51,7 @@ func (b *Backup) backupFileGroup(fileGroup [][]*FileWrapper, keeperIdx int) erro
 		go func(workerId int) {
 			defer wg.Done()
 			// t := time.Now()
-			if err := b.backupFilesInGroup(workerId, fileGroup[workerId], keeperIdx); err != nil {
+			if err := b.backupFilesInGroup(workerId, fileGroup[workerId]); err != nil {
 				log.Error(err)
 			}
 			// log.WithFields(log.Fields{
@@ -90,16 +67,15 @@ func (b *Backup) backupFileGroup(fileGroup [][]*FileWrapper, keeperIdx int) erro
 }
 
 // Thread-safe
-func (b *Backup) backupFilesInGroup(workerId int, files []*FileWrapper, keeperIdx int) error {
+func (b *Backup) backupFilesInGroup(workerId int, files []*FileWrapper) error {
 	for _, file := range files {
-		path, dur, err := b.keepers[keeperIdx].keep(file.Path)
+		path, dur, err := b.keeper.keep(file.Path)
 		if err != nil { // failed to backup
-			file.ExecTime = append(file.ExecTime, 0)
-			// 		b.summary.failedFiles.Store(file, nil)
-			// 		atomic.AddUint64(&b.summary.FailedCount, 1)
-			// 		atomic.AddUint64(&b.summary.FailedSize, uint64(file.Size))
-			// 		file.State = FileBackupFailed
-			file.Message = append(file.Message, err.Error())
+			b.summary.failedFiles.Store(file, nil)
+			atomic.AddUint64(&b.summary.FailedCount, 1)
+			atomic.AddUint64(&b.summary.FailedSize, uint64(file.Size))
+			file.State = FileBackupFailed
+			file.Message = err.Error()
 			log.WithFields(log.Fields{
 				"workerId": workerId,
 			}).Error(fmt.Errorf("failed to backup: %s; %w", file.Path, err))
@@ -107,12 +83,10 @@ func (b *Backup) backupFilesInGroup(workerId int, files []*FileWrapper, keeperId
 		}
 
 		// Success
-		// 	atomic.AddUint64(&b.summary.SuccessCount, 1)
-		// 	atomic.AddUint64(&b.summary.SuccessSize, uint64(file.Size))
-		file.State |= 1 << keeperIdx
-		file.ExecTime = append(file.ExecTime, dur)
-		file.Message = append(file.Message, "")
-		if err := b.keepers[keeperIdx].Chtimes(path, file.ModTime, file.ModTime); err != nil {
+		atomic.AddUint64(&b.summary.SuccessCount, 1)
+		atomic.AddUint64(&b.summary.SuccessSize, uint64(file.Size))
+		file.ExecTime = dur
+		if err := b.keeper.Chtimes(path, file.ModTime, file.ModTime); err != nil {
 			log.WithFields(log.Fields{
 				"workerId": workerId,
 			}).Error(fmt.Errorf("failed to change file modification time: %s; %w", file.Path, err))

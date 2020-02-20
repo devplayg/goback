@@ -1,23 +1,21 @@
 package goback
 
 import (
-	"gopkg.in/yaml.v2"
+	"github.com/ghodss/yaml"
 	"io/ioutil"
 )
 
 type Config struct {
 	App  AppConfig
-	Jobs []Job `json:"job"`
+	Jobs []Job `json:"jobs"`
 }
 
 type Job struct {
-	Dir      string `json:"dir"`
-	Schedule struct {
-		Full        []string `json:"full"`
-		Incremental []string `json:"incremental"`
-	}
-	Storage []Storage `json:"storage"`
-	Ignore  []string  `json:"ignore"`
+	Type     int      `json:"type"`
+	SrcDirs  []string `json:"srcDirs"`
+	Schedule string   `json:"schedule"`
+	Storage  Storage  `json:"storage"`
+	Ignore   []string `json:"ignore"`
 }
 
 type Storage struct {

@@ -29,11 +29,7 @@ func (f *File) WrapInFileWrapper(fill bool) *FileWrapper {
 		f.fill()
 	}
 	return &FileWrapper{
-		File:         f,
-		WhatHappened: 0,
-		State:        0,
-		ExecTime:     make([]float64, 0),
-		Message:      make([]string, 0),
+		File: f,
 	}
 }
 
@@ -50,10 +46,10 @@ func NewFile(path string, size int64, modTime time.Time) *File {
 // File wrapper structure
 type FileWrapper struct {
 	*File
-	WhatHappened int       `json:"how"`
-	State        int       `json:"state"`
-	ExecTime     []float64 `json:"execTimes"`
-	Message      []string  `json:"msg"`
+	WhatHappened int     `json:"how"`
+	State        int     `json:"state"`
+	ExecTime     float64 `json:"execTime"`
+	Message      string  `json:"msg"`
 }
 
 func NewFileWrapper(path string, size int64, modTime time.Time) *FileWrapper {
@@ -61,8 +57,8 @@ func NewFileWrapper(path string, size int64, modTime time.Time) *FileWrapper {
 		File:         NewFile(path, size, modTime),
 		WhatHappened: 0,
 		State:        0,
-		ExecTime:     make([]float64, 0),
-		Message:      make([]string, 0),
+		ExecTime:     0,
+		Message:      "",
 	}
 }
 
@@ -86,6 +82,6 @@ type FileGrid struct {
 	Size     int64     `json:"size"`
 	ModTime  time.Time `json:"mtime"`
 	State    int       `json:"state"`
-	ExecTime []float64 `json:"execTimes"`
-	Message  []string  `json:"msg"`
+	ExecTime float64   `json:"execTime"`
+	Message  string    `json:"msg"`
 }

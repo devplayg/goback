@@ -17,9 +17,10 @@ const (
 	FileBackupFailed    = -1
 	FileBackupSucceeded = 1
 
-	FilesDbName   = "files-%s.db"
-	SummaryDbName = "summary.db"
-	ChangesDbName = "changes-%s-%d.db"
+	FilesDbName    = "files-%s.db"
+	SummaryDbName  = "summary.db"
+	ChangesDbName  = "changes-%s-%d.db"
+	ConfigFileName = "config.yaml"
 
 	Initial     = 1
 	Incremental = 2
@@ -34,6 +35,7 @@ const (
 	GobEncoding  = 1
 	JsonEncoding = 2
 )
+
 const (
 	Started = iota + 1
 	Read

@@ -31,24 +31,24 @@ type Backup struct {
 	started          time.Time
 	rank             int
 	sizeRankMinSize  int64
-	keepers          []Keeper
+	keeper           Keeper
 	workingDir       string
 	DbDir            string
 	backupType       int
 }
 
-func NewBackup(srcDirs []string, keepers []Keeper, backupType int, debug bool) *Backup {
+func NewBackup(srcDirs []string, keeper Keeper, backupType int, debug bool) *Backup {
 	return &Backup{
 		srcDirs:          srcDirs,
 		srcDirMap:        make(map[string]*dirInfo),
 		debug:            debug,
-		workerCount:      runtime.NumCPU(),
+		workerCount:      runtime.GOMAXPROCS(0),
 		fileBackupEnable: true,
 		version:          2,
 		started:          time.Now(),
 		rank:             50,
 		sizeRankMinSize:  10 * MB,
-		keepers:          keepers,
+		keeper:           keeper,
 		backupDir:        "",
 		backupType:       backupType,
 	}
@@ -118,13 +118,11 @@ func (b *Backup) initDatabase() error {
 }
 
 func (b *Backup) initKeeper() error {
-	for _, k := range b.keepers {
-		if err := k.Init(b.started); err != nil {
-			log.WithFields(log.Fields{
-				"protocol": k.Description().Protocol,
-				"host":     k.Description().Host,
-			}).Errorf("failed to initialize the keeper: %s", err.Error())
-		}
+	if err := b.keeper.Init(b.started); err != nil {
+		log.WithFields(log.Fields{
+			"protocol": b.keeper.Description().Protocol,
+			"host":     b.keeper.Description().Host,
+		}).Errorf("failed to initialize the keeper: %s", err.Error())
 	}
 
 	return nil
@@ -233,18 +231,12 @@ func (b *Backup) issueSummary(dir string, backupType int) {
 }
 
 func (b *Backup) Stop() error {
-	// if err := b.keeper.Close(); err != nil {
-	// 	return err
-	// }
-
-	for _, k := range b.keepers {
-		if !k.Active() {
-			continue
-		}
-		if err := k.Close(); err != nil {
+	if b.keeper.Active() {
+		if err := b.keeper.Close(); err != nil {
 			log.Error(err)
 		}
 	}
+
 	if err := b.writeSummary(); err != nil {
 		return err
 	}
