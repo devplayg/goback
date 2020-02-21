@@ -3,7 +3,10 @@ package goback
 import (
 	"github.com/devplayg/himma"
 	"github.com/devplayg/hippo/v2"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
+
+	// log "github.com/sirupsen/logrus"
+
 	"runtime"
 	"time"
 )
@@ -36,15 +39,17 @@ func (s *Server) Start() error {
 	if err := s.init(); err != nil {
 		return err
 	}
+	log = s.Log
 
 	for _, job := range s.config.Jobs {
-		log.WithFields(log.Fields{
-			"target": "localDisk",
-			"dir":    job.Storage.Dir,
-		}).Debug("backup")
 
+		// Local backup
 		if job.Storage.Protocol == LocalDisk {
-			backup := NewBackup(job.SrcDirs, NewLocalKeeper(job.Storage.Dir), job.BackupType, s.config.App.Debug)
+			log.WithFields(logrus.Fields{
+				"target": "localDisk",
+				"dir":    job.Storage.Dir,
+			}).Debug("backup")
+			backup := NewBackup(job.SrcDirs, NewLocalKeeper(job.Storage.Dir), job.BackupType, s.appConfig.Debug)
 			if err := backup.Start(); err != nil {
 				log.Error(err)
 			}
@@ -52,7 +57,7 @@ func (s *Server) Start() error {
 		}
 
 		if job.Storage.Protocol == Sftp {
-			backup := NewBackup(job.SrcDirs, NewSftpKeeper(job.Storage), job.BackupType, s.config.App.Debug)
+			backup := NewBackup(job.SrcDirs, NewSftpKeeper(job.Storage), job.BackupType, s.appConfig.Debug)
 			if err := backup.Start(); err != nil {
 				log.Error(err)
 			}

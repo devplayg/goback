@@ -6,7 +6,7 @@ import (
 	"github.com/devplayg/golibs/compress"
 	"github.com/devplayg/himma"
 	"github.com/gorilla/mux"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"mime"
 	"net/http"
 	"os"
@@ -196,7 +196,7 @@ func DetectContentType(ext string) string {
 
 func Response(w http.ResponseWriter, r *http.Request, err error, statusCode int) {
 	if statusCode != http.StatusOK {
-		log.WithFields(log.Fields{
+		log.WithFields(logrus.Fields{
 			"ip":     r.RemoteAddr,
 			"uri":    r.RequestURI,
 			"method": r.Method,

@@ -6,7 +6,7 @@ import (
 )
 
 type Config struct {
-	App  AppConfig
+	// App  AppConfig
 	Jobs []Job `json:"jobs"`
 }
 

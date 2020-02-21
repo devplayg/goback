@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"hash"
 	"path/filepath"
 )
@@ -67,6 +68,10 @@ var fileSizeCategories = []int64{
 
 	5 * TB,
 }
+
+var log *logrus.Logger
+
+type Fields *logrus.Fields
 
 var (
 	HashKey     = sha256.Sum256([]byte("goback"))

@@ -6,7 +6,7 @@ import (
 	"github.com/devplayg/golibs/compress"
 	"github.com/devplayg/golibs/converter"
 	"github.com/dustin/go-humanize"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -119,7 +119,7 @@ func (b *Backup) initDatabase() error {
 
 func (b *Backup) initKeeper() error {
 	if err := b.keeper.Init(b.started); err != nil {
-		log.WithFields(log.Fields{
+		log.WithFields(logrus.Fields{
 			"protocol": b.keeper.Description().Protocol,
 			"host":     b.keeper.Description().Host,
 		}).Errorf("failed to initialize the keeper: %s", err.Error())
@@ -134,13 +134,13 @@ func (b *Backup) Start() error {
 	if err := b.init(); err != nil {
 		return err
 	}
-	// log.WithFields(log.Fields{
+	// Log.WithFields(Log.Fields{
 	// 	"directory": b.dstDir,
 	// 	"backupId":  b.Id,
 	// }).Infof("backup started")
 
 	defer func() {
-		log.WithFields(log.Fields{
+		log.WithFields(logrus.Fields{
 			"execTime": time.Since(b.started).Seconds(),
 			"dirCount": len(b.srcDirMap),
 			"backupId": b.Id,
@@ -224,7 +224,7 @@ func (b *Backup) issueSummary(dir string, backupType int) {
 	b.summaries = append(b.summaries, summary)
 	b.summary = summary
 
-	log.WithFields(log.Fields{
+	log.WithFields(logrus.Fields{
 		"summaryId": summaryId,
 		"backupId":  b.Id,
 		"dir":       dir,
@@ -350,7 +350,7 @@ func (b *Backup) getCurrentFileMaps(dir string) ([]*sync.Map, error) {
 
 	b.summary.Stats.rank(b.rank)
 	b.writeBackupState(Read)
-	log.WithFields(log.Fields{
+	log.WithFields(logrus.Fields{
 		"execTime": b.summary.ReadingTime.Sub(b.summary.Date).Seconds(),
 		"files":    b.summary.TotalCount,
 		"dir":      dir,

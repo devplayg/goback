@@ -1,7 +1,7 @@
 package goback
 
 import (
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"sync"
 	"sync/atomic"
 )
@@ -107,15 +107,15 @@ func (b *Backup) compareFileMaps(currentFileMaps []*sync.Map, lastFileMap *sync.
 	})
 
 	// Logging
-	log.WithFields(log.Fields{
+	log.WithFields(logrus.Fields{
 		"count": b.summary.AddedCount,
 		"size":  GetHumanizedSize(b.summary.AddedSize),
 	}).Info("added files")
-	log.WithFields(log.Fields{
+	log.WithFields(logrus.Fields{
 		"count": b.summary.ModifiedCount,
 		"size":  GetHumanizedSize(b.summary.ModifiedSize),
 	}).Info("modified files")
-	log.WithFields(log.Fields{
+	log.WithFields(logrus.Fields{
 		"count": b.summary.DeletedCount,
 		"size":  GetHumanizedSize(b.summary.DeletedSize),
 	}).Info("deleted files")

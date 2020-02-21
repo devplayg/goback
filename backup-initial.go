@@ -1,9 +1,5 @@
 package goback
 
-import (
-	log "github.com/sirupsen/logrus"
-)
-
 func (b *Backup) generateFirstBackupData(srcDir string) error {
 	log.Infof("generating source data from %s", srcDir)
 

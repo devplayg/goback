@@ -1,7 +1,6 @@
 package goback
 
 import (
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 )
 

@@ -2,7 +2,7 @@ package goback
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"sync"
 	"sync/atomic"
 )
@@ -23,14 +23,14 @@ func (b *Backup) backupFiles() error {
 }
 
 func (b *Backup) backupFileGroup(fileGroup [][]*FileWrapper) error {
-	log.WithFields(log.Fields{
+	log.WithFields(logrus.Fields{
 		"protocol": b.keeper.Description().Protocol,
 		"host":     b.keeper.Description().Host,
 	}).Debug("backup")
 
 	defer func() {
 		b.writeBackupState(Copied)
-		log.WithFields(log.Fields{
+		log.WithFields(logrus.Fields{
 			"execTime": b.summary.BackupTime.Sub(b.summary.ComparisonTime).Seconds(),
 			"success":  b.summary.SuccessCount,
 			"failed":   b.summary.FailedCount,
@@ -77,7 +77,7 @@ func (b *Backup) backupFilesInGroup(workerId int, files []*FileWrapper) error {
 			atomic.AddUint64(&b.summary.FailedSize, uint64(file.Size))
 			file.State = FileBackupFailed
 			file.Message = err.Error()
-			log.WithFields(log.Fields{
+			log.WithFields(logrus.Fields{
 				"workerId": workerId,
 			}).Error(fmt.Errorf("failed to backup: %s; %w", file.Path, err))
 			continue
@@ -89,7 +89,7 @@ func (b *Backup) backupFilesInGroup(workerId int, files []*FileWrapper) error {
 		file.State = FileBackupSucceeded
 		file.ExecTime = dur
 		if err := b.keeper.Chtimes(path, file.ModTime, file.ModTime); err != nil {
-			log.WithFields(log.Fields{
+			log.WithFields(logrus.Fields{
 				"workerId": workerId,
 			}).Error(fmt.Errorf("failed to change file modification time: %s; %w", file.Path, err))
 			continue

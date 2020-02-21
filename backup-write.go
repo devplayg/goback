@@ -111,7 +111,6 @@ func (b *Backup) writeChangesLog(lastFileMap *sync.Map) error {
 			return true
 		})
 	}
-	// spew.Dump(failed)
 
 	m["added"] = CreateFilesReportWithList(added, b.summary.AddedSize, 0, b.rank)
 	m["modified"] = CreateFilesReportWithList(modified, b.summary.ModifiedSize, 0, b.rank)
