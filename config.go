@@ -6,6 +6,9 @@ import (
 )
 
 type Config struct {
+	Server struct {
+		Address string `json:"address"`
+	} `json:"server"`
 	// App  AppConfig
 	Jobs []Job `json:"jobs"`
 }
@@ -58,5 +61,4 @@ type AppConfig struct {
 	Company     string
 	Debug       bool
 	Trace       bool
-	Addr        string
 }

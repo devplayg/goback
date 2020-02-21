@@ -6,19 +6,6 @@ import (
 )
 
 func main() {
-	//config := &hippo.Config{
-	//	Name:        "goback",
-	//	Description: "smart backup",
-	//	Version:     "beta",
-	//	Url:         "https://devplayg.com",
-	//	Phrase1:     "KEEP YOUR DATA SAFE",
-	//	Phrase2:     "Powered by Go",
-	//	Year:        time.Now().Year(),
-	//	Version:     config.Version,
-	//	Company:     "SECUSOLUTION",
-	//	Debug:       true,
-	//}
-
 	config := goback.AppConfig{
 		Name:        "goback",
 		Description: "smart bak",
@@ -30,7 +17,6 @@ func main() {
 		Company:     "dev",
 		Debug:       true,
 		Trace:       false,
-		Addr:        ":8000",
 	}
 	engine := goback.NewEngine(&config)
 	if err := engine.Start(); err != nil {

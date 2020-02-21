@@ -39,7 +39,18 @@ func (s *Server) Start() error {
 	if err := s.init(); err != nil {
 		return err
 	}
-	log = s.Log
+
+	ch := make(chan struct{})
+	go func() {
+		if err := s.startHttpServer(); err != nil {
+			s.Log.Error(err)
+		}
+		close(ch)
+	}()
+
+	defer func() {
+		<-ch
+	}()
 
 	for _, job := range s.config.Jobs {
 
@@ -64,18 +75,6 @@ func (s *Server) Start() error {
 			continue
 		}
 	}
-
-	ch := make(chan struct{})
-	go func() {
-		if err := s.startHttpServer(); err != nil {
-			s.Log.Error(err)
-		}
-		close(ch)
-	}()
-
-	defer func() {
-		<-ch
-	}()
 
 	for {
 		// Do your repetitive jobs
@@ -105,7 +104,12 @@ func (s *Server) startHttpServer() error {
 		Version:     s.appConfig.Version,
 		Company:     s.appConfig.Company,
 	}
-	controller := NewController(s, "db", s.appConfig.Addr, &app)
+
+	addr := s.config.Server.Address
+	if len(addr) < 1 {
+		addr = ":8000"
+	}
+	controller := NewController(s, "db", addr, &app)
 	if err := controller.Start(); err != nil {
 		log.Error(err)
 	}
@@ -125,6 +129,7 @@ func (s *Server) init() error {
 	s.config = config
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
+	log = s.Log
 
 	return nil
 }

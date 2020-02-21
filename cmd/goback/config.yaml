@@ -1,3 +1,5 @@
+server:
+  address: 0.0.0.0:8000
 jobs:
   - backup-type: 2
     src-dirs:
@@ -5,10 +7,10 @@ jobs:
       - D:\sample\APTX-T V4.5 - Manager
     storage:
       protocol: 4
-      host: 125.132.191.38
+      host: 10.10.10.10
       port: 22
-      username: unisem
-      password: Uniiot12!@
+      username: ddd
+      password: ddd
       dir: /data/backup
     ignore:
       - .tar
