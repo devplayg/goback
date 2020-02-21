@@ -76,6 +76,7 @@ func DisplayBackup() string {
                         <th data-field="id" data-sortable="true">ID</th>
                         <th data-field="date" data-sortable="true" data-formatter="dateFormatter">Date</th>
                         <th data-field="srcDir" data-sortable="true" data-formatter="shortDirFormatter">Source</th>
+                        <th data-field="keeper.protocol" data-sortable="true" data-formatter="backupKeeperFormatter">Storage</th>
                         <th data-field="backupType" data-sortable="true" data-formatter="backupTypeFormatter">Type</th>
                         <th data-field="state" data-sortable="true" data-formatter="backupStateFormatter">State</th>
                         <th data-field="execTime" data-sortable="true" data-formatter="toFixedFormatter">Time(Sec)</th>
@@ -120,7 +121,7 @@ func DisplayBackup() string {
             <div class="modal-content">
                 <div class="modal-header">
                     <h2 class="modal-title">
-                        <i class="fal fa-file-alt"></i> Changes log
+                        <i class="fal fa-file-alt"></i> Changes
                         <i class="summary fw-300 small ml-2"></i>
                     </h2>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -552,6 +553,18 @@ func DisplayBackup() string {
         /*
         * Formatters
         */
+
+        function backupKeeperFormatter(val, row, idx) {
+            if (val === 1) {
+                return "Local disk";
+            }
+            if (val === 2) {
+                return "Remote (SFTP)";
+            }
+            if (val === 4) {
+                return "Remote (SFTP)";
+            }
+        }
 
         function backupStatsSizeDistFormatter(val, row, idx) {
             if (val >= 5000000000000) {
