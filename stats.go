@@ -74,7 +74,6 @@ func NewStatsReport(sizeRankMinSize int64) *Stats {
 
 		sizeRankMinSize: sizeRankMinSize,
 	}
-
 }
 
 func (s *Stats) addToStats(file *FileGrid) {

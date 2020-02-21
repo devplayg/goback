@@ -14,8 +14,7 @@ func DisplayBackupTest() string {
 }
 
 func DisplayBackup() string {
-	return `
-    {{define "css"}}
+	return `{{define "css"}}
     <style>
         .pagination .page-link {
             border-width: 1px;
@@ -89,19 +88,19 @@ func DisplayBackup() string {
 
                         <th data-field="countAdded" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupStatsEvents">Added</th>
                         <th data-field="sizeAdded" data-sortable="true" data-formatter="byteSizeFormatter">Added</th>
-{{/*                        <th data-field="sizeAdded" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Added (B)</th>*/}}
+                        {{/*                        <th data-field="sizeAdded" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Added (B)</th>*/}}
 
                         <th data-field="countModified" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupStatsEvents">Modified</th>
                         <th data-field="sizeModified" data-sortable="true" data-formatter="byteSizeFormatter">Modified</th>
-{{/*                        <th data-field="sizeModified" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Modified (B)</th>*/}}
+                        {{/*                        <th data-field="sizeModified" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Modified (B)</th>*/}}
 
                         <th data-field="countDeleted" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupStatsEvents">Deleted</th>
                         <th data-field="sizeDeleted" data-sortable="true" data-formatter="byteSizeFormatter">Deleted</th>
-{{/*                        <th data-field="sizeDeleted" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Deleted (B)</th>*/}}
+                        {{/*                        <th data-field="sizeDeleted" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Deleted (B)</th>*/}}
 
                         <th data-field="countFailed" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupStatsEvents">Failed</th>
                         <th data-field="sizeFailed" data-sortable="true" data-formatter="byteSizeFormatter">Failed</th>
-{{/*                        <th data-field="sizeFailed" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Failed (B)</th>*/}}
+                        {{/*                        <th data-field="sizeFailed" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Failed (B)</th>*/}}
 
 
                         <th data-field="message" data-sortable="false">Read / Compare / Copy / Write</th>
@@ -121,7 +120,10 @@ func DisplayBackup() string {
         <div class="modal-dialog mw-100 w-75" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2 class="modal-title">Changes log</h2>
+                    <h2 class="modal-title">
+                        <i class="fal fa-file-alt"></i> Changes log
+                        <i class="summary fw-300 small ml-2"></i>
+                    </h2>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true"><i class="fal fa-times"></i></span>
                     </button>
@@ -264,7 +266,6 @@ func DisplayBackup() string {
                                             <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
                                             <th data-field="mtime" data-visible="false" data-formatter="dateFormatter">ModTime</th>
                                             <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
-                                            <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
                                         </tr>
                                         </thead>
                                     </table>
@@ -342,10 +343,7 @@ func DisplayBackup() string {
                             <div class="panel">
                                 <div class="panel-hdr">
                                     <h2>
-                                        Extension Ranking
-                                        <span class="fw-300">
-                                            <i class="stats-srcDir">Files</i>
-                                        </span>
+                                        Rankings by <i>extension</i>
                                     </h2>
                                     <div class="panel-toolbar">
                                         <span class="badge badge-primary fw-300 ml-1">Statistics</span>
@@ -383,10 +381,7 @@ func DisplayBackup() string {
                             <div class="panel">
                                 <div class="panel-hdr">
                                     <h2>
-                                        Size Distribution
-                                        <span class="fw-300">
-                                            <i class="stats-srcDir">Files</i>
-                                        </span>
+                                        Rankings by <i>fileSize distribution</i>
                                     </h2>
                                     <div class="panel-toolbar">
                                         <span class="badge badge-primary fw-300 ml-1">Statistics</span>
@@ -525,6 +520,7 @@ func DisplayBackup() string {
 
             let extTags = "",
                 total = what.report.extRanking.length;
+
             $.each(what.report.extRanking, function(i, r) {
                 extTags += '<a href="#" class="filterFiles" data-cond="' + r.ext + '" data-how="' + how + '"><span class="badge badge-stats bg-' + colorSuffix + '-' + getPer(i, total) + '">'+ r.ext + " / " + bytesToSize(r.size) + '</span></a>';
             });
@@ -538,7 +534,7 @@ func DisplayBackup() string {
                 per = 50;
             }
             return per;
-ss
+            ss
         }
 
         function getTab(field) {
@@ -586,7 +582,7 @@ ss
 
         function backupFileStateFormatter(val, row, idx) {
             if (val === -1) {
-                 return '<i><span class="text-danger">failed</span><i>';
+                return '<i><span class="text-danger">failed</span><i>';
             }
             if (val === 1) {
                 return "<i>done</i>";
@@ -691,13 +687,25 @@ ss
         window.backupStatsEvents = {
             'click .stats': function (e, val, row, idx) {
                 // let $btn = $(e.currentTarget);
-                $("#modal-backup-stats .modal-title .summary").html('Backup ID: ' + row.id + ' / <b class="text-primary">' + row.totalCount.toLocaleString() + ' files</b> / ' + bytesToSize(row.totalSize) + '');
-                $("#modal-backup-stats .stats-srcDir").text(row.srcDir);
+                let tags = '<button type="button" class="btn btn-sm btn-outline-default mr-1">Backup ID: ' + row.id + '</button>';
+                tags += '<button type="button" class="btn btn-sm btn-outline-default mr-1">' + row.totalCount + ' files</button>';
+                tags += '<button type="button" class="btn btn-sm btn-outline-default mr-1">' + bytesToSize(row.totalSize) + '</button>';
+                tags += '<button type="button" class="btn btn-sm btn-outline-default">' + row.srcDir + '</button>';
+
+                $("#modal-backup-stats .modal-title .summary").html(tags);
                 showStats(row);
             },
             'click .changed': function (e, val, row, idx) {
                 let $btn = $(e.currentTarget);
                 console.log(   $btn.data("field") );
+
+                let tags = '<button type="button" class="btn btn-sm btn-outline-default mr-1">Backup ID: ' + row.id + '</button>';
+                tags += '<button type="button" class="btn btn-sm btn-outline-default mr-1">' + row.totalCount + ' files</button>';
+                tags += '<button type="button" class="btn btn-sm btn-outline-default mr-1">' + bytesToSize(row.totalSize) + '</button>';
+                tags += '<button type="button" class="btn btn-sm btn-outline-default">' + row.srcDir + '</button>';
+
+                $("#modal-backup-changes .modal-title .summary").html(tags);
+
                 showChangedFiles(row.id, $btn.data("field"));
             },
         };

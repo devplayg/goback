@@ -10,6 +10,7 @@ import (
 func (b *Backup) backupFiles() error {
 	fileGroup, count := b.getBackupFileGroup()
 	if count < 1 {
+		b.summary.BackupTime = b.summary.ComparisonTime
 		return nil
 	}
 
@@ -85,6 +86,7 @@ func (b *Backup) backupFilesInGroup(workerId int, files []*FileWrapper) error {
 		// Success
 		atomic.AddUint64(&b.summary.SuccessCount, 1)
 		atomic.AddUint64(&b.summary.SuccessSize, uint64(file.Size))
+		file.State = FileBackupSucceeded
 		file.ExecTime = dur
 		if err := b.keeper.Chtimes(path, file.ModTime, file.ModTime); err != nil {
 			log.WithFields(log.Fields{

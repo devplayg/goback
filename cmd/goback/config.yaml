@@ -1,13 +1,24 @@
 jobs:
-  - type: 2
-    srcDirs:
-      - aaa
-      - bbb
-  - type: 3
-    srcDirs:
-      - aaa
-      - bbb
-
+  - backup-type: 2
+    src-dirs:
+      - d:\sample/static
+      - D:\sample\APTX-T V4.5 - Manager
+    storage:
+      protocol: 4
+      host: 125.132.191.38
+      port: 22
+      username: unisem
+      password: Uniiot12!@
+      dir: /data/backup
+    ignore:
+      - .tar
+  - backup-type: 2
+    src-dirs:
+      - D:\sample\backup.tar
+      - D:\sample\영상샘플
+    storage:
+      protocol: 1
+      dir: d:\backup
 #jobs:
 #  - type: 2
 #    SrcDirs:

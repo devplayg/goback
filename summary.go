@@ -63,7 +63,7 @@ func NewSummary(summaryId, backupType int, srcDir string, b *Backup) *Summary {
 		Version:       b.version,
 		BackupType:    backupType,
 		State:         Started,
-		Stats:         NewStatsReport(b.sizeRankMinSize),
+		Stats:         NewStatsReport(b.minFileSizeToRank),
 		addedFiles:    &sync.Map{},
 		modifiedFiles: &sync.Map{},
 		deletedFiles:  &sync.Map{},

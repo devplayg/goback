@@ -27,7 +27,7 @@ const (
 	Full        = 4
 
 	LocalDisk = 1
-	Ftp       = 3
+	Ftp       = 2
 	Sftp      = 4
 
 	// Failed = -1

@@ -11,14 +11,15 @@ type Config struct {
 }
 
 type Job struct {
-	Type     int      `json:"type"`
-	SrcDirs  []string `json:"srcDirs"`
-	Schedule string   `json:"schedule"`
-	Storage  Storage  `json:"storage"`
-	Ignore   []string `json:"ignore"`
+	BackupType int      `json:"backup-type"`
+	SrcDirs    []string `json:"src-dirs"`
+	Schedule   string   `json:"schedule"`
+	Storage    Storage  `json:"storage"`
+	Ignore     []string `json:"ignore"`
 }
 
 type Storage struct {
+	Protocol int    `json:"protocol"`
 	Host     string `json:"host"`
 	Port     int    `json:"port"`
 	Username string `json:"username"`

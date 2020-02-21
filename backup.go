@@ -17,40 +17,40 @@ import (
 )
 
 type Backup struct {
-	Id               int
-	debug            bool
-	srcDirs          []string
-	srcDirMap        map[string]*dirInfo
-	backupDir        string
-	summaryDb        *os.File
-	summary          *Summary
-	summaries        []*Summary
-	workerCount      int
-	fileBackupEnable bool
-	version          int
-	started          time.Time
-	rank             int
-	sizeRankMinSize  int64
-	keeper           Keeper
-	workingDir       string
-	DbDir            string
-	backupType       int
+	Id                int
+	debug             bool
+	srcDirs           []string
+	srcDirMap         map[string]*dirInfo
+	backupDir         string
+	summaryDb         *os.File
+	summary           *Summary
+	summaries         []*Summary
+	workerCount       int
+	fileBackupEnable  bool
+	version           int
+	started           time.Time
+	rank              int
+	minFileSizeToRank int64
+	keeper            Keeper
+	workingDir        string
+	DbDir             string
+	backupType        int
 }
 
 func NewBackup(srcDirs []string, keeper Keeper, backupType int, debug bool) *Backup {
 	return &Backup{
-		srcDirs:          srcDirs,
-		srcDirMap:        make(map[string]*dirInfo),
-		debug:            debug,
-		workerCount:      runtime.GOMAXPROCS(0),
-		fileBackupEnable: true,
-		version:          2,
-		started:          time.Now(),
-		rank:             50,
-		sizeRankMinSize:  10 * MB,
-		keeper:           keeper,
-		backupDir:        "",
-		backupType:       backupType,
+		srcDirs:           srcDirs,
+		srcDirMap:         make(map[string]*dirInfo),
+		debug:             debug,
+		workerCount:       runtime.GOMAXPROCS(0),
+		fileBackupEnable:  true,
+		version:           2,
+		started:           time.Now(),
+		rank:              50,
+		minFileSizeToRank: 10 * MB,
+		keeper:            keeper,
+		backupDir:         "",
+		backupType:        backupType,
 	}
 }
 
@@ -123,6 +123,7 @@ func (b *Backup) initKeeper() error {
 			"protocol": b.keeper.Description().Protocol,
 			"host":     b.keeper.Description().Host,
 		}).Errorf("failed to initialize the keeper: %s", err.Error())
+		return err
 	}
 
 	return nil

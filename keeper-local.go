@@ -31,8 +31,6 @@ func NewLocalKeeper(dstDir string) *LocalKeeper {
 }
 
 func (k *LocalKeeper) Init(t time.Time) error {
-	// k.date = date
-	// // k.DstDir = dstDir
 	k.date = t
 	tempDir, err := ioutil.TempDir(k.dstDir, "backup-")
 	if err != nil {
@@ -40,7 +38,6 @@ func (k *LocalKeeper) Init(t time.Time) error {
 	}
 	k.tempDir = tempDir
 	k.backupDir = FindProperBackupDirName(filepath.Join(k.dstDir, k.date.Format("20060102")))
-	// return k.tempDir, k.backupDir, nil
 	return nil
 }
 

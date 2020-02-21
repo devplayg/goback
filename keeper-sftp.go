@@ -29,19 +29,22 @@ type SftpKeeper struct {
 	backupDir string
 }
 
-func NewSftpKeeper(host string, port int, username, password, dstDir string) *SftpKeeper {
+func NewSftpKeeper(storage Storage) *SftpKeeper {
+	if storage.Port < 1 {
+		storage.Port = 22 // default SSH port
+	}
 	return &SftpKeeper{
-		host:     host,
-		port:     port,
-		dstDir:   dstDir,
-		username: username,
-		password: password,
+		host:     storage.Host,
+		port:     storage.Port,
+		dstDir:   storage.Dir,
+		username: storage.Username,
+		password: storage.Password,
 		conn:     nil,
 		active:   false,
 		KeeperDesc: &KeeperDesc{
 			Protocol: Sftp,
-			Host:     host,
-			Dir:      dstDir,
+			Host:     storage.Host,
+			Dir:      storage.Dir,
 		},
 	}
 }

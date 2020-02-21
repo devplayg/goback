@@ -1,7 +1,6 @@
 package goback
 
 import (
-	"github.com/davecgh/go-spew/spew"
 	"github.com/devplayg/himma"
 	"github.com/devplayg/hippo/v2"
 	log "github.com/sirupsen/logrus"
@@ -38,23 +37,28 @@ func (s *Server) Start() error {
 		return err
 	}
 
-	spew.Dump(s.config.Jobs)
+	for _, job := range s.config.Jobs {
+		log.WithFields(log.Fields{
+			"target": "localDisk",
+			"dir":    job.Storage.Dir,
+		}).Debug("backup")
 
-	// if err := s.startHttpServer(); err != nil {
-	// 	return err
-	// }
-	//
-	// for {
-	// 	s.Log.Info("server is working on it")
-	//
-	// 	// return errors.New("intentional error")
-	//
-	// 	select {
-	// 	case <-s.Ctx.Done(): // for gracefully shutdown
-	// 		return nil
-	// 	case <-time.After(2 * time.Second):
-	// 	}
-	// }
+		if job.Storage.Protocol == LocalDisk {
+			backup := NewBackup(job.SrcDirs, NewLocalKeeper(job.Storage.Dir), job.BackupType, s.config.App.Debug)
+			if err := backup.Start(); err != nil {
+				log.Error(err)
+			}
+			continue
+		}
+
+		if job.Storage.Protocol == Sftp {
+			backup := NewBackup(job.SrcDirs, NewSftpKeeper(job.Storage), job.BackupType, s.config.App.Debug)
+			if err := backup.Start(); err != nil {
+				log.Error(err)
+			}
+			continue
+		}
+	}
 
 	ch := make(chan struct{})
 	go func() {

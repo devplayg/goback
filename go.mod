@@ -2,7 +2,7 @@ module github.com/devplayg/goback-service
 
 go 1.13
 
-replace github.com/devplayg/goback => D:/gohome/src/github.com/devplayg/goback-service
+replace github.com/devplayg/goback => E:/gohome/src/github.com/devplayg/goback-service
 
 require (
 	github.com/davecgh/go-spew v1.1.1

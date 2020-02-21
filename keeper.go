@@ -12,7 +12,7 @@ type Keeper interface {
 }
 
 type KeeperDesc struct {
-	Protocol int    // Local / FTP / SFTP
-	Host     string // local or remote host
-	Dir      string
+	Protocol int    `json:"protocol"` // Local / FTP / SFTP
+	Host     string `json:"host"`     // local or remote host
+	Dir      string `json:"dir"`
 }
