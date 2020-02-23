@@ -3,90 +3,22 @@ server:
 jobs:
   - backup-type: 2
     src-dirs:
-      - d:\sample/static
-      - D:\sample\APTX-T V4.5 - Manager
+      - d:\sample\dir1
     storage:
-      protocol: 4
+#      protocol: 1
+#      dir: d:\backup
+      protocol: 1
       host: 10.10.10.10
       port: 22
       username: ddd
       password: ddd
-      dir: /data/backup
+      dir: d:\backup
+#      dir: /data/backup
     ignore:
       - .tar
   - backup-type: 2
     src-dirs:
-      - D:\sample\backup.tar
-      - D:\sample\영상샘플
+      - D:\sample\dir2
     storage:
       protocol: 1
       dir: d:\backup
-#jobs:
-#  - type: 2
-#    SrcDirs:
-#      - asdfasdfasdf
-#      - c:\temp
-#      - d:\data
-#    schedule: 0 0 * * *
-#    storage:
-#      dir: d:\backup\incremental
-#      ignore:
-#        - .iso
-#        - .txt
-#  - type: 2
-#    srcDirs:
-#      - E:\09. 음악
-#    schedule: 0 0 * * *
-#    storage:
-#      host: ftp://127.0.0.1
-#      username: devplayg
-#      password: devplayg123!@#
-#      dir: /backup2
-#      port: 21
-
-
-#jobs:
-#  - dir: c:\temp
-#    schedule:
-#      full:
-#        - 0 0 1 * *
-#      incremental:
-#        - 0 0 * * *
-#    storages:
-#      - dir: /backup
-#      - host: sftp://127.0.0.1
-#        username: devplayg
-#        password: devplayg123!@#
-#        dir: /backup1
-#        port: 22
-#      - host: ftp://127.0.0.1
-#        username: devplayg
-#        password: devplayg123!@#
-#        dir: /backup2
-#        port: 21
-#    ignore:
-#      - .jpg
-#      - .iso
-#  - dir: d:\data
-#    schedule:
-#      full:
-#        - 0 0 1 * *
-#      incremental:
-#        - 0 0 * * *
-#    method:
-#      - dir: /backup1
-#      - host: sftp://127.0.0.1
-#        user: devplayg
-#        pass: devplayg123!@#
-#        dir: /backup1
-#        port: 22
-#      - host: ftp://127.0.0.1
-#        user: devplayg
-#        pass: devplayg123!@#
-#        dir: /backup2
-#        port: 21
-#    ignore:
-#
-#
-#
-#

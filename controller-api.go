@@ -3,7 +3,7 @@ package goback
 import (
 	"encoding/json"
 	"github.com/devplayg/golibs/compress"
-	"github.com/devplayg/himma"
+	"github.com/devplayg/himma/v2"
 	"github.com/gorilla/mux"
 	"html/template"
 	"net/http"

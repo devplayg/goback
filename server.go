@@ -1,12 +1,8 @@
 package goback
 
 import (
-	"github.com/devplayg/himma"
+	"github.com/devplayg/himma/v2"
 	"github.com/devplayg/hippo/v2"
-	"github.com/sirupsen/logrus"
-
-	// log "github.com/sirupsen/logrus"
-
 	"runtime"
 	"time"
 )
@@ -56,10 +52,10 @@ func (s *Server) Start() error {
 
 		// Local backup
 		if job.Storage.Protocol == LocalDisk {
-			log.WithFields(logrus.Fields{
-				"target": "localDisk",
-				"dir":    job.Storage.Dir,
-			}).Debug("backup")
+			// log.WithFields(logrus.Fields{
+			// 	"target": "localDisk",
+			// 	"dir":    job.Storage.Dir,
+			// }).Debug("backup")
 			backup := NewBackup(job.SrcDirs, NewLocalKeeper(job.Storage.Dir), job.BackupType, s.appConfig.Debug)
 			if err := backup.Start(); err != nil {
 				log.Error(err)
@@ -94,7 +90,7 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) startHttpServer() error {
-	app := himma.Application{
+	app := himma.Config{
 		AppName:     s.appConfig.Name,
 		Description: s.appConfig.Description,
 		Url:         s.appConfig.Url,
