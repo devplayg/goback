@@ -79,7 +79,10 @@ func (c *Controller) init() error {
 
 func (c *Controller) initRouter() error {
 	c.router = mux.NewRouter()
-	c.router.HandleFunc("/", c.DisplayBackup)
+	c.router.HandleFunc("/", c.DisplayDefault)
+	c.router.HandleFunc("/backup/", c.DisplayBackup)
+	c.router.HandleFunc("/settings/", c.DisplaySettings)
+
 	c.router.HandleFunc("/summaries", c.GetSummaries)
 	c.router.HandleFunc("/summaries/{id:[0-9]+}/changes", c.GetChangesLog)
 

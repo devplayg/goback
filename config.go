@@ -39,8 +39,8 @@ func (c *Config) Save() error {
 	return ioutil.WriteFile("config_.yaml", b, 0644)
 }
 
-func loadConfig(path string) (*Config, error) {
-	b, err := ioutil.ReadFile(path)
+func loadConfig() (*Config, error) {
+	b, err := ioutil.ReadFile(ConfigFileName)
 	if err != nil {
 		return nil, err
 	}

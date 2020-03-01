@@ -74,7 +74,7 @@ func (s *Server) Start() error {
 
 	for {
 		// Do your repetitive jobs
-		s.Log.Info("server is working on it")
+		// s.Log.Info("server is working on it")
 
 		// Intentional error
 		// s.Cancel() // send cancel signal to engine
@@ -118,7 +118,7 @@ func (s *Server) Stop() error {
 }
 
 func (s *Server) init() error {
-	config, err := loadConfig(ConfigFileName)
+	config, err := loadConfig()
 	if err != nil {
 		return err
 	}

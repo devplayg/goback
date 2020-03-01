@@ -3,9 +3,7 @@ package goback
 import (
 	"encoding/json"
 	"github.com/devplayg/golibs/compress"
-	"github.com/devplayg/himma/v2"
 	"github.com/gorilla/mux"
-	"html/template"
 	"net/http"
 	"strconv"
 )
@@ -50,18 +48,4 @@ func (c *Controller) findSummaryById(id int) *Summary {
 	}
 
 	return nil
-}
-
-func (c *Controller) DisplayBackup(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.New("streams")
-	tmpl, err := tmpl.Parse(himma.Base())
-	if err != nil {
-		Response(w, r, err, http.StatusInternalServerError)
-	}
-	if tmpl, err = tmpl.Parse(DisplayBackup()); err != nil {
-		Response(w, r, err, http.StatusInternalServerError)
-	}
-	if err := tmpl.Execute(w, c.app); err != nil {
-		Response(w, r, err, http.StatusInternalServerError)
-	}
 }

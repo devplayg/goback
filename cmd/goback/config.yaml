@@ -2,8 +2,10 @@ server:
   address: 0.0.0.0:8000
 jobs:
   - backup-type: 2
+    schedule: 0 1 * * *
     src-dirs:
       - d:\sample\dir1
+      - d:\sample\dir2
     storage:
 #      protocol: 1
 #      dir: d:\backup
@@ -17,6 +19,7 @@ jobs:
     ignore:
       - .tar
   - backup-type: 2
+    schedule: 0 5 * * *
     src-dirs:
       - D:\sample\dir2
     storage:

@@ -1,11 +1,12 @@
 package goback
 
 import (
+	"fmt"
 	"io/ioutil"
 )
 
-func DisplayBackupTest() string {
-	b, err := ioutil.ReadFile("static/backup.html")
+func DisplayWithLocalFile(name string) string {
+	b, err := ioutil.ReadFile(fmt.Sprintf("static/%s.html", name))
 	if err != nil {
 		log.Error(err)
 	}
@@ -30,10 +31,10 @@ func DisplayBackup() string {
 
 {{define "sidebar"}}
     <li>
-        <a href="/" title="Live">
-            <i class="far fa-database"></i>
-            <span class="nav-link-text">Backup</span>
-        </a>
+        <a href="/backup/" title="Backup"><i class="fal fa-database"></i><span class="nav-link-text">Backup</span></a>
+    </li>
+    <li>
+        <a href="/settings/" title="Settings"><i class="fal fa-cog"></i><span class="nav-link-text">Settings</span></a>
     </li>
 {{end}}
 
