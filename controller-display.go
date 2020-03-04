@@ -8,6 +8,14 @@ import (
 	"net/http"
 )
 
+var funcMap template.FuncMap
+
+func init() {
+	funcMap = template.FuncMap{
+		"DirExists": DirExists,
+	}
+}
+
 func (c *Controller) DisplayDefault(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/backup/", http.StatusSeeOther)
 }
@@ -33,7 +41,7 @@ func (c *Controller) DisplaySettings(w http.ResponseWriter, r *http.Request) {
 		Response(w, r, errors.New("failed to load settings"), http.StatusInternalServerError)
 	}
 
-	tpl := template.New("settings")
+	tpl := template.New("settings").Funcs(funcMap)
 	tmpl, err := tpl.Parse(himma.Base())
 	if err != nil {
 		Response(w, r, err, http.StatusInternalServerError)

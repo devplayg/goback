@@ -37,6 +37,13 @@ func IsValidDir(dir string) (string, error) {
 	return absDir, nil
 }
 
+func DirExists(name string) string {
+	if _, err := os.Stat(name); os.IsNotExist(err) {
+		return "false"
+	}
+	return "true"
+}
+
 //
 // func GetFileHash(path string) (string, error) {
 // 	highwayhash, err := highwayhash.New(HashKey[:])

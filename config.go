@@ -21,6 +21,31 @@ type Job struct {
 	Ignore     []string `json:"ignore"`
 }
 
+//
+// type Directory string
+//
+// func (d Directory) String() string {
+// 	return string(d)
+// }
+//
+// func (d Directory) IsValid() bool {
+// 	return true
+// }
+//
+// func DirsToStrSlice(dirs []Directory) []string {
+// 	arr := make([]string, 0)
+// 	for _, d := range dirs {
+// 		arr = append(arr, d.String())
+// 	}
+// 	return arr
+// }
+
+//
+// type Dir struct {
+// 	Name    string
+// 	IsValid bool
+// }
+
 type Storage struct {
 	Protocol int    `json:"protocol"`
 	Host     string `json:"host"`
