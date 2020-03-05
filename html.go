@@ -6,7 +6,7 @@ import (
 )
 
 func DisplayBackupTest() string {
-	b, err := ioutil.ReadFile("static/backup.html")
+	b, err := ioutil.ReadFile("backup.html")
 	if err != nil {
 		log.Error(err)
 	}
@@ -84,24 +84,27 @@ func DisplayBackup() string {
 
                         <th data-field="workerCount" data-sortable="true" data-visible="false">Workers</th>
 
-                        <th data-field="totalCount" data-sortable="true" data-formatter="backupTotalCountFormatter" data-events="backupStatsEvents">Files</th>
+                        <th data-field="totalCount" data-sortable="true" data-formatter="backupTotalCountFormatter" data-events="backupStatsEvents">Total Files</th>
                         <th data-field="totalSize" data-sortable="true" data-formatter="byteSizeFormatter">Total Size</th>
+
+                        <th data-field="backupCount" data-sortable="true" data-formatter="backupBackupCountFormatter" data-events="backupStatsEvents">Backup Files</th>
+                        <th data-field="backupSize" data-sortable="true" data-formatter="backupBackupSizeFormatter">Backup Size</th>
 
                         <th data-field="countAdded" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupStatsEvents">Added</th>
                         <th data-field="sizeAdded" data-sortable="true" data-formatter="byteSizeFormatter">Added</th>
-{{/*                        <th data-field="sizeAdded" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Added (B)</th>*/}}
+                        {{/*                        <th data-field="sizeAdded" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Added (B)</th>*/}}
 
                         <th data-field="countModified" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupStatsEvents">Modified</th>
                         <th data-field="sizeModified" data-sortable="true" data-formatter="byteSizeFormatter">Modified</th>
-{{/*                        <th data-field="sizeModified" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Modified (B)</th>*/}}
+                        {{/*                        <th data-field="sizeModified" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Modified (B)</th>*/}}
 
                         <th data-field="countDeleted" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupStatsEvents">Deleted</th>
                         <th data-field="sizeDeleted" data-sortable="true" data-formatter="byteSizeFormatter">Deleted</th>
-{{/*                        <th data-field="sizeDeleted" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Deleted (B)</th>*/}}
+                        {{/*                        <th data-field="sizeDeleted" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Deleted (B)</th>*/}}
 
                         <th data-field="countFailed" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupStatsEvents">Failed</th>
                         <th data-field="sizeFailed" data-sortable="true" data-formatter="byteSizeFormatter">Failed</th>
-{{/*                        <th data-field="sizeFailed" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Failed (B)</th>*/}}
+                        {{/*                        <th data-field="sizeFailed" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Failed (B)</th>*/}}
 
 
                         <th data-field="message" data-sortable="false">Read / Compare / Copy / Write</th>
@@ -538,7 +541,7 @@ func DisplayBackup() string {
                 per = 50;
             }
             return per;
-ss
+            ss
         }
 
         function getTab(field) {
@@ -557,6 +560,14 @@ ss
         /*
         * Formatters
         */
+
+        function backupBackupCountFormatter(val, row, idx) {
+            return backupResultFormatter(row.countAdded + row.countModified);
+        }
+
+        function backupBackupSizeFormatter(val, row, idx) {
+            return byteSizeFormatter(row.sizeAdded + row.sizeModified);
+        }
 
         function backupStatsSizeDistFormatter(val, row, idx) {
             if (val >= 5000000000000) {
@@ -586,7 +597,7 @@ ss
 
         function backupFileStateFormatter(val, row, idx) {
             if (val === -1) {
-                 return '<i><span class="text-danger">failed</span><i>';
+                return '<i><span class="text-danger">failed</span><i>';
             }
             if (val === 1) {
                 return "<i>done</i>";
