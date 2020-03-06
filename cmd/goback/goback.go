@@ -13,7 +13,7 @@ import (
 
 const (
 	appName    = "goback"
-	appVersion = "1.0.7"
+	appVersion = "1.0.9"
 )
 
 var (
