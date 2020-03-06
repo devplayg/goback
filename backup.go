@@ -45,7 +45,7 @@ func NewBackup(srcDirs []string, dstDir string, hashComparision, debug bool) *Ba
 		dstDir:           dstDir,
 		hashComparision:  hashComparision,
 		debug:            debug,
-		workerCount:      runtime.NumCPU(),
+		workerCount:      runtime.GOMAXPROCS(0) * 2,
 		fileBackupEnable: true,
 		version:          2,
 		started:          time.Now(),
