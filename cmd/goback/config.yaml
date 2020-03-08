@@ -6,6 +6,7 @@ jobs:
     src-dirs:
       - d:\sample\dir1
       - d:\sample\dir2
+      - d:\sample\abc
     storage:
 #      protocol: 1
 #      dir: d:\backup

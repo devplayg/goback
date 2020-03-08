@@ -37,11 +37,11 @@ func IsValidDir(dir string) (string, error) {
 	return absDir, nil
 }
 
-func DirExists(name string) string {
+func DirExists(name string) bool {
 	if _, err := os.Stat(name); os.IsNotExist(err) {
-		return "false"
+		return false
 	}
-	return "true"
+	return true
 }
 
 //

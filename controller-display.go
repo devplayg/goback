@@ -41,12 +41,21 @@ func (c *Controller) DisplaySettings(w http.ResponseWriter, r *http.Request) {
 		Response(w, r, errors.New("failed to load settings"), http.StatusInternalServerError)
 	}
 
+	// testTemplate, err = template.New("hello.gohtml").Funcs(template.FuncMap{
+	// 	"hasPermission": func(feature string) bool {
+	// 		return false
+	// 	},
+	// }).ParseFiles("hello.gohtml")
+
 	tpl := template.New("settings").Funcs(funcMap)
 	tmpl, err := tpl.Parse(himma.Base())
 	if err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
 	}
-	if tmpl, err = tmpl.Parse(DisplayWithLocalFile("settings")); err != nil {
+	// if tmpl, err = tmpl.Parse(DisplayWithLocalFile("settings")); err != nil {
+	// 	Response(w, r, err, http.StatusInternalServerError)
+	// }
+	if tmpl, err = tmpl.Funcs(funcMap).Parse(DisplayWithLocalFile("settings")); err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
 	}
 
