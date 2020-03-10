@@ -87,8 +87,6 @@ func DisplayBackup() string {
                         <th data-field="totalCount" data-sortable="true" data-formatter="backupTotalCountFormatter" data-events="backupStatsEvents">Total Files</th>
                         <th data-field="totalSize" data-sortable="true" data-formatter="byteSizeFormatter">Total Size</th>
 
-                        <th data-field="backupCount" data-sortable="true" data-formatter="backupBackupCountFormatter" data-events="backupStatsEvents">Backup Files</th>
-                        <th data-field="backupSize" data-sortable="true" data-formatter="backupBackupSizeFormatter">Backup Size</th>
 
                         <th data-field="countAdded" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupStatsEvents">Added</th>
                         <th data-field="sizeAdded" data-sortable="true" data-formatter="byteSizeFormatter">Added</th>
@@ -106,6 +104,8 @@ func DisplayBackup() string {
                         <th data-field="sizeFailed" data-sortable="true" data-formatter="byteSizeFormatter">Failed</th>
                         {{/*                        <th data-field="sizeFailed" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Failed (B)</th>*/}}
 
+                        <th data-field="backupCount" data-sortable="true" data-formatter="backupBackupCountFormatter" data-events="backupStatsEvents">Backup Files</th>
+                        <th data-field="backupSize" data-sortable="true" data-formatter="backupBackupSizeFormatter">Backup Size</th>
 
                         <th data-field="message" data-sortable="false">Read / Compare / Copy / Write</th>
 
