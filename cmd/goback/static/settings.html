@@ -8,7 +8,6 @@
             margin-right: 3px;
             font-weight: 400;
         }
-
         @media print{@page {size: landscape}}
     </style>
 {{end}}
@@ -33,75 +32,148 @@
     </div>
 
     <div class="row">
-        {{range $i, $job := .Settings.Jobs}}
-        <div class="col-6">
-
-            <div id="job-{{$i}}" class="panel panel-sortable" role="widget">
-                <div class="panel-hdr" role="heading">
-                    <h2>[{{$i}}] {{$job.BackupType}}</h2>
-                    <div class="panel-saving mr-2" style="display:none">
-                        <i class="fal fa-spinner-third fa-spin-4x fs-xl"></i></div>
-{{/*                    <div class="panel-toolbar" role="menu">*/}}
-{{/*                        <a href="#" class="btn btn-panel hover-effect-dot js-panel-collapse waves-effect waves-themed" data-toggle="tooltip" data-offset="0,10" data-original-title="Collapse"></a>*/}}
-{{/*                        <a href="#" class="btn btn-panel hover-effect-dot js-panel-fullscreen waves-effect waves-themed" data-toggle="tooltip" data-offset="0,10" data-original-title="Fullscreen"></a>*/}}
-{{/*                        <a href="#" class="btn btn-panel hover-effect-dot js-panel-close waves-effect waves-themed" data-toggle="tooltip" data-offset="0,10" data-original-title="Close"></a>*/}}
-{{/*                    </div>*/}}
-                    <div class="panel-toolbar" role="menu">
-                        <a href="#" class="btn btn-toolbar-master waves-effect waves-themed" data-toggle="dropdown">
-                            <i class="fal fa-ellipsis-v"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-animated dropdown-menu-right p-0">
-                            <a href="#" class="dropdown-item text-danger">
-                                <span data-i18n="drpdwn.refreshpanelr"><i class="far fa-trash"></i> Delete</span>
-                            </a>
-                            <a href="#" class="dropdown-item js-panel-locked">
-                                <span data-i18n="drpdwn.lockpanel">Enable</span>
-                            </a>
-                            <a href="#" class="dropdown-item js-panel-reset">
-                                <span data-i18n="drpdwn.resetpanel">Disable</span>
-                            </a>
+        <div class="col-md-4">
+            {{range $i, $s := .Settings.Storages}}
+                <div class="card border mb-2">
+                    <div class="card-header py-2">
+                        <div class="card-title">
+                            Storage #{{$s.Id}}
                         </div>
                     </div>
+                    <div class="card-body">
+                        <blockquote class="blockquote mb-0">
+                            {{if eq $s.Protocol "local"}}
+                            <p>
+                                <i class="fal fa-database"></i> {{$s.Dir}}
+                            </p>
+                            <footer class="blockquote-footer">
+                                Local Disk
+                            </footer>
+                            {{else if eq $s.Protocol "sftp"}}
+                                <p>Hostname: {{$s.Host}}</p>
+                                <p>Port: {{$s.Port}}</p>
+                                <footer class="blockquote-footer">
+                                    SFTP
+                                </footer>
+                            {{end}}
+                        </blockquote>
+                    </div>
                 </div>
-                <div class="panel-container show" role="content"><div class="loader"><i class="fal fa-spinner-third fa-spin-4x fs-xxl"></i></div>
-                    <div class="panel-content ">
-                        <div class="panel-tag">
-                            Schedule: {{$job.Schedule}}
+            {{end}}
+        </div>
+        <div class="col-md-8">
+            <div class="row">
+                {{range $id, $job := .Settings.Jobs}}
+                        <div class="col-6">
+                            <form class="form-job" data-id="{{$id}}">
+                                <div id="job-{{$id}}" class="panel panel-sortable" role="widget">
+                                    <div class="panel-hdr" role="heading">
+                                        <h2>Job #{{$id}} </h2>
+                                        <div class="panel-saving mr-2" style="display:none">
+                                            <i class="fal fa-spinner-third fa-spin-4x fs-xl"></i>
+                                        </div>
+                                        <div class="panel-toolbar" role="menu">
+                                            <a href="#" class="btn btn-toolbar-master waves-effect waves-themed" data-toggle="dropdown">
+                                                <i class="fal fa-ellipsis-v"></i>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-animated dropdown-menu-right p-0">
+                                                <a href="#" class="dropdown-item text-danger">
+                                                    <span data-i18n="drpdwn.refreshpanelr"><i class="far fa-trash"></i> Delete</span>
+                                                </a>
+                                                <a href="#" class="dropdown-item js-panel-locked">
+                                                    <span data-i18n="drpdwn.lockpanel">Enable</span>
+                                                </a>
+                                                <a href="#" class="dropdown-item js-panel-reset">
+                                                    <span data-i18n="drpdwn.resetpanel">Disable</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="panel-container" role="content"><div class="loader"><i class="fal fa-spinner-third fa-spin-4x fs-xxl"></i></div>
+                                        <div class="panel-content">
+                                            <div class="row">
+                                                <div class="col-5">
+                                                    <div class="form-group">
+                                                        <label class="form-label" for="simpleinputInvalid">Storage</label>
+                                                        <input type="text" class="form-control is-valid" id="job-storage-{{$id}}" value="{{$job.StorageId}}">
+                                                    </div>
+
+                                                </div>
+                                                <div class="col-7">
+                                                    <div class="form-group">
+                                                        <label class="form-label" for="simpleinputInvalid">Schedule</label>
+                                                        <input type="text" class="form-control is-valid" id="job-schedule-{{$id}}" value="{{$job.Schedule}}">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <p class="form-label mt-4 mb-2">Directories to backup</p>
+                                            {{range $j, $dirName := $job.SrcDirs }}
+                                                <div class="form-group mb-2">
+                                                    <input type="text" class="form-control {{if  DirExists $dirName  }}is-valid{{else}}is-invalid{{end}}" value="{{$dirName}}">
+                                                </div>
+                                            {{end}}
+
+                                            <div>
+                                                <button class="btn btn-primary">Update</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </form>
                         </div>
-                    </div>
-                    <div class="panel-content">
-                        <h5>Directories to backup</h5>
-                        {{range $j, $dirName := $job.SrcDirs }}
-                            <div class="form-group">
-                                {{if eq ($dirName | DirExists) true }}
-                                    xxxxxxxx
-                                {{else}}
-                                    yyyyyyyyy
-                                {{end}}
-                                {{if DirExists $dirName }}
-                                    exists - {{$dirName | DirExists}}
-                                {{ else }}
-                                    not exists - {{$dirName | DirExists}}
-                                {{end}}
-                                <input type="text" class="form-control {{if  DirExists $dirName  }}is-valid{{else}}is-invalid{{end}}" value="{{$dirName}}">
+                {{end}}
 
-                                <input type="text" class="form-control {{$dirName | DirExists}}" value="{{$dirName}}">
-                            </div>
-                        {{end}}
-                        </ul>
-                    </div>
-
-                </div>
             </div>
         </div>
-        <div class="col-6">
-        </div>
-    {{end}}
     </div>
 {{end}}
 
 {{define "script"}}
     <script>
+        $(".form-job").each(function() {
+            let c = $(this);
+            $(this).validate({
+                submitHandler: function (form, e) {
+                    e.preventDefault();
+                    let $form = $(this.currentForm);
+                    // console.log($form.data("id"));
 
+                    let url = "/settings/job/id/"+$form.data("id");
+                    console.log(url);
+
+                    $.ajax({
+                        url: url,
+                        type: "PATCH",
+                        data: $form.serialize(),
+                    }).done(function (data) {
+                        console.log(data);
+                        // $(".result-message", c).html('<i class="fa fa-check"></i> ' + langMap["updated"]);
+                        // setTimeout(function() {
+                        //     $(".result-message", c).empty();
+                        // }, 1000);
+                    }).fail(function (jqXHR, textStatus, errorThrown) {
+                        console.error(jqXHR);
+                        Swal.fire("Error", jqXHR.message, "warning");
+                    }).always(function() {
+
+                    });
+
+
+                },
+                rules: {
+                    // alarmSmsMobiles: {
+                    //     required: true,
+                    //     minlength: 10,
+                    // },
+                    // alarmSmsInterval: {
+                    //     min: 60,
+                    // }
+                }
+            });
+
+        });
     </script>
 {{end}}

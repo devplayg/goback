@@ -42,7 +42,7 @@ func NewBackup(srcDirs []string, keeper Keeper, backupType int, debug bool) *Bac
 		srcDirs:           srcDirs,
 		srcDirMap:         make(map[string]*dirInfo),
 		debug:             debug,
-		workerCount:       runtime.GOMAXPROCS(0),
+		workerCount:       runtime.GOMAXPROCS(0) * 2,
 		fileBackupEnable:  true,
 		version:           2,
 		started:           time.Now(),

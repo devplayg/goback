@@ -80,12 +80,8 @@ func (c *Controller) init() error {
 func (c *Controller) initRouter() error {
 	c.router = mux.NewRouter()
 	c.router.HandleFunc("/", c.DisplayDefault)
-	c.router.HandleFunc("/backup/", c.DisplayBackup)
-	c.router.HandleFunc("/settings/", c.DisplaySettings)
 
-	c.router.HandleFunc("/summaries", c.GetSummaries)
-	c.router.HandleFunc("/summaries/{id:[0-9]+}/changes", c.GetChangesLog)
-
+	// Assets
 	c.router.HandleFunc("/assets/{u1}/{u2}", func(w http.ResponseWriter, r *http.Request) {
 		GetAsset(w, r)
 	})
@@ -95,6 +91,17 @@ func (c *Controller) initRouter() error {
 	c.router.HandleFunc("/assets/{u1}/{u2}/{u3}/{u4}", func(w http.ResponseWriter, r *http.Request) {
 		GetAsset(w, r)
 	})
+
+	// Backup
+	c.router.HandleFunc("/backup/", c.DisplayBackup)
+	c.router.HandleFunc("/summaries", c.GetSummaries)
+	c.router.HandleFunc("/summaries/{id:[0-9]+}/changes", c.GetChangesLog)
+
+	// Settings
+	c.router.HandleFunc("/settings/", c.DisplaySettings)
+	c.router.HandleFunc("/settings/job/id/{id:[0-9]+}", c.UpdateJob)
+
+	//
 	http.Handle("/", c.router)
 
 	//srv := &http.Server{

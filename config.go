@@ -9,16 +9,16 @@ type Config struct {
 	Server struct {
 		Address string `json:"address"`
 	} `json:"server"`
-	// App  AppConfig
-	Jobs []Job `json:"jobs"`
+	Storages []Storage `json:"storages"`
+	Jobs     []Job     `json:"jobs"`
 }
 
 type Job struct {
 	BackupType int      `json:"backup-type"`
-	SrcDirs    []string `json:"src-dirs"`
+	SrcDirs    []string `json:"dirs"`
 	Schedule   string   `json:"schedule"`
-	Storage    Storage  `json:"storage"`
 	Ignore     []string `json:"ignore"`
+	StorageId  int      `json:"storage-id"`
 }
 
 //
@@ -47,7 +47,8 @@ type Job struct {
 // }
 
 type Storage struct {
-	Protocol int    `json:"protocol"`
+	Id       int    `json:"id"`
+	Protocol string `json:"protocol"`
 	Host     string `json:"host"`
 	Port     int    `json:"port"`
 	Username string `json:"username"`

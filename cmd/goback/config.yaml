@@ -1,28 +1,33 @@
 server:
   address: 0.0.0.0:8000
+storages:
+  - id: 1
+    protocol: local
+    dir: d:\backup
+  - id: 2
+    protocol: sftp
+    host: 10.10.10.10
+    port: 22
+    username: ddd
+    password: ddd
+    dir: d:\backup
 jobs:
   - backup-type: 2
+    storage-id: 1
     schedule: 0 1 * * *
-    src-dirs:
-      - d:\sample\dir1
-      - d:\sample\dir2
-      - d:\sample\abc
-    storage:
-#      protocol: 1
-#      dir: d:\backup
-      protocol: 1
-      host: 10.10.10.10
-      port: 22
-      username: ddd
-      password: ddd
-      dir: d:\backup
-#      dir: /data/backup
+    dirs:
+      - d:\data
+      - d:\sample
     ignore:
       - .tar
   - backup-type: 2
+    storage-id: 1
+    schedule: 0 2 * * *
+    dirs:
+      - D:\utils
+  - backup-type: 2
+    storage-id: 1
     schedule: 0 5 * * *
-    src-dirs:
+    dirs:
       - D:\sample\dir2
-    storage:
-      protocol: 1
-      dir: d:\backup
+

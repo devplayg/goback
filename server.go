@@ -48,29 +48,31 @@ func (s *Server) Start() error {
 		<-ch
 	}()
 
-	for _, job := range s.config.Jobs {
+	// spew.Dump(s.config)
 
-		// Local backup
-		if job.Storage.Protocol == LocalDisk {
-			// log.WithFields(logrus.Fields{
-			// 	"target": "localDisk",
-			// 	"dir":    job.Storage.Dir,
-			// }).Debug("backup")
-			backup := NewBackup(job.SrcDirs, NewLocalKeeper(job.Storage.Dir), job.BackupType, s.appConfig.Debug)
-			if err := backup.Start(); err != nil {
-				log.Error(err)
-			}
-			continue
-		}
+	//for _, job := range s.config.Jobs {
 
-		if job.Storage.Protocol == Sftp {
-			backup := NewBackup(job.SrcDirs, NewSftpKeeper(job.Storage), job.BackupType, s.appConfig.Debug)
-			if err := backup.Start(); err != nil {
-				log.Error(err)
-			}
-			continue
-		}
-	}
+	// Local backup
+	//if job.Storage.Protocol == LocalDisk {
+	//	// log.WithFields(logrus.Fields{
+	//	// 	"target": "localDisk",
+	//	// 	"dir":    job.Storage.Dir,
+	//	// }).Debug("backup")
+	//	backup := NewBackup(job.SrcDirs, NewLocalKeeper(job.Storage.Dir), job.BackupType, s.appConfig.Debug)
+	//	if err := backup.Start(); err != nil {
+	//		log.Error(err)
+	//	}
+	//	continue
+	//}
+	//
+	//if job.Storage.Protocol == Sftp {
+	//	backup := NewBackup(job.SrcDirs, NewSftpKeeper(job.Storage), job.BackupType, s.appConfig.Debug)
+	//	if err := backup.Start(); err != nil {
+	//		log.Error(err)
+	//	}
+	//	continue
+	//}
+	//}
 
 	for {
 		// Do your repetitive jobs
