@@ -1,0 +1,107 @@
+{{define "css"}}
+    <style>
+        .pagination .page-link {
+            border-width: 1px;
+        }
+
+        .badge-stats {
+            margin-right: 3px;
+            font-weight: 400;
+        }
+
+        @media print{@page {size: landscape}}
+    </style>
+{{end}}
+
+{{define "sidebar"}}
+    <li>
+        <a href="/backup/" title="Backup"><i class="fal fa-database"></i><span class="nav-link-text">Backup</span></a>
+    </li>
+    <li>
+        <a href="/settings/" title="Settings"><i class="fal fa-cog"></i><span class="nav-link-text">Settings</span></a>
+    </li>
+{{end}}
+
+{{define "content"}}
+    <div class="subheader">
+        <h1 class="subheader-title">
+            <i class="subheader-icon fal fa-cog"></i> Settings
+            <small>
+                configure backup schedule
+            </small>
+        </h1>
+    </div>
+
+    <div class="row">
+        {{range $i, $job := .Settings.Jobs}}
+        <div class="col-6">
+
+            <div id="job-{{$i}}" class="panel panel-sortable" role="widget">
+                <div class="panel-hdr" role="heading">
+                    <h2>[{{$i}}] {{$job.BackupType}}</h2>
+                    <div class="panel-saving mr-2" style="display:none">
+                        <i class="fal fa-spinner-third fa-spin-4x fs-xl"></i></div>
+{{/*                    <div class="panel-toolbar" role="menu">*/}}
+{{/*                        <a href="#" class="btn btn-panel hover-effect-dot js-panel-collapse waves-effect waves-themed" data-toggle="tooltip" data-offset="0,10" data-original-title="Collapse"></a>*/}}
+{{/*                        <a href="#" class="btn btn-panel hover-effect-dot js-panel-fullscreen waves-effect waves-themed" data-toggle="tooltip" data-offset="0,10" data-original-title="Fullscreen"></a>*/}}
+{{/*                        <a href="#" class="btn btn-panel hover-effect-dot js-panel-close waves-effect waves-themed" data-toggle="tooltip" data-offset="0,10" data-original-title="Close"></a>*/}}
+{{/*                    </div>*/}}
+                    <div class="panel-toolbar" role="menu">
+                        <a href="#" class="btn btn-toolbar-master waves-effect waves-themed" data-toggle="dropdown">
+                            <i class="fal fa-ellipsis-v"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-animated dropdown-menu-right p-0">
+                            <a href="#" class="dropdown-item text-danger">
+                                <span data-i18n="drpdwn.refreshpanelr"><i class="far fa-trash"></i> Delete</span>
+                            </a>
+                            <a href="#" class="dropdown-item js-panel-locked">
+                                <span data-i18n="drpdwn.lockpanel">Enable</span>
+                            </a>
+                            <a href="#" class="dropdown-item js-panel-reset">
+                                <span data-i18n="drpdwn.resetpanel">Disable</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-container show" role="content"><div class="loader"><i class="fal fa-spinner-third fa-spin-4x fs-xxl"></i></div>
+                    <div class="panel-content ">
+                        <div class="panel-tag">
+                            Schedule: {{$job.Schedule}}
+                        </div>
+                    </div>
+                    <div class="panel-content">
+                        <h5>Directories to backup</h5>
+                        {{range $j, $dirName := $job.SrcDirs }}
+                            <div class="form-group">
+                                {{if eq ($dirName | DirExists) true }}
+                                    xxxxxxxx
+                                {{else}}
+                                    yyyyyyyyy
+                                {{end}}
+                                {{if DirExists $dirName }}
+                                    exists - {{$dirName | DirExists}}
+                                {{ else }}
+                                    not exists - {{$dirName | DirExists}}
+                                {{end}}
+                                <input type="text" class="form-control {{if  DirExists $dirName  }}is-valid{{else}}is-invalid{{end}}" value="{{$dirName}}">
+
+                                <input type="text" class="form-control {{$dirName | DirExists}}" value="{{$dirName}}">
+                            </div>
+                        {{end}}
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+        </div>
+    {{end}}
+    </div>
+{{end}}
+
+{{define "script"}}
+    <script>
+
+    </script>
+{{end}}
