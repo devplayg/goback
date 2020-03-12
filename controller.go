@@ -99,7 +99,7 @@ func (c *Controller) initRouter() error {
 
 	// Settings
 	c.router.HandleFunc("/settings/", c.DisplaySettings)
-	c.router.HandleFunc("/settings/job/id/{id:[0-9]+}", c.UpdateJob)
+	c.router.HandleFunc("/settings/job/id/{id:[0-9]+}", c.UpdateJob).Methods(http.MethodPatch)
 
 	//
 	http.Handle("/", c.router)

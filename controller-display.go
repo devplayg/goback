@@ -1,8 +1,6 @@
 package goback
 
 import (
-	"errors"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/devplayg/himma/v2"
 	"html/template"
 	"net/http"
@@ -35,11 +33,11 @@ func (c *Controller) DisplayBackup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) DisplaySettings(w http.ResponseWriter, r *http.Request) {
-	config, err := loadConfig()
-	if err != nil {
-		log.Error(err)
-		Response(w, r, errors.New("failed to load settings"), http.StatusInternalServerError)
-	}
+	//config, err := loadConfig()
+	//if err != nil {
+	//	log.Error(err)
+	//	Response(w, r, errors.New("failed to load settings"), http.StatusInternalServerError)
+	//}
 
 	// testTemplate, err = template.New("hello.gohtml").Funcs(template.FuncMap{
 	// 	"hasPermission": func(feature string) bool {
@@ -63,9 +61,9 @@ func (c *Controller) DisplaySettings(w http.ResponseWriter, r *http.Request) {
 		*himma.Config
 		Settings *Config
 	}{
-		c.app, config,
+		c.app, c.server.config,
 	}
-	spew.Dump(aa)
+	//spew.Dump(aa)
 	if err := tmpl.Execute(w, aa); err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
 	}

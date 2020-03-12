@@ -14,9 +14,10 @@ type Config struct {
 }
 
 type Job struct {
+	Id         int      `json:"id" schema:"id"`
 	BackupType int      `json:"backup-type"`
-	SrcDirs    []string `json:"dirs"`
-	Schedule   string   `json:"schedule"`
+	SrcDirs    []string `json:"dirs" schema:"srcDirs"`
+	Schedule   string   `json:"schedule" schema:"schedule"`
 	Ignore     []string `json:"ignore"`
 	StorageId  int      `json:"storage-id"`
 }
@@ -63,17 +64,6 @@ func (c *Config) Save() error {
 	}
 
 	return ioutil.WriteFile("config_.yaml", b, 0644)
-}
-
-func loadConfig() (*Config, error) {
-	b, err := ioutil.ReadFile(ConfigFileName)
-	if err != nil {
-		return nil, err
-	}
-
-	var config Config
-	err = yaml.Unmarshal(b, &config)
-	return &config, err
 }
 
 type AppConfig struct {

@@ -63,67 +63,71 @@
         </div>
         <div class="col-md-8">
             <div class="row">
-                {{range $id, $job := .Settings.Jobs}}
-                        <div class="col-6">
-                            <form class="form-job" data-id="{{$id}}">
-                                <div id="job-{{$id}}" class="panel panel-sortable" role="widget">
-                                    <div class="panel-hdr" role="heading">
-                                        <h2>Job #{{$id}} </h2>
-                                        <div class="panel-saving mr-2" style="display:none">
-                                            <i class="fal fa-spinner-third fa-spin-4x fs-xl"></i>
-                                        </div>
-                                        <div class="panel-toolbar" role="menu">
-                                            <a href="#" class="btn btn-toolbar-master waves-effect waves-themed" data-toggle="dropdown">
-                                                <i class="fal fa-ellipsis-v"></i>
+                {{range $idx, $job := .Settings.Jobs}}
+
+                    <div class="col-6">
+                        <form class="form-job" data-id="{{$job.Id}}">
+                            <input type="hidden" name="id" value="{{$job.Id}}"/>
+                            <input type="hidden" name="backupType" value="{{$job.BackupType}}"/>
+
+                            <div id="job-{{$job.Id}}" class="panel panel-sortable" role="widget">
+                                <div class="panel-hdr" role="heading">
+                                    <h2>Job #{{$job.Id}} </h2>
+                                    <div class="panel-saving mr-2" style="display:none">
+                                        <i class="fal fa-spinner-third fa-spin-4x fs-xl"></i>
+                                    </div>
+                                    <div class="panel-toolbar" role="menu">
+                                        <a href="#" class="btn btn-toolbar-master waves-effect waves-themed" data-toggle="dropdown">
+                                            <i class="fal fa-ellipsis-v"></i>
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-animated dropdown-menu-right p-0">
+                                            <a href="#" class="dropdown-item text-danger">
+                                                <span data-i18n="drpdwn.refreshpanelr"><i class="far fa-trash"></i> Delete</span>
                                             </a>
-                                            <div class="dropdown-menu dropdown-menu-animated dropdown-menu-right p-0">
-                                                <a href="#" class="dropdown-item text-danger">
-                                                    <span data-i18n="drpdwn.refreshpanelr"><i class="far fa-trash"></i> Delete</span>
-                                                </a>
-                                                <a href="#" class="dropdown-item js-panel-locked">
-                                                    <span data-i18n="drpdwn.lockpanel">Enable</span>
-                                                </a>
-                                                <a href="#" class="dropdown-item js-panel-reset">
-                                                    <span data-i18n="drpdwn.resetpanel">Disable</span>
-                                                </a>
-                                            </div>
+                                            <a href="#" class="dropdown-item js-panel-locked">
+                                                <span data-i18n="drpdwn.lockpanel">Enable</span>
+                                            </a>
+                                            <a href="#" class="dropdown-item js-panel-reset">
+                                                <span data-i18n="drpdwn.resetpanel">Disable</span>
+                                            </a>
                                         </div>
                                     </div>
-
-                                    <div class="panel-container" role="content"><div class="loader"><i class="fal fa-spinner-third fa-spin-4x fs-xxl"></i></div>
-                                        <div class="panel-content">
-                                            <div class="row">
-                                                <div class="col-5">
-                                                    <div class="form-group">
-                                                        <label class="form-label" for="simpleinputInvalid">Storage</label>
-                                                        <input type="text" class="form-control is-valid" id="job-storage-{{$id}}" value="{{$job.StorageId}}">
-                                                    </div>
-
-                                                </div>
-                                                <div class="col-7">
-                                                    <div class="form-group">
-                                                        <label class="form-label" for="simpleinputInvalid">Schedule</label>
-                                                        <input type="text" class="form-control is-valid" id="job-schedule-{{$id}}" value="{{$job.Schedule}}">
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <p class="form-label mt-4 mb-2">Directories to backup</p>
-                                            {{range $j, $dirName := $job.SrcDirs }}
-                                                <div class="form-group mb-2">
-                                                    <input type="text" class="form-control {{if  DirExists $dirName  }}is-valid{{else}}is-invalid{{end}}" value="{{$dirName}}">
-                                                </div>
-                                            {{end}}
-
-                                            <div>
-                                                <button class="btn btn-primary">Update</button>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                 </div>
-                            </form>
-                        </div>
+
+                                <div class="panel-container" role="content"><div class="loader"><i class="fal fa-spinner-third fa-spin-4x fs-xxl"></i></div>
+                                    <div class="panel-content">
+                                        <div class="row">
+                                            <div class="col-5">
+                                                <div class="form-group">
+                                                    <label class="form-label">Storage</label>
+                                                    <input type="text" name="storageId" class="form-control" value="{{$job.StorageId}}" readonly>
+                                                </div>
+
+                                            </div>
+                                            <div class="col-7">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="simpleinputInvalid">Schedule</label>
+                                                    <input type="text" name="schedule" class="form-control"  value="{{$job.Schedule}}">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <p class="form-label mt-4 mb-2">Directories to backup</p>
+                                        {{range $j, $dirName := $job.SrcDirs }}
+                                            <div class="form-group mb-2">
+                                                <input type="text" name="srcDirs" class="form-control {{if  DirExists $dirName  }}is-valid{{else}}is-invalid{{end}}" value="{{$dirName}}">
+                                            </div>
+                                        {{end}}
+
+                                        <div>
+                                            <button class="btn btn-primary">Update</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </form>
+                    </div>
                 {{end}}
 
             </div>
@@ -143,7 +147,8 @@
 
                     let url = "/settings/job/id/"+$form.data("id");
                     console.log(url);
-
+                    console.log($form);
+                    console.log($form.serialize());
                     $.ajax({
                         url: url,
                         type: "PATCH",

@@ -12,7 +12,8 @@ storages:
     password: ddd
     dir: d:\backup
 jobs:
-  - backup-type: 2
+  - id: 1
+    backup-type: 2
     storage-id: 1
     schedule: 0 1 * * *
     dirs:
@@ -20,14 +21,15 @@ jobs:
       - d:\sample
     ignore:
       - .tar
-  - backup-type: 2
+  - id: 2
+    backup-type: 2
     storage-id: 1
     schedule: 0 2 * * *
     dirs:
       - D:\utils
-  - backup-type: 2
+  - id: 3
+    backup-type: 2
     storage-id: 1
     schedule: 0 5 * * *
     dirs:
       - D:\sample\dir2
-

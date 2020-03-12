@@ -1,9 +1,13 @@
 package goback
 
 import (
+	"bufio"
 	"github.com/devplayg/himma/v2"
 	"github.com/devplayg/hippo/v2"
+	"github.com/ghodss/yaml"
+	"os"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -11,6 +15,7 @@ type Server struct {
 	hippo.Launcher // DO NOT REMOVE
 	appConfig      *AppConfig
 	config         *Config
+	configFile     *os.File
 }
 
 func NewServer(appConfig *AppConfig) *Server {
@@ -116,15 +121,35 @@ func (s *Server) startHttpServer() error {
 
 func (s *Server) Stop() error {
 	s.Log.Info("server has been stopped")
+	if err := s.configFile.Close(); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (s *Server) init() error {
-	config, err := loadConfig()
+	file, err := os.Open(ConfigFileName)
 	if err != nil {
 		return err
 	}
-	s.config = config
+	s.configFile = file
+
+	rows := make([]string, 0)
+	fileScanner := bufio.NewScanner(file)
+	for fileScanner.Scan() {
+		rows = append(rows, fileScanner.Text())
+	}
+
+	if err := yaml.Unmarshal([]byte(strings.Join(rows, "\n")), &s.config); err != nil {
+		return err
+	}
+	//s.config = &config
+	//spew.Dump(s.config)
+	//return &config, err
+	//file.read
+
+	//s.configFile = file
+	//s.config = config
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	log = s.Log
