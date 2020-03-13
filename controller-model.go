@@ -18,7 +18,7 @@ func (c *Controller) getChangesLog(id int) ([]byte, error) {
 
 	h := md5.Sum([]byte(summary.SrcDir))
 	key := hex.EncodeToString(h[:])
-	logPath := filepath.Join(c.dir, fmt.Sprintf(ChangesDbName, key, summary.BackupId))
+	logPath := filepath.Join(c.dbDir, fmt.Sprintf(ChangesDbName, key, summary.BackupId))
 	if _, err := os.Stat(logPath); os.IsNotExist(err) {
 		return nil, err
 	}

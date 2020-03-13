@@ -2,10 +2,15 @@ package goback
 
 import (
 	"bufio"
+	"compress/gzip"
+	"fmt"
 	"github.com/devplayg/himma/v2"
 	"github.com/devplayg/hippo/v2"
 	"github.com/ghodss/yaml"
+	"io"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -16,11 +21,16 @@ type Server struct {
 	appConfig      *AppConfig
 	config         *Config
 	configFile     *os.File
+	summaries      []*Summary
+	dbFile         *os.File
+	tempDbFile     *os.File
+	dbDir          string
 }
 
 func NewServer(appConfig *AppConfig) *Server {
 	return &Server{
 		appConfig: appConfig,
+		dbDir:     "db",
 	}
 }
 
@@ -112,7 +122,7 @@ func (s *Server) startHttpServer() error {
 	if len(addr) < 1 {
 		addr = ":8000"
 	}
-	controller := NewController(s, "db", addr, &app)
+	controller := NewController(s, addr, &app)
 	if err := controller.Start(); err != nil {
 		log.Error(err)
 	}
@@ -124,12 +134,97 @@ func (s *Server) Stop() error {
 	if err := s.configFile.Close(); err != nil {
 		return err
 	}
+
+	//if err := s.tempDbFile.Close(); err != nil {
+	//	return err
+	//}
+
+	if err := s.dbFile.Close(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (s *Server) init() error {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	log = s.Log
+
+	if err := s.loadConfig(); err != nil {
+		return fmt.Errorf("failed to load configuration; %w", err)
+	}
+
+	if err := s.initDirectories(); err != nil {
+		return fmt.Errorf("failed to initialize directorie; %w", err)
+	}
+
+	if err := s.initDatabase(); err != nil {
+		return fmt.Errorf("failed to initialize database; %w", err)
+	}
+
+	return nil
+}
+
+func (s *Server) initDirectories() error {
+	dbDir := filepath.Join(s.WorkingDir, s.dbDir)
+	if _, err := os.Stat(dbDir); os.IsNotExist(err) {
+		if err := os.Mkdir(dbDir, 0600); err != nil {
+			return fmt.Errorf("unable to create database directory: %w", err)
+		}
+	}
+	s.dbDir = dbDir
+	return nil
+}
+
+func (s *Server) initDatabase() error {
+
+	// Open compressed database file
+	path := filepath.Join(s.WorkingDir, "db", SummaryDbName)
+	dbFile, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	s.dbFile = dbFile
+
+	// Create temp database derived from compress database file
+	tempDbPath := filepath.Join(s.WorkingDir, "db", SummaryTempDbName)
+	tempDbFile, err := os.OpenFile(tempDbPath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	s.tempDbFile = tempDbFile
+
+	// Decompress compressed database file
+	zr, err := gzip.NewReader(dbFile)
+	if err != nil {
+		if err == io.EOF {
+			return nil
+		}
+		return err
+	}
+	data, err := ioutil.ReadAll(zr)
+	if err != nil {
+		return err
+	}
+	if _, err := tempDbFile.Write(data); err != nil {
+		return err
+	}
+	if err := zr.Close(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//
+//func (s *Server) findSummaries() ([]*Summary, error){
+//	var summaries []*Summary
+//	json.Unmarshal(s.tempDbFile, &summaries)
+//	return nil, nil
+//}
+
+func (s *Server) loadConfig() error {
 	file, err := os.OpenFile(ConfigFileName, os.O_RDWR, os.ModePerm)
-	//file, err := os.Open(ConfigFileName)
 	if err != nil {
 		return err
 	}
@@ -144,15 +239,10 @@ func (s *Server) init() error {
 	if err := yaml.Unmarshal([]byte(strings.Join(rows, "\n")), &s.config); err != nil {
 		return err
 	}
-
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	log = s.Log
-
 	return nil
 }
 
 func (s *Server) saveConfig() error {
-
 	if err := s.configFile.Truncate(0); err != nil {
 		return err
 	}

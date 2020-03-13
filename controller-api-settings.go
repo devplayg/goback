@@ -87,12 +87,12 @@ func (c *Controller) DoBackup(w http.ResponseWriter, r *http.Request) {
 
 	keeper := NewKeeper(job)
 	if keeper == nil {
-		Response(w, r, fmt.Errorf("keeper not found", job.Id), http.StatusInternalServerError)
+		Response(w, r, fmt.Errorf("Keeper not found", job.Id), http.StatusInternalServerError)
 		return
 	}
 
 	go func() {
-		backup := NewBackup(job.SrcDirs, keeper, job.BackupType, c.server.appConfig.Debug)
+		backup := NewBackup(job, c.dbDir, keeper, c.server.appConfig.Debug)
 		if err := backup.Start(); err != nil {
 			log.Error(err)
 		}

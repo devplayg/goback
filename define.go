@@ -18,10 +18,12 @@ const (
 	FileBackupFailed    = -1
 	FileBackupSucceeded = 1
 
-	FilesDbName    = "files-%s.db"
-	SummaryDbName  = "summary.db"
-	ChangesDbName  = "changes-%s-%d.db"
-	ConfigFileName = "config.yaml"
+	//DbDir = "db"
+	FilesDbName       = "files-%s.db"
+	SummaryDbName     = "summary.db"
+	SummaryTempDbName = "summary.db.lock"
+	ChangesDbName     = "changes-%s-%d.db"
+	ConfigFileName    = "config.yaml"
 
 	Initial     = 1
 	Incremental = 2

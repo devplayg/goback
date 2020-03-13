@@ -25,18 +25,18 @@ type Controller struct {
 	router    *mux.Router
 	summaryDb *os.File
 	addr      string
-	dir       string
+	dbDir     string
 	version   string
 	app       *himma.Config
 	summaries []*Summary
 	server    *Server
 }
 
-func NewController(server *Server, dir, addr string, app *himma.Config) *Controller {
+func NewController(server *Server, addr string, app *himma.Config) *Controller {
 	return &Controller{
 		server:    server,
 		addr:      addr,
-		dir:       dir,
+		dbDir:     server.dbDir,
 		summaries: make([]*Summary, 0),
 		version:   app.Version,
 		app:       app,
@@ -71,9 +71,9 @@ func (c *Controller) init() error {
 	uiAssetMap.Add("/assets/img/logo.png", LogoImg)
 	WebAssetMap = uiAssetMap
 
-	if err := c.loadSummaryDb(); err != nil {
-		return err
-	}
+	//if err := c.loadSummaryDb(); err != nil {
+	//	return err
+	//}
 	return nil
 }
 
@@ -182,20 +182,20 @@ func (c *Controller) Stop() error {
 	return nil
 }
 
-func (c *Controller) loadSummaryDb() error {
-	path := filepath.Join(c.dir, SummaryDbName)
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		c.server.Log.Warnf("database not found: %s", path)
-		return nil
-	}
-	var summaries []*Summary
-	if err := LoadBackupData(path, &summaries, GobEncoding); err != nil {
-		return err
-	}
-	c.summaries = summaries
-	// spew.Dump(summaries)
-	return nil
-}
+//func (c *Controller) loadSummaryDb() error {
+//	path := filepath.Join(c.dbDir, SummaryDbName)
+//	if _, err := os.Stat(path); os.IsNotExist(err) {
+//		c.server.Log.Warnf("database not found: %s", path)
+//		return nil
+//	}
+//	var summaries []*Summary
+//	if err := LoadBackupData(path, &summaries, GobEncoding); err != nil {
+//		return err
+//	}
+//	c.summaries = summaries
+//	// spew.Dump(summaries)
+//	return nil
+//}
 
 func GetAsset(w http.ResponseWriter, r *http.Request) {
 	if content, hasAsset := WebAssetMap[r.RequestURI]; hasAsset {

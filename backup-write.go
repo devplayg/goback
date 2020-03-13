@@ -117,7 +117,7 @@ func (b *Backup) writeChangesLog(lastFileMap *sync.Map) error {
 	m["failed"] = CreateFilesReportWithList(failed, b.summary.FailedSize, 0, b.rank)
 	m["deleted"] = CreateFilesReportWithList(deleted, b.summary.DeletedSize, 0, b.rank)
 
-	path := filepath.Join(b.DbDir, fmt.Sprintf(ChangesDbName, b.srcDirMap[b.summary.SrcDir].checksum, b.Id))
+	path := filepath.Join(b.dbDir, fmt.Sprintf(ChangesDbName, b.srcDirMap[b.summary.SrcDir].checksum, b.Id))
 	if err := WriteBackupData(m, path, JsonEncoding); err != nil {
 		return err
 	}

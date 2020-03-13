@@ -1,9 +1,7 @@
 package goback
 
 import (
-	"errors"
 	"fmt"
-	"github.com/devplayg/golibs/compress"
 	"github.com/devplayg/golibs/converter"
 	"github.com/dustin/go-humanize"
 	"github.com/sirupsen/logrus"
@@ -17,54 +15,58 @@ import (
 )
 
 type Backup struct {
-	Id                int
-	debug             bool
-	srcDirs           []string
-	srcDirMap         map[string]*dirInfo
-	backupDir         string
-	summaryDb         *os.File
-	summary           *Summary
-	summaries         []*Summary
-	workerCount       int
-	fileBackupEnable  bool
+	Id    int
+	debug bool
+	//srcDirs     []string
+	srcDirMap   map[string]*dirInfo
+	backupDir   string
+	summaryDb   *os.File
+	summary     *Summary
+	summaries   []*Summary
+	workerCount int
+	//fileBackupEnable  bool
 	version           int
 	started           time.Time
 	rank              int
 	minFileSizeToRank int64
 	keeper            Keeper
-	workingDir        string
-	DbDir             string
-	backupType        int
+	//workingDir        string
+	dbDir string
+	//backupType int
+	job *Job
 }
 
-func NewBackup(srcDirs []string, keeper Keeper, backupType int, debug bool) *Backup {
+func NewBackup(job *Job, dbDir string, keeper Keeper, debug bool) *Backup {
 	return &Backup{
-		srcDirs:           srcDirs,
-		srcDirMap:         make(map[string]*dirInfo),
-		debug:             debug,
-		workerCount:       runtime.GOMAXPROCS(0) * 2,
-		fileBackupEnable:  true,
+		job: job,
+		//srcDirs:     job.SrcDirs,
+		srcDirMap:   make(map[string]*dirInfo),
+		debug:       debug,
+		workerCount: runtime.GOMAXPROCS(0) * 2,
+		//fileBackupEnable:  true,
 		version:           2,
 		started:           time.Now(),
 		rank:              50,
 		minFileSizeToRank: 10 * MB,
 		keeper:            keeper,
 		backupDir:         "",
-		backupType:        backupType,
+		//backupType:        job.BackupType,
+		dbDir:     dbDir,
+		summaries: make([]*Summary, 0),
 	}
 }
 
 // Initialize backup
 func (b *Backup) init() error {
-	if err := b.initDirectories(); err != nil {
-		return err
-	}
-	if err := b.initDatabase(); err != nil {
-		return err
-	}
-	if err := b.loadSummaryDb(); err != nil {
-		return err
-	}
+	//if err := b.initDirectories(); err != nil {
+	//	return err
+	//}
+	//if err := b.initDatabase(); err != nil {
+	//	return err
+	//}
+	//if err := b.loadSummaryDb(); err != nil {
+	//	return err
+	//}
 	if err := b.initKeeper(); err != nil {
 		return err
 	}
@@ -73,49 +75,40 @@ func (b *Backup) init() error {
 }
 
 // Initialize directories
-func (b *Backup) initDirectories() error {
-	if len(b.srcDirs) < 1 {
-		return errors.New("source directories not found")
-	}
-
-	// Working directory
-	workingDir, err := filepath.Abs(os.Args[0])
-	if err != nil {
-		return err
-	}
-	b.workingDir = filepath.Dir(workingDir)
-
-	// Database directory
-	dbDir := filepath.Join(b.workingDir, "db")
-	if _, err := os.Stat(dbDir); os.IsNotExist(err) {
-		if err := os.Mkdir(dbDir, 0600); err != nil {
-			return fmt.Errorf("unable to create database directory: %w", err)
-		}
-	}
-	b.DbDir = dbDir
-
-	// Check if destination is valid
-	// if len(b.dstDir) < 1 {
-	// 	return errors.New("backup directory not found")
-	// }
-	// dstDir, err := IsValidDir(b.dstDir)
-	// if err != nil {
-	// 	return errors.New("destination directory error: " + err.Error())
-	// }
-	// b.dstDir = dstDir
-	return nil
-}
+//func (b *Backup) initDirectories() error {
+//	if len(b.srcDirs) < 1 {
+//		return errors.New("source directories not found")
+//	}
+//
+//	// Working directory
+//	workingDir, err := filepath.Abs(os.Args[0])
+//	if err != nil {
+//		return err
+//	}
+//	b.workingDir = filepath.Dir(workingDir)
+//
+//	// Database directory
+//	dbDir := filepath.Join(b.workingDir, "db")
+//	if _, err := os.Stat(dbDir); os.IsNotExist(err) {
+//		if err := os.Mkdir(dbDir, 0600); err != nil {
+//			return fmt.Errorf("unable to create database directory: %w", err)
+//		}
+//	}
+//	b.DbDir = dbDir
+//
+//	return nil
+//}
 
 // Initialize database
-func (b *Backup) initDatabase() error {
-	path := filepath.Join(b.DbDir, SummaryDbName)
-	summaryDb, err := LoadOrCreateDatabase(path)
-	if err != nil {
-		return fmt.Errorf("failed to load summary database: %w", err)
-	}
-	b.summaryDb = summaryDb
-	return nil
-}
+//func (b *Backup) initDatabase() error {
+//	path := filepath.Join(b.DbDir, SummaryDbName)
+//	summaryDb, err := LoadOrCreateDatabase(path)
+//	if err != nil {
+//		return fmt.Errorf("failed to load summary database: %w", err)
+//	}
+//	b.summaryDb = summaryDb
+//	return nil
+//}
 
 func (b *Backup) initKeeper() error {
 	if err := b.keeper.Init(b.started); err != nil {
@@ -148,7 +141,7 @@ func (b *Backup) Start() error {
 	}()
 
 	// Backup directory sequentially
-	for _, dir := range b.srcDirs {
+	for _, dir := range b.job.SrcDirs {
 		if err := b.doBackup(dir); err != nil {
 			log.Error(err)
 		}
@@ -168,10 +161,10 @@ func (b *Backup) doBackup(dirToBackup string) error {
 		return fmt.Errorf("invalid source directory: %w", err)
 	}
 
-	if _, have := b.srcDirMap[srcDir]; have {
+	if _, ok := b.srcDirMap[srcDir]; ok {
 		return nil
 	}
-	b.srcDirMap[srcDir] = newDirInfo(srcDir, b.DbDir)
+	b.srcDirMap[srcDir] = newDirInfo(srcDir, b.dbDir)
 
 	lastFileMap, err := b.loadLastFileMap(srcDir)
 	if err != nil {
@@ -179,7 +172,7 @@ func (b *Backup) doBackup(dirToBackup string) error {
 	}
 
 	// Full backup
-	if b.backupType == Full {
+	if b.job.BackupType == Full {
 		return nil
 	}
 
@@ -248,36 +241,37 @@ func (b *Backup) Stop() error {
 	return nil
 }
 
-func (b *Backup) loadSummaryDb() error {
-	data, err := ioutil.ReadAll(b.summaryDb)
-	if err != nil {
-		return err
-	}
-	if len(data) < 1 {
-		b.Id = 1
-		b.summaries = make([]*Summary, 0)
-		return nil
-	}
-
-	decompressed, err := compress.Decompress(data, compress.GZIP)
-	if err != nil {
-		return err
-	}
-
-	var summaries []*Summary
-	if err := converter.DecodeFromBytes(decompressed, &summaries); err != nil {
-		return fmt.Errorf("failed to load summary database: %w", err)
-	}
-	if len(summaries) < 1 {
-		b.Id = 1
-	} else {
-		b.Id = summaries[len(summaries)-1].BackupId + 1
-	}
-	// spew.Dump(summaries)
-
-	b.summaries = summaries
-	return nil
-}
+//
+//func (b *Backup) loadSummaryDb() error {
+//	data, err := ioutil.ReadAll(b.summaryDb)
+//	if err != nil {
+//		return err
+//	}
+//	if len(data) < 1 {
+//		b.Id = 1
+//		b.summaries = make([]*Summary, 0)
+//		return nil
+//	}
+//
+//	decompressed, err := compress.Decompress(data, compress.GZIP)
+//	if err != nil {
+//		return err
+//	}
+//
+//	var summaries []*Summary
+//	if err := converter.DecodeFromBytess(decompressed, &summaries); err != nil {
+//		return fmt.Errorf("failed to load summary database: %w", err)
+//	}
+//	if len(summaries) < 1 {
+//		b.Id = 1
+//	} else {
+//		b.Id = summaries[len(summaries)-1].BackupId + 1
+//	}
+//	// spew.Dump(summaries)
+//
+//	b.summaries = summaries
+//	return nil
+//}
 
 func (b *Backup) writeBackupState(state int) {
 	t := time.Now()

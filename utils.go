@@ -74,13 +74,13 @@ func GetHumanizedSize(size uint64) string {
 	return fmt.Sprintf("%s (%s)", str, humanized)
 }
 
-func LoadOrCreateDatabase(path string) (*os.File, error) {
-	db, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		return nil, err
-	}
-	return db, nil
-}
+//func LoadOrCreateDatabase(path string) (*os.File, error) {
+//	db, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0644)
+//	if err != nil {
+//		return nil, err
+//	}
+//	return db, nil
+//}
 
 func NewSizeDistMap() map[int64]*SizeDistStats {
 	m := make(map[int64]*SizeDistStats)

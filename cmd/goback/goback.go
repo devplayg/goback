@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/devplayg/goback"
 	"time"
 )
@@ -20,7 +21,7 @@ func main() {
 	}
 	engine := goback.NewEngine(&config)
 	if err := engine.Start(); err != nil {
-		panic(err)
+		fmt.Println(err.Error())
 	}
 
 	//config, _ := goback.LoadConfig("config.yaml")
