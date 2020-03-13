@@ -128,7 +128,8 @@ func (s *Server) Stop() error {
 }
 
 func (s *Server) init() error {
-	file, err := os.Open(ConfigFileName)
+	file, err := os.OpenFile(ConfigFileName, os.O_RDWR, os.ModePerm)
+	//file, err := os.Open(ConfigFileName)
 	if err != nil {
 		return err
 	}
@@ -153,6 +154,24 @@ func (s *Server) init() error {
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	log = s.Log
+
+	return nil
+}
+
+func (s *Server) saveConfig() error {
+
+	if err := s.configFile.Truncate(0); err != nil {
+		return err
+	}
+
+	data, err := yaml.Marshal(s.config)
+	if err != nil {
+		return err
+	}
+
+	if _, err := s.configFile.WriteAt(data, 0); err != nil {
+		return err
+	}
 
 	return nil
 }

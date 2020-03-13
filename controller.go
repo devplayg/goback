@@ -100,6 +100,7 @@ func (c *Controller) initRouter() error {
 	// Settings
 	c.router.HandleFunc("/settings/", c.DisplaySettings)
 	c.router.HandleFunc("/settings/job/id/{id:[0-9]+}", c.UpdateJob).Methods(http.MethodPatch)
+	c.router.HandleFunc("/settings/storage/id/{id:[0-9]+}", c.UpdateStorage).Methods(http.MethodPatch)
 
 	//
 	http.Handle("/", c.router)

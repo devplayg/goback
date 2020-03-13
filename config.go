@@ -20,32 +20,8 @@ type Job struct {
 	Schedule   string   `json:"schedule" schema:"schedule"`
 	Ignore     []string `json:"ignore"`
 	StorageId  int      `json:"storage-id"`
+	Enabled    bool     `json:"enabled"`
 }
-
-//
-// type Directory string
-//
-// func (d Directory) String() string {
-// 	return string(d)
-// }
-//
-// func (d Directory) IsValid() bool {
-// 	return true
-// }
-//
-// func DirsToStrSlice(dirs []Directory) []string {
-// 	arr := make([]string, 0)
-// 	for _, d := range dirs {
-// 		arr = append(arr, d.String())
-// 	}
-// 	return arr
-// }
-
-//
-// type Dir struct {
-// 	Name    string
-// 	IsValid bool
-// }
 
 type Storage struct {
 	Id       int    `json:"id"`

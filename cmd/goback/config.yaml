@@ -1,35 +1,35 @@
+jobs:
+- backup-type: 2
+  dirs:
+  - d:\utils
+  - c:\temp
+  enabled: false
+  id: 1
+  ignore: null
+  schedule: 0 1 * * *
+  storage-id: 1
+- backup-type: 2
+  dirs:
+  - D:\utils
+  enabled: true
+  id: 2
+  ignore: null
+  schedule: 0 2 * * *
+  storage-id: 1
 server:
   address: 0.0.0.0:8000
 storages:
-  - id: 1
-    protocol: local
-    dir: d:\backup
-  - id: 2
-    protocol: sftp
-    host: 10.10.10.10
-    port: 22
-    username: ddd
-    password: ddd
-    dir: d:\backup
-jobs:
-  - id: 1
-    backup-type: 2
-    storage-id: 1
-    schedule: 0 1 * * *
-    dirs:
-      - d:\data
-      - d:\sample
-    ignore:
-      - .tar
-  - id: 2
-    backup-type: 2
-    storage-id: 1
-    schedule: 0 2 * * *
-    dirs:
-      - D:\utils
-  - id: 3
-    backup-type: 2
-    storage-id: 1
-    schedule: 0 5 * * *
-    dirs:
-      - D:\sample\dir2
+- dir: c:\temp
+  host: ""
+  id: 1
+  password: ""
+  port: 0
+  protocol: local
+  username: ""
+- dir: ""
+  host: 10.10.10.10
+  id: 2
+  password: ddd
+  port: 22
+  protocol: sftp
+  username: ""
