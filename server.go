@@ -144,13 +144,6 @@ func (s *Server) init() error {
 	if err := yaml.Unmarshal([]byte(strings.Join(rows, "\n")), &s.config); err != nil {
 		return err
 	}
-	//s.config = &config
-	//spew.Dump(s.config)
-	//return &config, err
-	//file.read
-
-	//s.configFile = file
-	//s.config = config
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	log = s.Log

@@ -28,7 +28,7 @@ type SftpKeeper struct {
 	backupDir string
 }
 
-func NewSftpKeeper(storage Storage) *SftpKeeper {
+func NewSftpKeeper(storage *Storage) *SftpKeeper {
 	if storage.Port < 1 {
 		storage.Port = 22 // default SSH port
 	}

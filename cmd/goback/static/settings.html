@@ -30,76 +30,6 @@
             </small>
         </h1>
     </div>
-        <!--
-    <div class="row">
-        <div class="col-xl-6">
-            <div class="card border mb-g">
-                <div class="card-header bg-fusion-500 pr-3 d-flex align-items-center flex-wrap">
-                    <div class="card-title">Dropdowns</div>
-                    <div class="dropdown-menu dropdown-menu-animated dropdown-menu-right">
-                        <button class="dropdown-item">
-                            Option 1
-                        </button>
-                        <button class="dropdown-item">
-                            Option 2
-                        </button>
-                        <div class="dropdown-divider m-0"></div>
-                        <button class="dropdown-item">
-                            Refresh
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                </div>
-            </div>
-            <div class="card border mb-4 mb-xl-0">
-                <div class="card-header bg-trans-gradient py-2 pr-2 d-flex align-items-center flex-wrap">
-                    <div class="card-title text-white">Input</div>
-                </div>
-                <div class="card-body">
-                    <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-6">
-            <div class="card border mb-g">
-                <div class="card-header bg-danger-700 pr-3 d-flex align-items-center flex-wrap">
-                    <div class="card-title">Buttons</div>
-                </div>
-                <div class="card-body">
-                    <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                </div>
-            </div>
-            <div class="card border mb-0">
-                <div class="card-header bg-success-500 d-flex pr-2 align-items-center flex-wrap">
-                    <div class="card-title">Checkbox</div>
-                    <div class="custom-control d-flex custom-switch ml-auto">
-                        <input id="demo-switch" type="checkbox" class="custom-control-input" checked="checked">
-                        <label class="custom-control-label fw-500" for="demo-switch"></label>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-                        <ul class="nav nav-tabs" role="tablist">
-                            <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab_default-1" role="tab" aria-selected="true">Home</a></li>
-                            <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab_default-3" role="tab" aria-selected="false">Set</a></li>
-                        </ul>
-                        <div class="tab-content p-3">
-                            <div class="tab-pane fade" id="tab_default-1" role="tabpanel">
-                                ㅁㅁㅁㅁㅁ
-                            </div>
-                            <div class="tab-pane fade active show" id="tab_default-3" role="tabpanel">
-                                bbbbb
-                            </div>
-                        </div>
-        -->
-
     <div class="row">
         <div class="col-md-4">
             {{range $i, $storage := .Settings.Storages}}
@@ -107,7 +37,6 @@
                 <input type="hidden" name="id" value="{{$storage.Id}}"/>
 
                 <div class="card border mb-4">
-{{/*                    <div class="card-header bg-trans-gradient py-2 pr-2 d-flex align-items-center flex-wrap">*/}}
                     <div class="card-header bg-trans-gradient d-flex pr-2 align-items-center flex-wrap">
                         <div class="card-title text-white">
                             Storage -
@@ -120,7 +49,7 @@
                     </div>
                     <div class="card-body">
 
-                        {{if eq $storage.Protocol "local"}}
+                        {{if eq $storage.Protocol 1}}
                         <div class="form-group">
                             <label class="form-label">Local</label>
                             <input type="text" name="dir" class="form-control {{if DirExists $storage.Dir  }}is-valid{{else}}is-invalid{{end}}"  value="{{$storage.Dir}}" />
@@ -131,7 +60,7 @@
                             {{end}}
                         </div>
 
-                        {{else if eq $storage.Protocol "sftp"}}
+                        {{else if eq $storage.Protocol 4}}
                         <div class="row">
                             <div class="col-lg-8">
                                 <div class="form-group">
@@ -194,9 +123,9 @@
                             <div class="col-5">
                                 <div class="form-group">
                                     <label class="form-label">Storage</label>
-                                    <select class="form-control selectpicker" name="storageId" data-style="btn-default">
-                                        <option value="1">Local Disk</option>
-                                        <option value="2">SFTP</option>
+                                    <select class="form-control" name="storageId" data-style="btn-default">
+                                        <option value="1" {{if eq $job.StorageId 1}}selected{{end}}>Local Disk</option>
+                                        <option value="2" {{if eq $job.StorageId 2}}selected{{end}}>SFTP</option>
                                     </select>
 
                                 </div>
@@ -241,7 +170,7 @@
                         </div>
 
                         <div class="float-right">
-                            <button type="button" class="btn btn-danger">Run backup</button>
+                            <button type="button" class="btn btn-danger runBackup" data-id="{{$job.Id}}">Run backup</button>
                             <button class="btn btn-primary">Update</button>
                         </div>
                     </div>
@@ -272,7 +201,6 @@
                         console.error(jqXHR);
                         Swal.fire("Error", jqXHR.message, "warning");
                     }).always(function() {
-
                     });
                 },
             });
@@ -286,6 +214,21 @@
             e.preventDefault();
             let elm = '<div class="form-group mb-2 input-dir"><div class="row"><div class="col-10"><input type="text" name="srcDirs" class="form-control"/></div><div class="col-2"><a href="javascript:void(0);" class="removeDir"><i class="fal fa-times"></i></a></div></div></div>';
             $(this).closest(".directory").find(".dirs").append($(elm));
+        });
+
+        $(".runBackup").click(function(e) {
+            let id = $(this).data("id");
+
+            $.ajax({
+                url: "/backup/" + id + "/run",
+                type: "GET",
+            }).done(function(data) {
+                console.log(data);
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.error(jqXHR);
+                Swal.fire("Error", jqXHR.message, "warning");
+            }).always(function() {
+            });
         });
     </script>
 {{end}}

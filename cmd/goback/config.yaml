@@ -24,12 +24,12 @@ storages:
   id: 1
   password: ""
   port: 0
-  protocol: local
+  protocol: 1
   username: ""
 - dir: ""
   host: 10.10.10.10
   id: 2
   password: ddd
   port: 22
-  protocol: sftp
+  protocol: 2
   username: ""

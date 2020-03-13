@@ -16,3 +16,15 @@ type KeeperDesc struct {
 	Host     string `json:"host"`     // local or remote host
 	Dir      string `json:"dir"`
 }
+
+func NewKeeper(job *Job) Keeper {
+	if job.Storage.Protocol == LocalDisk {
+		return NewLocalKeeper(job.Storage.Dir)
+	}
+
+	if job.Storage.Protocol == Sftp {
+		return NewSftpKeeper(job.Storage)
+	}
+
+	return nil
+}
