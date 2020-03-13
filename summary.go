@@ -53,10 +53,10 @@ func (s *Summary) Marshal() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func NewSummary(summaryId, backupType int, srcDir string, b *Backup) *Summary {
+func NewSummary(backupType int, srcDir string, b *Backup) *Summary {
 	return &Summary{
-		Id:            summaryId,
-		BackupId:      b.Id,
+		//Id:            summaryId,
+		//BackupId:      b.Id,
 		Date:          time.Now(),
 		SrcDir:        srcDir,
 		WorkerCount:   b.workerCount,

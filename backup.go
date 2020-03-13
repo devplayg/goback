@@ -136,7 +136,7 @@ func (b *Backup) Start() error {
 		log.WithFields(logrus.Fields{
 			"execTime": time.Since(b.started).Seconds(),
 			"dirCount": len(b.srcDirMap),
-			"backupId": b.Id,
+			//"backupId": b.Id,
 		}).Info("backup process done")
 	}()
 
@@ -212,15 +212,15 @@ func (b *Backup) loadLastFileMap(dir string) (*sync.Map, error) {
 }
 
 func (b *Backup) issueSummary(dir string, backupType int) {
-	summaryId := len(b.summaries) + 1
-	summary := NewSummary(summaryId, backupType, dir, b)
+	//summaryId := len(b.summaries) + 1
+	summary := NewSummary(backupType, dir, b)
 	b.summaries = append(b.summaries, summary)
 	b.summary = summary
 
 	log.WithFields(logrus.Fields{
-		"summaryId": summaryId,
-		"backupId":  b.Id,
-		"dir":       dir,
+		//"summaryId": summaryId,
+		//"backupId":  b.Id,
+		"dir": dir,
 	}).Infof("backup started %s", strings.Repeat("-", 30))
 }
 

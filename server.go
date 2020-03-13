@@ -63,32 +63,6 @@ func (s *Server) Start() error {
 		<-ch
 	}()
 
-	// spew.Dump(s.config)
-
-	//for _, job := range s.config.Jobs {
-
-	// Local backup
-	//if job.Storage.Protocol == LocalDisk {
-	//	// log.WithFields(logrus.Fields{
-	//	// 	"target": "localDisk",
-	//	// 	"dir":    job.Storage.Dir,
-	//	// }).Debug("backup")
-	//	backup := NewBackup(job.SrcDirs, NewLocalKeeper(job.Storage.Dir), job.BackupType, s.appConfig.Debug)
-	//	if err := backup.Start(); err != nil {
-	//		log.Error(err)
-	//	}
-	//	continue
-	//}
-	//
-	//if job.Storage.Protocol == Sftp {
-	//	backup := NewBackup(job.SrcDirs, NewSftpKeeper(job.Storage), job.BackupType, s.appConfig.Debug)
-	//	if err := backup.Start(); err != nil {
-	//		log.Error(err)
-	//	}
-	//	continue
-	//}
-	//}
-
 	for {
 		// Do your repetitive jobs
 		// s.Log.Info("server is working on it")
@@ -213,6 +187,15 @@ func (s *Server) initDatabase() error {
 		return err
 	}
 
+	return nil
+}
+
+// Thread-safe
+func (s *Server) WriteSummaries(summaries []*Summary) error {
+	// Gob decode
+	// Issue backup-id and summary-id
+	// Append summaries
+	// Save
 	return nil
 }
 
