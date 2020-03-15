@@ -201,26 +201,33 @@ func (s *Server) initDatabase() error {
 }
 
 // Thread-safe
-func (s *Server) writeSummaries(result []*Summary) error {
+func (s *Server) writeSummaries(results []*Summary) error {
 
+	// Lock & unlock
 	s.rwMutex.Lock()
 	defer s.rwMutex.Unlock()
 
+	s.tempDbFile.Seek(0, 0)
 	data, err := ioutil.ReadAll(s.tempDbFile)
 	if err != nil {
 		return err
 	}
 
-	var summaries []*Summary
-	if len(data) > 0 {
-		if err := converter.DecodeFromBytes(data, &summaries); err != nil {
-			return err
-		}
-	} else {
-		summaries = make([]*Summary, 0)
+	// Decode gob-encoded data
+	summaries, lastBackupId, lastSummaryId, err := DecodeSummaries(data)
+	if err != nil {
+		return err
 	}
-	summaries = append(summaries, result...)
 
+	// Issue backup-id and summary-id
+	for i := range results {
+		results[i].BackupId = lastBackupId + 1
+		results[i].Id = lastSummaryId + 1
+		lastSummaryId++
+	}
+	summaries = append(summaries, results...)
+
+	// Encode data into gob-encoded data
 	encoded, err := converter.EncodeToBytes(summaries)
 	if err != nil {
 		return err
@@ -258,28 +265,19 @@ func (s *Server) writeSummaries(result []*Summary) error {
 // Thread-safe
 func (s *Server) getSummaries() ([]*Summary, error) {
 	s.rwMutex.RLock()
-
 	defer s.rwMutex.RUnlock()
 
+	s.tempDbFile.Seek(0, 0)
 	data, err := ioutil.ReadAll(s.tempDbFile)
 	if err != nil {
 		return nil, err
 	}
 
-	var summaries []*Summary
-	if len(data) > 0 {
-		if err := converter.DecodeFromBytes(data, &summaries); err != nil {
-			return nil, err
-		}
-	} else {
-		summaries = make([]*Summary, 0)
+	summaries, _, _, err := DecodeSummaries(data)
+	if err != nil {
+		return nil, err
 	}
-	// var rwMutex = new(sync.RWMutex)
-	// Gob decode
 
-	// Issue backup-id and summary-id
-	// Append summaries
-	// Save
 	return summaries, nil
 }
 

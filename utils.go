@@ -74,13 +74,13 @@ func GetHumanizedSize(size uint64) string {
 	return fmt.Sprintf("%s (%s)", str, humanized)
 }
 
-//func LoadOrCreateDatabase(path string) (*os.File, error) {
+// func LoadOrCreateDatabase(path string) (*os.File, error) {
 //	db, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0644)
 //	if err != nil {
 //		return nil, err
 //	}
 //	return db, nil
-//}
+// }
 
 func NewSizeDistMap() map[int64]*SizeDistStats {
 	m := make(map[int64]*SizeDistStats)
@@ -165,4 +165,15 @@ func FindProperBackupDirName(dir string) string {
 		}
 		i++
 	}
+}
+
+func DecodeSummaries(data []byte) ([]*Summary, int, int, error) {
+	if len(data) < 0 {
+		return make([]*Summary, 0), 0, 0, nil
+	}
+
+	var summaries []*Summary
+	err := converter.DecodeFromBytes(data, &summaries)
+
+	return summaries, summaries[0].BackupId, summaries[0].Id, err
 }
