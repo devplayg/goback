@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"compress/gzip"
 	"fmt"
+	"github.com/devplayg/golibs/compress"
+	"github.com/devplayg/golibs/converter"
 	"github.com/devplayg/himma/v2"
 	"github.com/devplayg/hippo/v2"
 	"github.com/ghodss/yaml"
@@ -13,6 +15,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -25,12 +28,14 @@ type Server struct {
 	dbFile         *os.File
 	tempDbFile     *os.File
 	dbDir          string
+	rwMutex        *sync.RWMutex
 }
 
 func NewServer(appConfig *AppConfig) *Server {
 	return &Server{
 		appConfig: appConfig,
 		dbDir:     "db",
+		rwMutex:   new(sync.RWMutex),
 	}
 }
 
@@ -109,9 +114,14 @@ func (s *Server) Stop() error {
 		return err
 	}
 
-	//if err := s.tempDbFile.Close(); err != nil {
+	// if err := s.tempDbFile.Close(); err != nil {
 	//	return err
-	//}
+	// }
+
+	if err := s.tempDbFile.Close(); err != nil {
+		return err
+	}
+	os.Remove(s.tempDbFile.Name())
 
 	if err := s.dbFile.Close(); err != nil {
 		return err
@@ -191,20 +201,94 @@ func (s *Server) initDatabase() error {
 }
 
 // Thread-safe
-func (s *Server) WriteSummaries(summaries []*Summary) error {
+func (s *Server) writeSummaries(result []*Summary) error {
+
+	s.rwMutex.Lock()
+	defer s.rwMutex.Unlock()
+
+	data, err := ioutil.ReadAll(s.tempDbFile)
+	if err != nil {
+		return err
+	}
+
+	var summaries []*Summary
+	if len(data) > 0 {
+		if err := converter.DecodeFromBytes(data, &summaries); err != nil {
+			return err
+		}
+	} else {
+		summaries = make([]*Summary, 0)
+	}
+	summaries = append(summaries, result...)
+
+	encoded, err := converter.EncodeToBytes(summaries)
+	if err != nil {
+		return err
+	}
+
+	if err := s.tempDbFile.Truncate(0); err != nil {
+		return err
+	}
+
+	if _, err := s.tempDbFile.WriteAt(encoded, 0); err != nil {
+		return err
+	}
+
+	compressed, err := compress.Compress(encoded, compress.GZIP)
+	if err != nil {
+		return fmt.Errorf("failed to compress summary data: %w", err)
+	}
+
+	if err := s.dbFile.Truncate(0); err != nil {
+		return err
+	}
+
+	if _, err := s.dbFile.WriteAt(compressed, 0); err != nil {
+		return err
+	}
+
 	// Gob decode
+
 	// Issue backup-id and summary-id
 	// Append summaries
 	// Save
 	return nil
 }
 
+// Thread-safe
+func (s *Server) getSummaries() ([]*Summary, error) {
+	s.rwMutex.RLock()
+
+	defer s.rwMutex.RUnlock()
+
+	data, err := ioutil.ReadAll(s.tempDbFile)
+	if err != nil {
+		return nil, err
+	}
+
+	var summaries []*Summary
+	if len(data) > 0 {
+		if err := converter.DecodeFromBytes(data, &summaries); err != nil {
+			return nil, err
+		}
+	} else {
+		summaries = make([]*Summary, 0)
+	}
+	// var rwMutex = new(sync.RWMutex)
+	// Gob decode
+
+	// Issue backup-id and summary-id
+	// Append summaries
+	// Save
+	return summaries, nil
+}
+
 //
-//func (s *Server) findSummaries() ([]*Summary, error){
+// func (s *Server) findSummaries() ([]*Summary, error){
 //	var summaries []*Summary
 //	json.Unmarshal(s.tempDbFile, &summaries)
 //	return nil, nil
-//}
+// }
 
 func (s *Server) loadConfig() error {
 	file, err := os.OpenFile(ConfigFileName, os.O_RDWR, os.ModePerm)

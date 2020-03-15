@@ -93,8 +93,15 @@ func (c *Controller) DoBackup(w http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		backup := NewBackup(job, c.dbDir, keeper, c.server.appConfig.Debug)
-		if err := backup.Start(); err != nil {
+		summaries, err := backup.Start()
+		if err != nil {
 			log.Error(err)
+			return
+		}
+
+		if err := c.server.writeSummaries(summaries); err != nil {
+			log.Error(err)
+			return
 		}
 	}()
 	w.Write([]byte(vars["id"]))

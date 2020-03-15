@@ -123,9 +123,9 @@ func (b *Backup) initKeeper() error {
 }
 
 // Start backup
-func (b *Backup) Start() error {
+func (b *Backup) Start() ([]*Summary, error) {
 	if err := b.init(); err != nil {
-		return err
+		return nil, err
 	}
 	// Log.WithFields(Log.Fields{
 	// 	"directory": b.dstDir,
@@ -149,10 +149,10 @@ func (b *Backup) Start() error {
 
 	// Stop backup
 	if err := b.Stop(); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return b.summaries, nil
 }
 
 func (b *Backup) doBackup(dirToBackup string) error {
@@ -231,12 +231,12 @@ func (b *Backup) Stop() error {
 		}
 	}
 
-	if err := b.writeSummary(); err != nil {
-		return err
-	}
-	if err := b.summaryDb.Close(); err != nil {
-		return err
-	}
+	// if err := b.writeSummary(); err != nil {
+	// 	return err
+	// }
+	// if err := b.summaryDb.Close(); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }

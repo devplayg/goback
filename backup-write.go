@@ -2,7 +2,6 @@ package goback
 
 import (
 	"fmt"
-	"github.com/devplayg/golibs/compress"
 	"github.com/devplayg/golibs/converter"
 	"io/ioutil"
 	"path/filepath"
@@ -59,21 +58,21 @@ func (b *Backup) writeFileMaps(fileMaps []*sync.Map) error {
 }
 
 func (b *Backup) writeSummary() error {
-	encoded, err := converter.EncodeToBytes(b.summaries)
-	if err != nil {
-		return fmt.Errorf("failed to encode summary data: %w", err)
-	}
-	compressed, err := compress.Compress(encoded, compress.GZIP)
-	if err != nil {
-		return fmt.Errorf("failed to compress summary data: %w", err)
-	}
-
-	if err := b.summaryDb.Truncate(0); err != nil {
-		return err
-	}
-	if _, err := b.summaryDb.WriteAt(compressed, 0); err != nil {
-		return err
-	}
+	// encoded, err := converter.EncodeToBytes(b.summaries)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to encode summary data: %w", err)
+	// }
+	// compressed, err := compress.Compress(encoded, compress.GZIP)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to compress summary data: %w", err)
+	// }
+	//
+	// if err := b.summaryDb.Truncate(0); err != nil {
+	// 	return err
+	// }
+	// if _, err := b.summaryDb.WriteAt(compressed, 0); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }

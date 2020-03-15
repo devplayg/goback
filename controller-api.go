@@ -9,10 +9,13 @@ import (
 )
 
 func (c *Controller) GetSummaries(w http.ResponseWriter, r *http.Request) {
-	b, err := json.Marshal(c.summaries)
+	summaries, err := c.server.getSummaries()
+	// b, err := json.Marshal(c.summaries)
 	if err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
 	}
+
+	b, _ := json.Marshal(summaries)
 
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(b)
