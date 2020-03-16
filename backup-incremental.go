@@ -1,6 +1,7 @@
 package goback
 
 import (
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"sync"
 	"sync/atomic"
@@ -9,10 +10,10 @@ import (
 func (b *Backup) startBackup(srcDir string, lastFileMap *sync.Map) error {
 	defer func() {
 		log.WithFields(logrus.Fields{
-			"execTime(": b.summary.ExecutionTime,
-			"success":   b.summary.SuccessCount,
-			"failed":    b.summary.FailedCount,
-			"dir":       b.summary.SrcDir,
+			"execTime": fmt.Sprintf("%3.1f", b.summary.ExecutionTime),
+			"success":  b.summary.SuccessCount,
+			"failed":   b.summary.FailedCount,
+			"dir":      b.summary.SrcDir,
 		}).Info("# directory backup done")
 	}()
 

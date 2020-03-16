@@ -69,16 +69,16 @@ func (c *Controller) UpdateStorage(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(vars["id"]))
 }
 
-func (c *Controller) DoBackup(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) RunBackupJob(w http.ResponseWriter, r *http.Request) {
 	var input Job
 	vars, err := c.ParseForm(r, &input)
 	if err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
 		return
 	}
-	id, _ := strconv.Atoi(vars["id"])
+	jobId, _ := strconv.Atoi(vars["id"])
 
-	if err := c.server.requestBackup(id); err != nil {
+	if err := c.server.runBackupJob(jobId); err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
 	}
 

@@ -10,6 +10,7 @@ import (
 	"github.com/devplayg/himma/v2"
 	"github.com/devplayg/hippo/v2"
 	"github.com/ghodss/yaml"
+	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"os"
@@ -202,7 +203,7 @@ func (s *Server) initDatabase() error {
 }
 
 // Thread-safe
-func (s *Server) writeSummaries(results []*Summary) error {
+func (s *Server) writeSummaries(results []*Summary) (int, error) {
 
 	// Lock & unlock
 	s.rwMutex.Lock()
@@ -211,18 +212,19 @@ func (s *Server) writeSummaries(results []*Summary) error {
 	s.tempDbFile.Seek(0, 0)
 	data, err := ioutil.ReadAll(s.tempDbFile)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// Decode gob-encoded data
 	summaries, lastBackupId, lastSummaryId, err := DecodeSummaries(data)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// Issue backup-id and summary-id
+	backupId := lastBackupId + 1
 	for i := range results {
-		results[i].BackupId = lastBackupId + 1
+		results[i].BackupId = backupId
 		results[i].Id = lastSummaryId + 1
 		lastSummaryId++
 	}
@@ -231,28 +233,28 @@ func (s *Server) writeSummaries(results []*Summary) error {
 	// Encode data into gob-encoded data
 	encoded, err := converter.EncodeToBytes(summaries)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if err := s.tempDbFile.Truncate(0); err != nil {
-		return err
+		return 0, err
 	}
 
 	if _, err := s.tempDbFile.WriteAt(encoded, 0); err != nil {
-		return err
+		return 0, err
 	}
 
 	compressed, err := compress.Compress(encoded, compress.GZIP)
 	if err != nil {
-		return fmt.Errorf("failed to compress summary data: %w", err)
+		return 0, fmt.Errorf("failed to compress summary data: %w", err)
 	}
 
 	if err := s.dbFile.Truncate(0); err != nil {
-		return err
+		return 0, err
 	}
 
 	if _, err := s.dbFile.WriteAt(compressed, 0); err != nil {
-		return err
+		return 0, err
 	}
 
 	// Gob decode
@@ -260,7 +262,7 @@ func (s *Server) writeSummaries(results []*Summary) error {
 	// Issue backup-id and summary-id
 	// Append summaries
 	// Save
-	return nil
+	return backupId, nil
 }
 
 // Thread-safe
@@ -325,8 +327,8 @@ func (s *Server) saveConfig() error {
 	return nil
 }
 
-func (s *Server) requestBackup(id int) error {
-	job := s.config.findJobById(id)
+func (s *Server) runBackupJob(jobId int) error {
+	job := s.config.findJobById(jobId)
 	if job == nil {
 		return errors.New("backup job not found")
 	}
@@ -337,34 +339,42 @@ func (s *Server) requestBackup(id int) error {
 	}
 
 	go func() {
-		backup := NewBackup(job, s.dbDir, keeper, s.appConfig.Debug)
+		started := time.Now()
+		backup := NewBackup(job, s.dbDir, keeper, started, s.appConfig.Debug)
 		summaries, err := backup.Start()
 		if err != nil {
 			log.Error(err)
 			return
 		}
 
-		if err := s.writeSummaries(summaries); err != nil {
+		backupId, err := s.writeSummaries(summaries)
+		if err != nil {
 			log.Error(err)
 			return
 		}
+
+		log.WithFields(logrus.Fields{
+			"execTime": time.Since(started).Seconds(),
+			"backupId": backupId,
+		}).Info("## all backup processes done")
 	}()
 
 	return nil
 }
 
-//func (s *Server) getChangesLog(id int) ([]byte, error) { // wondory
-//	summary := c.findSummaryById(id)
-//	if summary == nil {
-//		return nil, errors.New("summary not found")
-//	}
-//
-//	h := md5.Sum([]byte(summary.SrcDir))
-//	key := hex.EncodeToString(h[:])
-//	logPath := filepath.Join(c.dbDir, fmt.Sprintf(ChangesDbName, key, summary.BackupId))
-//	if _, err := os.Stat(logPath); os.IsNotExist(err) {
-//		return nil, err
-//	}
-//
-//	return ioutil.ReadFile(logPath)
-//}
+func (s *Server) getChangesLog(id int) ([]byte, error) { // wondory
+	//	summary := c.findSummaryById(id)
+	//	if summary == nil {
+	//		return nil, errors.New("summary not found")
+	//	}
+	//
+	//	h := md5.Sum([]byte(summary.SrcDir))
+	//	key := hex.EncodeToString(h[:])
+	//	logPath := filepath.Join(c.dbDir, fmt.Sprintf(ChangesDbName, key, summary.BackupId))
+	//	if _, err := os.Stat(logPath); os.IsNotExist(err) {
+	//		return nil, err
+	//	}
+	//
+	//	return ioutil.ReadFile(logPath)
+	return nil, nil
+}

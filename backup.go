@@ -30,14 +30,14 @@ type Backup struct {
 	job               *Job
 }
 
-func NewBackup(job *Job, dbDir string, keeper Keeper, debug bool) *Backup {
+func NewBackup(job *Job, dbDir string, keeper Keeper, started time.Time, debug bool) *Backup {
 	return &Backup{
 		job:               job,
 		srcDirMap:         make(map[string]*dirInfo),
 		debug:             debug,
 		workerCount:       runtime.GOMAXPROCS(0) * 2,
 		version:           2,
-		started:           time.Now(),
+		started:           started,
 		rank:              50,
 		minFileSizeToRank: 10 * MB,
 		keeper:            keeper,
@@ -77,17 +77,9 @@ func (b *Backup) Start() ([]*Summary, error) {
 	// 	"backupId":  b.Id,
 	// }).Infof("backup started")
 
-	defer func() {
-		log.WithFields(logrus.Fields{
-			"execTime": time.Since(b.started).Seconds(),
-			"dirCount": len(b.srcDirMap),
-			//"backupId": b.Id,
-		}).Info("## all backup processes done")
-	}()
-
 	// Backup directory sequentially
 	for _, dir := range b.job.SrcDirs {
-		if err := b.doBackupDir(dir); err != nil {
+		if err := b.startDirBackup(dir); err != nil {
 			log.Error(err)
 		}
 	}
@@ -100,8 +92,9 @@ func (b *Backup) Start() ([]*Summary, error) {
 	return b.summaries, nil
 }
 
-func (b *Backup) doBackupDir(dirToBackup string) error {
-	srcDir, err := IsValidDir(dirToBackup)
+// Sequentially
+func (b *Backup) startDirBackup(dir string) error {
+	srcDir, err := IsValidDir(dir)
 	if err != nil {
 		return fmt.Errorf("invalid source directory: %w", err)
 	}
