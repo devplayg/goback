@@ -2,7 +2,6 @@ package goback
 
 import (
 	"errors"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 	"net/http"
@@ -79,30 +78,34 @@ func (c *Controller) DoBackup(w http.ResponseWriter, r *http.Request) {
 	}
 	id, _ := strconv.Atoi(vars["id"])
 
-	job := c.server.config.findJobById(id)
-	if job == nil {
-		Response(w, r, fmt.Errorf("job(%d) not found", job.Id), http.StatusInternalServerError)
-		return
+	if err := c.server.requestBackup(id); err != nil {
+		Response(w, r, err, http.StatusInternalServerError)
 	}
 
-	keeper := NewKeeper(job)
-	if keeper == nil {
-		Response(w, r, fmt.Errorf("Keeper not found", job.Id), http.StatusInternalServerError)
-		return
-	}
-
-	go func() {
-		backup := NewBackup(job, c.dbDir, keeper, c.server.appConfig.Debug)
-		summaries, err := backup.Start()
-		if err != nil {
-			log.Error(err)
-			return
-		}
-
-		if err := c.server.writeSummaries(summaries); err != nil {
-			log.Error(err)
-			return
-		}
-	}()
+	//job := c.server.config.findJobById(id)
+	//if job == nil {
+	//	Response(w, r, fmt.Errorf("job(%d) not found", job.Id), http.StatusInternalServerError)
+	//	return
+	//}
+	//
+	//keeper := NewKeeper(job)
+	//if keeper == nil {
+	//	Response(w, r, fmt.Errorf("Keeper not found", job.Id), http.StatusInternalServerError)
+	//	return
+	//}
+	//
+	//go func() {
+	//	backup := NewBackup(job, c.dbDir, keeper, c.server.appConfig.Debug)
+	//	summaries, err := backup.Start()
+	//	if err != nil {
+	//		log.Error(err)
+	//		return
+	//	}
+	//
+	//	if err := c.server.writeSummaries(summaries); err != nil {
+	//		log.Error(err)
+	//		return
+	//	}
+	//}()
 	w.Write([]byte(vars["id"]))
 }

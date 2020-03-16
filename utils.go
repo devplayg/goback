@@ -168,12 +168,13 @@ func FindProperBackupDirName(dir string) string {
 }
 
 func DecodeSummaries(data []byte) ([]*Summary, int, int, error) {
-	if len(data) < 0 {
+	if len(data) < 1 {
 		return make([]*Summary, 0), 0, 0, nil
 	}
 
 	var summaries []*Summary
 	err := converter.DecodeFromBytes(data, &summaries)
 
-	return summaries, summaries[0].BackupId, summaries[0].Id, err
+	lastIdx := len(summaries) - 1
+	return summaries, summaries[lastIdx].BackupId, summaries[lastIdx].Id, err
 }

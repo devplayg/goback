@@ -9,15 +9,6 @@ import (
 )
 
 func (b *Backup) writeResult(currentFileMaps []*sync.Map, lastFileMap *sync.Map) error {
-	// 	defer func() {
-	// 		b.summary.LoggingTime = time.Now()
-	// 		log.WithFields(log.Fields{
-	// 			"files": b.summary.TotalCount,
-	// 			// "changeFiles": GetChangeFilesDesc(b.summary.AddedCount, b.summary.ModifiedCount, b.summary.DeletedCount),
-	// 			"execTime": time.Since(b.summary.Date).Seconds(),
-	// 		}).Info("current files recorded")
-	// 	}()
-	//
 	if lastFileMap != nil {
 		if err := b.writeChangesLog(lastFileMap); err != nil {
 			return err
@@ -55,26 +46,6 @@ func (b *Backup) writeFileMaps(fileMaps []*sync.Map) error {
 	}
 
 	return ioutil.WriteFile(b.srcDirMap[b.summary.SrcDir].dbPath, data, 0644)
-}
-
-func (b *Backup) writeSummary() error {
-	// encoded, err := converter.EncodeToBytes(b.summaries)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to encode summary data: %w", err)
-	// }
-	// compressed, err := compress.Compress(encoded, compress.GZIP)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to compress summary data: %w", err)
-	// }
-	//
-	// if err := b.summaryDb.Truncate(0); err != nil {
-	// 	return err
-	// }
-	// if _, err := b.summaryDb.WriteAt(compressed, 0); err != nil {
-	// 	return err
-	// }
-
-	return nil
 }
 
 func (b *Backup) writeChangesLog(lastFileMap *sync.Map) error {

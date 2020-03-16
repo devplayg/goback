@@ -23,19 +23,8 @@ func (b *Backup) backupFiles() error {
 }
 
 func (b *Backup) backupFileGroup(fileGroup [][]*FileWrapper) error {
-	log.WithFields(logrus.Fields{
-		"protocol": b.keeper.Description().Protocol,
-		"host":     b.keeper.Description().Host,
-	}).Debug("backup")
-
 	defer func() {
 		b.writeBackupState(Copied)
-		log.WithFields(logrus.Fields{
-			"execTime": b.summary.BackupTime.Sub(b.summary.ComparisonTime).Seconds(),
-			"success":  b.summary.SuccessCount,
-			"failed":   b.summary.FailedCount,
-			"dir":      b.summary.SrcDir,
-		}).Info("directory backup done")
 	}()
 
 	// 	log.WithFields(log.Fields{
@@ -51,7 +40,7 @@ func (b *Backup) backupFileGroup(fileGroup [][]*FileWrapper) error {
 		wg.Add(1)
 		go func(workerId int) {
 			defer wg.Done()
-			// t := time.Now()
+
 			if err := b.backupFilesInGroup(workerId, fileGroup[workerId]); err != nil {
 				log.Error(err)
 			}

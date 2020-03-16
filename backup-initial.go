@@ -1,7 +1,7 @@
 package goback
 
 func (b *Backup) generateFirstBackupData(srcDir string) error {
-	log.Infof("generating source data from %s", srcDir)
+	log.Infof("generating initial data from %s", srcDir)
 
 	// 1. Issue summary
 	b.issueSummary(srcDir, Initial)

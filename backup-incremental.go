@@ -7,31 +7,35 @@ import (
 )
 
 func (b *Backup) startBackup(srcDir string, lastFileMap *sync.Map) error {
+	defer func() {
+		log.WithFields(logrus.Fields{
+			"execTime(": b.summary.ExecutionTime,
+			"success":   b.summary.SuccessCount,
+			"failed":    b.summary.FailedCount,
+			"dir":       b.summary.SrcDir,
+		}).Info("# directory backup done")
+	}()
+
 	// 1. Issue summary
 	b.issueSummary(srcDir, Incremental)
 
-	// 2. Collect files in source directories
+	// 2. Collect files in source directories (Reading)
 	currentFileMaps, err := b.getCurrentFileMaps(srcDir)
 	if err != nil {
 		return nil
 	}
 
-	// 3. Compares file maps
+	// 3. Compares file maps (Comparing)
 	if err := b.compareFileMaps(currentFileMaps, lastFileMap); err != nil {
 		return err
 	}
 
-	// 4. Backup added or changed files
+	// 4. Backup added or changed files (Backup)
 	if err := b.backupFiles(); err != nil {
 		return err
 	}
 
-	// b.ftpSite = newFtpSite(Sftp, "127.0.0.1", 22, "/backup/", "devplayg", "devplayg123!@#")
-	// b.sendChangedFiles()
-
-	// 5. Write result
-	// bb, _ := json.MarshalIndent(b.summary, "", "  ")
-	// fmt.Println(string(bb))
+	// 5. Write result (Logging)
 	if err := b.writeResult(currentFileMaps, lastFileMap); err != nil {
 		return err
 	}

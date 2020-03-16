@@ -3,6 +3,7 @@ package goback
 import (
 	"bufio"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"github.com/devplayg/golibs/compress"
 	"github.com/devplayg/golibs/converter"
@@ -323,3 +324,47 @@ func (s *Server) saveConfig() error {
 
 	return nil
 }
+
+func (s *Server) requestBackup(id int) error {
+	job := s.config.findJobById(id)
+	if job == nil {
+		return errors.New("backup job not found")
+	}
+
+	keeper := NewKeeper(job)
+	if keeper == nil {
+		return fmt.Errorf("invalid keeper protocol %d", job.Storage.Protocol)
+	}
+
+	go func() {
+		backup := NewBackup(job, s.dbDir, keeper, s.appConfig.Debug)
+		summaries, err := backup.Start()
+		if err != nil {
+			log.Error(err)
+			return
+		}
+
+		if err := s.writeSummaries(summaries); err != nil {
+			log.Error(err)
+			return
+		}
+	}()
+
+	return nil
+}
+
+//func (s *Server) getChangesLog(id int) ([]byte, error) { // wondory
+//	summary := c.findSummaryById(id)
+//	if summary == nil {
+//		return nil, errors.New("summary not found")
+//	}
+//
+//	h := md5.Sum([]byte(summary.SrcDir))
+//	key := hex.EncodeToString(h[:])
+//	logPath := filepath.Join(c.dbDir, fmt.Sprintf(ChangesDbName, key, summary.BackupId))
+//	if _, err := os.Stat(logPath); os.IsNotExist(err) {
+//		return nil, err
+//	}
+//
+//	return ioutil.ReadFile(logPath)
+//}

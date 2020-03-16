@@ -55,8 +55,6 @@ func (s *Summary) Marshal() ([]byte, error) {
 
 func NewSummary(backupType int, srcDir string, b *Backup) *Summary {
 	return &Summary{
-		//Id:            summaryId,
-		//BackupId:      b.Id,
 		Date:          time.Now(),
 		SrcDir:        srcDir,
 		WorkerCount:   b.workerCount,
@@ -68,7 +66,6 @@ func NewSummary(backupType int, srcDir string, b *Backup) *Summary {
 		modifiedFiles: &sync.Map{},
 		deletedFiles:  &sync.Map{},
 		failedFiles:   &sync.Map{},
-		BackupDir:     b.backupDir,
 		Keeper:        b.keeper.Description(),
 	}
 }

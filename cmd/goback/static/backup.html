@@ -87,6 +87,10 @@
                         <th data-field="sizeFailed" data-sortable="true" data-formatter="byteSizeFormatter">Failed</th>
                         {{/*                        <th data-field="sizeFailed" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Failed (B)</th>*/}}
 
+                        <th data-field="backupCount" data-sortable="true" data-formatter="backupBackupCountFormatter" data-events="backupStatsEvents">Backup Files</th>
+                        <th data-field="backupSize" data-sortable="true" data-formatter="backupBackupSizeFormatter">Backup Size</th>
+
+
 
                         <th data-field="message" data-sortable="false">Read / Compare / Copy / Write</th>
 
@@ -538,6 +542,13 @@
         /*
         * Formatters
         */
+
+        function backupBackupCountFormatter(val, row, idx) {
+            return backupResultFormatter(row.countAdded + row.countModified);
+        }
+        function backupBackupSizeFormatter(val, row, idx) {
+            return byteSizeFormatter(row.sizeAdded + row.sizeModified);
+        }
 
         function backupKeeperFormatter(val, row, idx) {
             if (val === 1) {
