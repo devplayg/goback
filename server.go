@@ -2,19 +2,14 @@ package goback
 
 import (
 	"bufio"
-	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/boltdb/bolt"
-	"github.com/devplayg/golibs/compress"
-	"github.com/devplayg/golibs/converter"
 	"github.com/devplayg/himma/v2"
 	"github.com/devplayg/hippo/v2"
 	"github.com/ghodss/yaml"
 	"github.com/sirupsen/logrus"
-	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -28,12 +23,11 @@ type Server struct {
 	appConfig      *AppConfig
 	config         *Config
 	configFile     *os.File
-	summaries      []*Summary
-	dbFile         *os.File
-	tempDbFile     *os.File
-	dbDir          string
-	rwMutex        *sync.RWMutex
-	db             *bolt.DB
+	// dbFile         *os.File
+	// tempDbFile     *os.File
+	dbDir   string
+	rwMutex *sync.RWMutex
+	db      *bolt.DB
 }
 
 func NewServer(appConfig *AppConfig) *Server {
@@ -123,14 +117,14 @@ func (s *Server) Stop() error {
 	//	return err
 	// }
 
-	if err := s.tempDbFile.Close(); err != nil {
-		return err
-	}
-	os.Remove(s.tempDbFile.Name())
-
-	if err := s.dbFile.Close(); err != nil {
-		return err
-	}
+	// if err := s.tempDbFile.Close(); err != nil {
+	// 	return err
+	// }
+	// os.Remove(s.tempDbFile.Name())
+	//
+	// if err := s.dbFile.Close(); err != nil {
+	// 	return err
+	// }
 
 	if err := s.db.Close(); err != nil {
 		return err
@@ -171,40 +165,40 @@ func (s *Server) initDirectories() error {
 
 func (s *Server) initDatabase() error {
 
-	// Open compressed database file
-	path := filepath.Join(s.WorkingDir, "db", SummaryDbName)
-	dbFile, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	s.dbFile = dbFile
-
-	// Create temp database derived from compress database file
-	tempDbPath := filepath.Join(s.WorkingDir, "db", SummaryTempDbName)
-	tempDbFile, err := os.OpenFile(tempDbPath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	s.tempDbFile = tempDbFile
-
-	// Decompress compressed database file
-	zr, err := gzip.NewReader(dbFile)
-	if err != nil {
-		if err == io.EOF {
-			return nil
-		}
-		return err
-	}
-	data, err := ioutil.ReadAll(zr)
-	if err != nil {
-		return err
-	}
-	if _, err := tempDbFile.Write(data); err != nil {
-		return err
-	}
-	if err := zr.Close(); err != nil {
-		return err
-	}
+	// // Open compressed database file
+	// path := filepath.Join(s.WorkingDir, "db", SummaryDbName)
+	// dbFile, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, os.ModePerm)
+	// if err != nil {
+	// 	return err
+	// }
+	// s.dbFile = dbFile
+	//
+	// // Create temp database derived from compress database file
+	// tempDbPath := filepath.Join(s.WorkingDir, "db", SummaryTempDbName)
+	// tempDbFile, err := os.OpenFile(tempDbPath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, os.ModePerm)
+	// if err != nil {
+	// 	return err
+	// }
+	// s.tempDbFile = tempDbFile
+	//
+	// // Decompress compressed database file
+	// zr, err := gzip.NewReader(dbFile)
+	// if err != nil {
+	// 	if err == io.EOF {
+	// 		return nil
+	// 	}
+	// 	return err
+	// }
+	// data, err := ioutil.ReadAll(zr)
+	// if err != nil {
+	// 	return err
+	// }
+	// if _, err := tempDbFile.Write(data); err != nil {
+	// 	return err
+	// }
+	// if err := zr.Close(); err != nil {
+	// 	return err
+	// }
 
 	// bolt-DB
 	db, err := bolt.Open(filepath.Join(s.dbDir, s.appConfig.Name+".db"), 0600, &bolt.Options{Timeout: 1 * time.Second})
@@ -246,57 +240,57 @@ func (s *Server) issueDbId(bucketName []byte) (int, error) {
 // Thread-safe
 func (s *Server) writeSummaries(results []*Summary) error {
 
-	// Lock & unlock
-	s.rwMutex.Lock()
-	defer s.rwMutex.Unlock()
-
-	s.tempDbFile.Seek(0, 0)
-	data, err := ioutil.ReadAll(s.tempDbFile)
-	if err != nil {
-		return err
-	}
-
-	// Decode gob-encoded data
-	summaries, lastBackupId, lastSummaryId, err := DecodeSummaries(data)
-	if err != nil {
-		return err
-	}
-
-	// Issue backup-id and summary-id
-	backupId := lastBackupId + 1
-	for i := range results {
-		results[i].BackupId = backupId
-		results[i].Id = lastSummaryId + 1
-		lastSummaryId++
-	}
-	summaries = append(summaries, results...)
-
-	// Encode data into gob-encoded data
-	encoded, err := converter.EncodeToBytes(summaries)
-	if err != nil {
-		return err
-	}
-
-	if err := s.tempDbFile.Truncate(0); err != nil {
-		return err
-	}
-
-	if _, err := s.tempDbFile.WriteAt(encoded, 0); err != nil {
-		return err
-	}
-
-	compressed, err := compress.Compress(encoded, compress.GZIP)
-	if err != nil {
-		return fmt.Errorf("failed to compress summary data: %w", err)
-	}
-
-	if err := s.dbFile.Truncate(0); err != nil {
-		return err
-	}
-
-	if _, err := s.dbFile.WriteAt(compressed, 0); err != nil {
-		return err
-	}
+	// // Lock & unlock
+	// s.rwMutex.Lock()
+	// defer s.rwMutex.Unlock()
+	//
+	// s.tempDbFile.Seek(0, 0)
+	// data, err := ioutil.ReadAll(s.tempDbFile)
+	// if err != nil {
+	// 	return err
+	// }
+	//
+	// // Decode gob-encoded data
+	// summaries, lastBackupId, lastSummaryId, err := DecodeSummaries(data)
+	// if err != nil {
+	// 	return err
+	// }
+	//
+	// // Issue backup-id and summary-id
+	// backupId := lastBackupId + 1
+	// for i := range results {
+	// 	results[i].BackupId = backupId
+	// 	results[i].Id = lastSummaryId + 1
+	// 	lastSummaryId++
+	// }
+	// summaries = append(summaries, results...)
+	//
+	// // Encode data into gob-encoded data
+	// encoded, err := converter.EncodeToBytes(summaries)
+	// if err != nil {
+	// 	return err
+	// }
+	//
+	// if err := s.tempDbFile.Truncate(0); err != nil {
+	// 	return err
+	// }
+	//
+	// if _, err := s.tempDbFile.WriteAt(encoded, 0); err != nil {
+	// 	return err
+	// }
+	//
+	// compressed, err := compress.Compress(encoded, compress.GZIP)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to compress summary data: %w", err)
+	// }
+	//
+	// if err := s.dbFile.Truncate(0); err != nil {
+	// 	return err
+	// }
+	//
+	// if _, err := s.dbFile.WriteAt(compressed, 0); err != nil {
+	// 	return err
+	// }
 
 	// Save
 	return s.db.Batch(func(tx *bolt.Tx) error {
