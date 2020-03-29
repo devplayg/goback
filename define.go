@@ -39,6 +39,11 @@ const (
 	JsonEncoding = 2
 )
 
+var (
+	SummaryBucketName []byte = []byte("summary")
+	BackupGroupName   []byte = []byte("group")
+)
+
 const (
 	Started = iota + 1
 	Read

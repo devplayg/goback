@@ -3,8 +3,10 @@ package goback
 import (
 	"bufio"
 	"compress/gzip"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/boltdb/bolt"
 	"github.com/devplayg/golibs/compress"
 	"github.com/devplayg/golibs/converter"
 	"github.com/devplayg/himma/v2"
@@ -31,6 +33,7 @@ type Server struct {
 	tempDbFile     *os.File
 	dbDir          string
 	rwMutex        *sync.RWMutex
+	db             *bolt.DB
 }
 
 func NewServer(appConfig *AppConfig) *Server {
@@ -129,6 +132,10 @@ func (s *Server) Stop() error {
 		return err
 	}
 
+	if err := s.db.Close(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -199,11 +206,45 @@ func (s *Server) initDatabase() error {
 		return err
 	}
 
+	// bolt-DB
+	db, err := bolt.Open(filepath.Join(s.dbDir, s.appConfig.Name+".db"), 0600, &bolt.Options{Timeout: 1 * time.Second})
+	if err != nil {
+		return err
+	}
+	if err := db.Update(func(tx *bolt.Tx) error {
+		_, err = tx.CreateBucketIfNotExists(SummaryBucketName)
+		return err
+	}); err != nil {
+		return fmt.Errorf("failed to create summary bucket; %w", err)
+	}
+	if err := db.Update(func(tx *bolt.Tx) error {
+		_, err = tx.CreateBucketIfNotExists(BackupGroupName)
+		return err
+	}); err != nil {
+		return fmt.Errorf("failed to create summary bucket; %w", err)
+	}
+	s.db = db
+
 	return nil
 }
 
+func (s *Server) issueDbId(bucketName []byte) (int, error) {
+	var id int
+	err := s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucketName)
+		if b == nil {
+			return ErrorBucketNotFound
+		}
+		newId, _ := b.NextSequence()
+		id = int(newId)
+
+		return b.Put(iToB(id), nil)
+	})
+	return id, err
+}
+
 // Thread-safe
-func (s *Server) writeSummaries(results []*Summary) (int, error) {
+func (s *Server) writeSummaries(results []*Summary) error {
 
 	// Lock & unlock
 	s.rwMutex.Lock()
@@ -212,13 +253,13 @@ func (s *Server) writeSummaries(results []*Summary) (int, error) {
 	s.tempDbFile.Seek(0, 0)
 	data, err := ioutil.ReadAll(s.tempDbFile)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	// Decode gob-encoded data
 	summaries, lastBackupId, lastSummaryId, err := DecodeSummaries(data)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	// Issue backup-id and summary-id
@@ -233,63 +274,74 @@ func (s *Server) writeSummaries(results []*Summary) (int, error) {
 	// Encode data into gob-encoded data
 	encoded, err := converter.EncodeToBytes(summaries)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	if err := s.tempDbFile.Truncate(0); err != nil {
-		return 0, err
+		return err
 	}
 
 	if _, err := s.tempDbFile.WriteAt(encoded, 0); err != nil {
-		return 0, err
+		return err
 	}
 
 	compressed, err := compress.Compress(encoded, compress.GZIP)
 	if err != nil {
-		return 0, fmt.Errorf("failed to compress summary data: %w", err)
+		return fmt.Errorf("failed to compress summary data: %w", err)
 	}
 
 	if err := s.dbFile.Truncate(0); err != nil {
-		return 0, err
+		return err
 	}
 
 	if _, err := s.dbFile.WriteAt(compressed, 0); err != nil {
-		return 0, err
+		return err
 	}
 
-	// Gob decode
-
-	// Issue backup-id and summary-id
-	// Append summaries
 	// Save
-	return backupId, nil
+	return s.db.Batch(func(tx *bolt.Tx) error {
+		b := tx.Bucket(SummaryBucketName)
+		for i := range results {
+			// 	results[i].BackupId = backupId
+			// 	results[i].Id = lastSummaryId + 1
+			// 	lastSummaryId++
+
+			newSummaryId, _ := b.NextSequence()
+			id := int(newSummaryId)
+			results[i].Id = id
+			data, err := results[i].Marshal()
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+			if err := b.Put(iToB(id), data); err != nil {
+				log.Error(err)
+				continue
+			}
+		}
+		return nil
+	})
 }
 
 // Thread-safe
 func (s *Server) getSummaries() ([]*Summary, error) {
-	s.rwMutex.RLock()
-	defer s.rwMutex.RUnlock()
+	summaries := make([]*Summary, 0)
+	err := s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(SummaryBucketName)
+		b.ForEach(func(id, data []byte) error {
+			var summary Summary
+			if err := json.Unmarshal(data, &summary); err != nil {
+				log.Error(err)
+				return nil
+			}
+			summaries = append(summaries, &summary)
+			return nil
+		})
+		return nil
+	})
 
-	s.tempDbFile.Seek(0, 0)
-	data, err := ioutil.ReadAll(s.tempDbFile)
-	if err != nil {
-		return nil, err
-	}
-
-	summaries, _, _, err := DecodeSummaries(data)
-	if err != nil {
-		return nil, err
-	}
-
-	return summaries, nil
+	return summaries, err
 }
-
-//
-// func (s *Server) findSummaries() ([]*Summary, error){
-//	var summaries []*Summary
-//	json.Unmarshal(s.tempDbFile, &summaries)
-//	return nil, nil
-// }
 
 func (s *Server) loadConfig() error {
 	file, err := os.OpenFile(ConfigFileName, os.O_RDWR, os.ModePerm)
@@ -338,17 +390,22 @@ func (s *Server) runBackupJob(jobId int) error {
 		return fmt.Errorf("invalid keeper protocol %d", job.Storage.Protocol)
 	}
 
+	// Issue backup group id
+	backupId, err := s.issueDbId(BackupGroupName)
+	if err != nil {
+		return fmt.Errorf("failed to issue backup id; %w", err)
+	}
+
 	go func() {
 		started := time.Now()
-		backup := NewBackup(job, s.dbDir, keeper, started, s.appConfig.Debug)
+		backup := NewBackup(backupId, job, s.dbDir, keeper, started)
 		summaries, err := backup.Start()
 		if err != nil {
 			log.Error(err)
 			return
 		}
 
-		backupId, err := s.writeSummaries(summaries)
-		if err != nil {
+		if err := s.writeSummaries(summaries); err != nil {
 			log.Error(err)
 			return
 		}

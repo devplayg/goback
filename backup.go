@@ -16,7 +16,6 @@ import (
 
 type Backup struct {
 	Id                int
-	debug             bool
 	srcDirMap         map[string]*dirInfo
 	summary           *Summary
 	summaries         []*Summary
@@ -30,11 +29,11 @@ type Backup struct {
 	job               *Job
 }
 
-func NewBackup(job *Job, dbDir string, keeper Keeper, started time.Time, debug bool) *Backup {
+func NewBackup(id int, job *Job, dbDir string, keeper Keeper, started time.Time) *Backup {
 	return &Backup{
+		Id:                id,
 		job:               job,
 		srcDirMap:         make(map[string]*dirInfo),
-		debug:             debug,
 		workerCount:       runtime.GOMAXPROCS(0) * 2,
 		version:           2,
 		started:           started,

@@ -1,6 +1,7 @@
 package goback
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,6 +15,12 @@ import (
 )
 
 var ErrorBucketNotFound = errors.New("bucket not found")
+
+func iToB(v int) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(v))
+	return b
+}
 
 func IsValidDir(dir string) (string, error) {
 	absDir, err := filepath.Abs(dir)

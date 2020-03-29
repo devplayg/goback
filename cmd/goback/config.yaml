@@ -1,7 +1,7 @@
 jobs:
 - backup-type: 2
   dirs:
-  - d:\utils
+  - c:\utils
   - c:\temp
   enabled: false
   id: 1
@@ -10,7 +10,7 @@ jobs:
   storage-id: 1
 - backup-type: 2
   dirs:
-  - D:\utils
+  - c:\utils
   enabled: true
   id: 2
   ignore: null
