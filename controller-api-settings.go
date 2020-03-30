@@ -82,30 +82,5 @@ func (c *Controller) RunBackupJob(w http.ResponseWriter, r *http.Request) {
 		Response(w, r, err, http.StatusInternalServerError)
 	}
 
-	//job := c.server.config.findJobById(id)
-	//if job == nil {
-	//	Response(w, r, fmt.Errorf("job(%d) not found", job.Id), http.StatusInternalServerError)
-	//	return
-	//}
-	//
-	//keeper := NewKeeper(job)
-	//if keeper == nil {
-	//	Response(w, r, fmt.Errorf("Keeper not found", job.Id), http.StatusInternalServerError)
-	//	return
-	//}
-	//
-	//go func() {
-	//	backup := NewBackup(job, c.dbDir, keeper, c.server.appConfig.Debug)
-	//	summaries, err := backup.Start()
-	//	if err != nil {
-	//		log.Error(err)
-	//		return
-	//	}
-	//
-	//	if err := c.server.writeSummaries(summaries); err != nil {
-	//		log.Error(err)
-	//		return
-	//	}
-	//}()
 	w.Write([]byte(vars["id"]))
 }

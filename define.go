@@ -41,7 +41,8 @@ const (
 
 var (
 	SummaryBucketName []byte = []byte("summary")
-	BackupGroupName   []byte = []byte("group")
+	BackupBucketName  []byte = []byte("backup")
+	ConfigBucketName  []byte = []byte("config")
 )
 
 const (

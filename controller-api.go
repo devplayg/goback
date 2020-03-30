@@ -9,14 +9,12 @@ import (
 )
 
 func (c *Controller) GetSummaries(w http.ResponseWriter, r *http.Request) {
-	summaries, err := c.server.getSummaries()
-	// b, err := json.Marshal(c.summaries)
+	summaries, err := c.server.findSummaries()
 	if err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
 	}
 
 	b, _ := json.Marshal(summaries)
-
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(b)
 }
@@ -24,7 +22,7 @@ func (c *Controller) GetSummaries(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) GetChangesLog(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
-	data, err := c.getChangesLog(id)
+	data, err := c.server.getChangesLog(id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))

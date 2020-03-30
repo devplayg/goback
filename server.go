@@ -1,19 +1,18 @@
 package goback
 
 import (
-	"bufio"
-	"encoding/json"
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/boltdb/bolt"
 	"github.com/devplayg/himma/v2"
 	"github.com/devplayg/hippo/v2"
-	"github.com/ghodss/yaml"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
 )
@@ -137,10 +136,6 @@ func (s *Server) init() error {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	log = s.Log
 
-	if err := s.loadConfig(); err != nil {
-		return fmt.Errorf("failed to load configuration; %w", err)
-	}
-
 	if err := s.initDirectories(); err != nil {
 		return fmt.Errorf("failed to initialize directorie; %w", err)
 	}
@@ -149,6 +144,9 @@ func (s *Server) init() error {
 		return fmt.Errorf("failed to initialize database; %w", err)
 	}
 
+	if err := s.loadConfig(); err != nil {
+		return fmt.Errorf("failed to load configuration; %w", err)
+	}
 	return nil
 }
 
@@ -164,62 +162,23 @@ func (s *Server) initDirectories() error {
 }
 
 func (s *Server) initDatabase() error {
-
-	// // Open compressed database file
-	// path := filepath.Join(s.WorkingDir, "db", SummaryDbName)
-	// dbFile, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, os.ModePerm)
-	// if err != nil {
-	// 	return err
-	// }
-	// s.dbFile = dbFile
-	//
-	// // Create temp database derived from compress database file
-	// tempDbPath := filepath.Join(s.WorkingDir, "db", SummaryTempDbName)
-	// tempDbFile, err := os.OpenFile(tempDbPath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, os.ModePerm)
-	// if err != nil {
-	// 	return err
-	// }
-	// s.tempDbFile = tempDbFile
-	//
-	// // Decompress compressed database file
-	// zr, err := gzip.NewReader(dbFile)
-	// if err != nil {
-	// 	if err == io.EOF {
-	// 		return nil
-	// 	}
-	// 	return err
-	// }
-	// data, err := ioutil.ReadAll(zr)
-	// if err != nil {
-	// 	return err
-	// }
-	// if _, err := tempDbFile.Write(data); err != nil {
-	// 	return err
-	// }
-	// if err := zr.Close(); err != nil {
-	// 	return err
-	// }
-
-	// bolt-DB
 	db, err := bolt.Open(filepath.Join(s.dbDir, s.appConfig.Name+".db"), 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		return err
 	}
-	if err := db.Update(func(tx *bolt.Tx) error {
-		_, err = tx.CreateBucketIfNotExists(SummaryBucketName)
-		return err
-	}); err != nil {
-		return fmt.Errorf("failed to create summary bucket; %w", err)
-	}
-	if err := db.Update(func(tx *bolt.Tx) error {
-		_, err = tx.CreateBucketIfNotExists(BackupGroupName)
-		return err
-	}); err != nil {
-		return fmt.Errorf("failed to create summary bucket; %w", err)
-	}
 	s.db = db
-
-	return nil
+	return db.Batch(func(tx *bolt.Tx) error {
+		if _, err := tx.CreateBucketIfNotExists(SummaryBucketName); err != nil {
+			return fmt.Errorf("failed to create summary bucket; %w", err)
+		}
+		if _, err := tx.CreateBucketIfNotExists(BackupBucketName); err != nil {
+			return fmt.Errorf("failed to create backup group bucket; %w", err)
+		}
+		if _, err := tx.CreateBucketIfNotExists(ConfigBucketName); err != nil {
+			return fmt.Errorf("failed to create backup group bucket; %w", err)
+		}
+		return nil
+	})
 }
 
 func (s *Server) issueDbId(bucketName []byte) (int, error) {
@@ -237,68 +196,10 @@ func (s *Server) issueDbId(bucketName []byte) (int, error) {
 	return id, err
 }
 
-// Thread-safe
 func (s *Server) writeSummaries(results []*Summary) error {
-
-	// // Lock & unlock
-	// s.rwMutex.Lock()
-	// defer s.rwMutex.Unlock()
-	//
-	// s.tempDbFile.Seek(0, 0)
-	// data, err := ioutil.ReadAll(s.tempDbFile)
-	// if err != nil {
-	// 	return err
-	// }
-	//
-	// // Decode gob-encoded data
-	// summaries, lastBackupId, lastSummaryId, err := DecodeSummaries(data)
-	// if err != nil {
-	// 	return err
-	// }
-	//
-	// // Issue backup-id and summary-id
-	// backupId := lastBackupId + 1
-	// for i := range results {
-	// 	results[i].BackupId = backupId
-	// 	results[i].Id = lastSummaryId + 1
-	// 	lastSummaryId++
-	// }
-	// summaries = append(summaries, results...)
-	//
-	// // Encode data into gob-encoded data
-	// encoded, err := converter.EncodeToBytes(summaries)
-	// if err != nil {
-	// 	return err
-	// }
-	//
-	// if err := s.tempDbFile.Truncate(0); err != nil {
-	// 	return err
-	// }
-	//
-	// if _, err := s.tempDbFile.WriteAt(encoded, 0); err != nil {
-	// 	return err
-	// }
-	//
-	// compressed, err := compress.Compress(encoded, compress.GZIP)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to compress summary data: %w", err)
-	// }
-	//
-	// if err := s.dbFile.Truncate(0); err != nil {
-	// 	return err
-	// }
-	//
-	// if _, err := s.dbFile.WriteAt(compressed, 0); err != nil {
-	// 	return err
-	// }
-
-	// Save
 	return s.db.Batch(func(tx *bolt.Tx) error {
 		b := tx.Bucket(SummaryBucketName)
 		for i := range results {
-			// 	results[i].BackupId = backupId
-			// 	results[i].Id = lastSummaryId + 1
-			// 	lastSummaryId++
 
 			newSummaryId, _ := b.NextSequence()
 			id := int(newSummaryId)
@@ -317,62 +218,6 @@ func (s *Server) writeSummaries(results []*Summary) error {
 	})
 }
 
-// Thread-safe
-func (s *Server) getSummaries() ([]*Summary, error) {
-	summaries := make([]*Summary, 0)
-	err := s.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket(SummaryBucketName)
-		b.ForEach(func(id, data []byte) error {
-			var summary Summary
-			if err := json.Unmarshal(data, &summary); err != nil {
-				log.Error(err)
-				return nil
-			}
-			summaries = append(summaries, &summary)
-			return nil
-		})
-		return nil
-	})
-
-	return summaries, err
-}
-
-func (s *Server) loadConfig() error {
-	file, err := os.OpenFile(ConfigFileName, os.O_RDWR, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	s.configFile = file
-
-	rows := make([]string, 0)
-	fileScanner := bufio.NewScanner(file)
-	for fileScanner.Scan() {
-		rows = append(rows, fileScanner.Text())
-	}
-
-	if err := yaml.Unmarshal([]byte(strings.Join(rows, "\n")), &s.config); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *Server) saveConfig() error {
-	if err := s.configFile.Truncate(0); err != nil {
-		return err
-	}
-
-	data, err := yaml.Marshal(s.config)
-	if err != nil {
-		return err
-	}
-
-	if _, err := s.configFile.WriteAt(data, 0); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (s *Server) runBackupJob(jobId int) error {
 	job := s.config.findJobById(jobId)
 	if job == nil {
@@ -385,7 +230,7 @@ func (s *Server) runBackupJob(jobId int) error {
 	}
 
 	// Issue backup group id
-	backupId, err := s.issueDbId(BackupGroupName)
+	backupId, err := s.issueDbId(BackupBucketName)
 	if err != nil {
 		return fmt.Errorf("failed to issue backup id; %w", err)
 	}
@@ -414,18 +259,18 @@ func (s *Server) runBackupJob(jobId int) error {
 }
 
 func (s *Server) getChangesLog(id int) ([]byte, error) { // wondory
-	//	summary := c.findSummaryById(id)
-	//	if summary == nil {
-	//		return nil, errors.New("summary not found")
-	//	}
-	//
-	//	h := md5.Sum([]byte(summary.SrcDir))
-	//	key := hex.EncodeToString(h[:])
-	//	logPath := filepath.Join(c.dbDir, fmt.Sprintf(ChangesDbName, key, summary.BackupId))
-	//	if _, err := os.Stat(logPath); os.IsNotExist(err) {
-	//		return nil, err
-	//	}
-	//
-	//	return ioutil.ReadFile(logPath)
-	return nil, nil
+	// get summary
+	summary, err := s.findSummaryById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	// read changes data in file
+	h := md5.Sum([]byte(summary.SrcDir))
+	key := hex.EncodeToString(h[:])
+	logPath := filepath.Join(s.dbDir, fmt.Sprintf(ChangesDbName, key, summary.BackupId))
+	if _, err := os.Stat(logPath); os.IsNotExist(err) {
+		return nil, err
+	}
+	return ioutil.ReadFile(logPath)
 }

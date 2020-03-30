@@ -1,10 +1,5 @@
 package goback
 
-import (
-	"github.com/ghodss/yaml"
-	"io/ioutil"
-)
-
 type Config struct {
 	Server struct {
 		Address string `json:"address"`
@@ -24,14 +19,15 @@ type Job struct {
 	Storage    *Storage `json:"-"`
 }
 
-func (c *Config) Save() error {
-	b, err := yaml.Marshal(c)
-	if err != nil {
-		return err
-	}
-
-	return ioutil.WriteFile("config_.yaml", b, 0644)
-}
+//
+// func (c *Config) Save() error {
+// 	b, err := yaml.Marshal(c)
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	return ioutil.WriteFile("config_.yaml", b, 0644)
+// }
 
 type Storage struct {
 	Id       int    `json:"id"`

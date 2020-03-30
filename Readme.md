@@ -20,8 +20,7 @@ s.runBackupJob(jobId)
 				b.writeResult(
 					b.writeChangesLog(lastFileMap)
 					b.writeFileMaps(currentFileMaps)
-	b.writeBackupState(Logged)
-s.writeSummaries(summaries)
+    s.writeSummaries(summaries)
 	backupId := lastBackupId + 1
 	
 	
@@ -33,3 +32,8 @@ summary
 * value: Summary
 
 group
+
+* key: Backup.Id
+* value: nil
+
+config
