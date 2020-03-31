@@ -27,6 +27,7 @@ func (c *Controller) UpdateJob(w http.ResponseWriter, r *http.Request) {
 	}
 	id, _ := strconv.Atoi(vars["id"])
 
+	input.Tune()
 	for i, job := range c.server.config.Jobs {
 		if job.Id == id {
 			c.server.config.Jobs[i] = input
@@ -49,6 +50,7 @@ func (c *Controller) UpdateStorage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id, _ := strconv.Atoi(vars["id"])
+	input.Tune()
 
 	for i, job := range c.server.config.Storages {
 		if job.Id == id {

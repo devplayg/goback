@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 var ErrorBucketNotFound = errors.New("bucket not found")
@@ -49,6 +50,20 @@ func DirExists(name string) bool {
 		return false
 	}
 	return true
+}
+
+func UniqueStrings(arr []string) []string {
+	keys := make(map[string]bool)
+	list := make([]string, 0)
+	for _, e := range arr {
+		e = strings.TrimSpace(e)
+		if _, value := keys[e]; !value {
+			keys[e] = true
+			list = append(list, e)
+		}
+	}
+
+	return list
 }
 
 //

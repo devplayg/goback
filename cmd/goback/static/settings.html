@@ -51,7 +51,7 @@
 
                         {{if eq $storage.Protocol 1}}
                         <div class="form-group">
-                            <label class="form-label">Local</label>
+                            <label class="form-label">Local Directory Path</label>
                             <input type="text" name="dir" class="form-control {{if DirExists $storage.Dir  }}is-valid{{else}}is-invalid{{end}}"  value="{{$storage.Dir}}" />
                             {{if eq (DirExists $storage.Dir) false }}
                             <div class="invalid-feedback">

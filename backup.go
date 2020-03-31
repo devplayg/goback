@@ -59,7 +59,7 @@ func (b *Backup) initKeeper() error {
 		log.WithFields(logrus.Fields{
 			"protocol": b.keeper.Description().Protocol,
 			"host":     b.keeper.Description().Host,
-		}).Errorf("failed to initialize the keeper: %s", err.Error())
+		}).Errorf("failed to initialize the keeper; %s", err.Error())
 		return err
 	}
 

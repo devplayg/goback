@@ -1,5 +1,10 @@
 package goback
 
+import (
+	"fmt"
+	"strings"
+)
+
 type Config struct {
 	Server struct {
 		Address string `json:"address"`
@@ -17,6 +22,19 @@ type Job struct {
 	StorageId  int      `json:"storage-id"`
 	Enabled    bool     `json:"enabled"`
 	Storage    *Storage `json:"-"`
+}
+
+func (j *Job) IsValid() error {
+	if len(j.SrcDirs) < 1 {
+		return fmt.Errorf("empty source directory")
+	}
+	return nil
+}
+
+func (j *Job) Tune() {
+	j.SrcDirs = UniqueStrings(j.SrcDirs)
+	j.Schedule = strings.TrimSpace(j.Schedule)
+	j.Storage.Tune()
 }
 
 //
@@ -37,6 +55,16 @@ type Storage struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Dir      string `json:"dir"`
+}
+
+func (s *Storage) Tune() {
+	if s == nil {
+		return
+	}
+	s.Host = strings.TrimSpace(s.Host)
+	s.Username = strings.TrimSpace(s.Username)
+	s.Password = strings.TrimSpace(s.Password)
+	s.Dir = strings.TrimSpace(s.Dir)
 }
 
 func (c *Config) findJobById(id int) *Job {
