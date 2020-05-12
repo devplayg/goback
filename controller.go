@@ -32,10 +32,10 @@ type Controller struct {
 	server    *Server
 }
 
-func NewController(server *Server, addr string, app *himma.Config) *Controller {
+func NewController(server *Server, app *himma.Config) *Controller {
 	return &Controller{
 		server:    server,
-		addr:      addr,
+		addr:      server.appConfig.Address,
 		dbDir:     server.dbDir,
 		summaries: make([]*Summary, 0),
 		version:   app.Version,

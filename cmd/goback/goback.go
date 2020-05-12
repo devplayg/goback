@@ -18,6 +18,7 @@ func main() {
 		Company:     "dev",
 		Debug:       true,
 		Trace:       false,
+		Address:     ":8000",
 	}
 	engine := goback.NewEngine(&config)
 	if err := engine.Start(); err != nil {

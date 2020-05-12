@@ -23,7 +23,7 @@ const (
 	SummaryDbName     = "summary.db"
 	SummaryTempDbName = "summary.db.lock"
 	ChangesDbName     = "changes-%s-%d.db"
-	ConfigFileName    = "config.yaml"
+	//ConfigFileName    = "config. yaml"
 
 	Initial     = 1
 	Incremental = 2
@@ -40,9 +40,11 @@ const (
 )
 
 var (
-	SummaryBucketName []byte = []byte("summary")
-	BackupBucketName  []byte = []byte("backup")
-	ConfigBucketName  []byte = []byte("config")
+	SummaryBucketName = []byte("summary")
+	BackupBucketName  = []byte("backup")
+	ConfigBucketName  = []byte("config")
+	KeyStorage        = []byte("storage")
+	KeyJobs           = []byte("jobs")
 )
 
 const (

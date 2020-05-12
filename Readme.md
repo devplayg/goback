@@ -37,3 +37,8 @@ group
 * value: nil
 
 config
+
+|Key|Value|
+|---|---|
+|storages|JSON|
+|jobs|JSON|

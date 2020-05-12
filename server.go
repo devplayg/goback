@@ -31,6 +31,10 @@ type Server struct {
 
 func NewServer(appConfig *AppConfig) *Server {
 	return &Server{
+		config: &Config{
+			Storages: nil,
+			Jobs:     nil,
+		},
 		appConfig: appConfig,
 		dbDir:     "db",
 		rwMutex:   new(sync.RWMutex),
@@ -95,11 +99,11 @@ func (s *Server) startHttpServer() error {
 		Company:     s.appConfig.Company,
 	}
 
-	addr := s.config.Server.Address
-	if len(addr) < 1 {
-		addr = ":8000"
-	}
-	controller := NewController(s, addr, &app)
+	//addr := s.config.Server.Address
+	//if len(addr) < 1 {
+	//	addr = ":8000"
+	//}
+	controller := NewController(s, &app)
 	if err := controller.Start(); err != nil {
 		log.Error(err)
 	}

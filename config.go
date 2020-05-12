@@ -6,9 +6,6 @@ import (
 )
 
 type Config struct {
-	Server struct {
-		Address string `json:"address"`
-	} `json:"server"`
 	Storages []Storage `json:"storages"`
 	Jobs     []Job     `json:"jobs"`
 }
@@ -97,6 +94,7 @@ func (c *Config) findStorageById(id int) *Storage {
 }
 
 type AppConfig struct {
+	Address     string
 	Name        string
 	Description string
 	Version     string
