@@ -2,23 +2,26 @@ package goback
 
 import (
 	"fmt"
+	"github.com/robfig/cron/v3"
 	"strings"
 )
 
 type Config struct {
-	Storages []Storage `json:"storages"`
-	Jobs     []Job     `json:"jobs"`
+	Storages []*Storage `json:"storages"`
+	Jobs     []*Job     `json:"jobs"`
 }
 
 type Job struct {
-	Id         int      `json:"id" schema:"id"`
-	BackupType int      `json:"backup-type"`
-	SrcDirs    []string `json:"dirs" schema:"srcDirs"`
-	Schedule   string   `json:"schedule" schema:"schedule"`
-	Ignore     []string `json:"ignore"`
-	StorageId  int      `json:"storage-id"`
-	Enabled    bool     `json:"enabled"`
-	Storage    *Storage `json:"-"`
+	Id          int      `json:"id" schema:"id"`
+	BackupType  int      `json:"backup-type"`
+	SrcDirs     []string `json:"dirs" schema:"srcDirs"`
+	Schedule    string   `json:"schedule" schema:"schedule"`
+	Ignore      []string `json:"ignore"`
+	StorageId   int      `json:"storage-id"`
+	Enabled     bool     `json:"enabled"`
+	Storage     *Storage `json:"-"`
+	running     bool
+	cronEntryId *cron.EntryID
 }
 
 func (j *Job) IsValid() error {
@@ -64,34 +67,33 @@ func (s *Storage) Tune() {
 	s.Dir = strings.TrimSpace(s.Dir)
 }
 
-func (c *Config) findJobById(id int) *Job {
-	var job *Job
-	for i, j := range c.Jobs {
-		if j.Id == id {
-			job = &c.Jobs[i]
-			break
-		}
-	}
-
-	if job != nil {
-		storage := c.findStorageById(job.StorageId)
-		if storage == nil {
-			log.Error("Storage not found")
-			return nil
-		}
-		job.Storage = storage
-	}
-	return job
-}
-
-func (c *Config) findStorageById(id int) *Storage {
-	for i, storage := range c.Storages {
-		if storage.Id == id {
-			return &c.Storages[i]
-		}
-	}
-	return nil
-}
+//
+//func (c *Config) findJobById(id int) *Job {
+//	var job *Job
+//
+//	c.rwMutex.RLock()
+//	defer c.rwMutex.RUnlock()
+//
+//	for i, j := range c.Jobs {
+//		if j.Id == id {
+//			job = &c.Jobs[i]
+//			break
+//		}
+//	}
+//	if job != nil {
+//		job.Storage = c.findStorageById(job.StorageId)
+//	}
+//	return job
+//}
+//
+//func (c *Config) findStorageById(id int) *Storage {
+//	for i, storage := range c.Storages {
+//		if storage.Id == id {
+//			return &c.Storages[i]
+//		}
+//	}
+//	return nil
+//}
 
 type AppConfig struct {
 	Address     string

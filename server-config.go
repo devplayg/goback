@@ -20,12 +20,12 @@ func (s *Server) loadConfig() error {
 			return nil
 		}
 
-		s.config.Storages = []Storage{
+		s.config.Storages = []*Storage{
 			{Id: 1, Protocol: LocalDisk, Host: "", Port: 0, Username: "", Password: "", Dir: ""},
 			{Id: 2, Protocol: Sftp, Host: "", Port: 0, Username: "", Password: "", Dir: ""},
 		}
 
-		s.config.Jobs = []Job{
+		s.config.Jobs = []*Job{
 			{Id: 1, BackupType: LocalDisk, SrcDirs: nil, Schedule: "", Ignore: nil, StorageId: 1, Enabled: false, Storage: nil},
 			{Id: 2, BackupType: LocalDisk, SrcDirs: nil, Schedule: "", Ignore: nil, StorageId: 1, Enabled: false, Storage: nil},
 		}

@@ -51,8 +51,8 @@ func NewSftpKeeper(storage *Storage) *SftpKeeper {
 func (k *SftpKeeper) Init(t time.Time) error {
 	k.date = t
 	var auths []ssh.AuthMethod
-	if aconn, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
-		auths = append(auths, ssh.PublicKeysCallback(agent.NewClient(aconn).Signers))
+	if conn, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
+		auths = append(auths, ssh.PublicKeysCallback(agent.NewClient(conn).Signers))
 	}
 	auths = append(auths, ssh.Password(k.password))
 	config := ssh.ClientConfig{
@@ -60,13 +60,13 @@ func (k *SftpKeeper) Init(t time.Time) error {
 		Auth:            auths,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
-	conn, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", k.host, k.port), &config)
+	sshConn, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", k.host, k.port), &config)
 	if err != nil {
 		return fmt.Errorf("failed to connect to SFTP server: %w", err)
 	}
 
 	size := 1 << 15
-	ftpConn, err := sftp.NewClient(conn, sftp.MaxPacket(size))
+	ftpConn, err := sftp.NewClient(sshConn, sftp.MaxPacket(size))
 	if err != nil {
 		return fmt.Errorf("failed to create to SFTP client: %w", err)
 	}
@@ -151,6 +151,7 @@ func (k *SftpKeeper) keep(path string) (string, float64, error) {
 		return "", 0, fmt.Errorf("copy: expected %v bytes, got %d", size, n)
 	}
 	log.Debugf("wrote %v bytes in %s", size, time.Since(t1))
+	k.conn.Chtimes(dstPath, fi.ModTime(), fi.ModTime())
 	return dstPath, time.Since(t).Seconds(), nil
 }
 

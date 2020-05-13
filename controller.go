@@ -171,7 +171,9 @@ func Response(w http.ResponseWriter, r *http.Request, err error, statusCode int)
 		}).Error(err)
 	}
 	w.Header().Add("Content-Type", "application/json")
-	b, _ := json.Marshal(err)
+	b, _ := json.Marshal(map[string]interface{}{
+		"error": err.Error(),
+	})
 	w.WriteHeader(statusCode)
 	w.Write(b)
 }

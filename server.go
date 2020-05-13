@@ -8,6 +8,7 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/devplayg/himma/v2"
 	"github.com/devplayg/hippo/v2"
+	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
@@ -22,11 +23,10 @@ type Server struct {
 	appConfig      *AppConfig
 	config         *Config
 	configFile     *os.File
-	// dbFile         *os.File
-	// tempDbFile     *os.File
-	dbDir   string
-	rwMutex *sync.RWMutex
-	db      *bolt.DB
+	dbDir          string
+	rwMutex        *sync.RWMutex
+	db             *bolt.DB
+	cron           *cron.Cron
 }
 
 func NewServer(appConfig *AppConfig) *Server {
@@ -65,6 +65,8 @@ func (s *Server) Start() error {
 		}
 		close(ch)
 	}()
+
+	s.cron.Start()
 
 	defer func() {
 		<-ch
@@ -129,6 +131,8 @@ func (s *Server) Stop() error {
 	// 	return err
 	// }
 
+	s.cron.Stop()
+
 	if err := s.db.Close(); err != nil {
 		return err
 	}
@@ -151,6 +155,18 @@ func (s *Server) init() error {
 	if err := s.loadConfig(); err != nil {
 		return fmt.Errorf("failed to load configuration; %w", err)
 	}
+
+	if err := s.initScheduler(); err != nil {
+		return fmt.Errorf("failed to initialize scheduler; %w", err)
+	}
+	return nil
+}
+
+func (s *Server) initScheduler() error {
+	loc := time.Local
+	s.cron = cron.New(cron.WithLocation(loc))
+	//var secondParser = cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.DowOptional)
+	//cron.NewParser()
 	return nil
 }
 
@@ -223,7 +239,7 @@ func (s *Server) writeSummaries(results []*Summary) error {
 }
 
 func (s *Server) runBackupJob(jobId int) error {
-	job := s.config.findJobById(jobId)
+	job, _ := s.findJobById(jobId)
 	if job == nil {
 		return errors.New("backup job not found")
 	}
@@ -233,13 +249,29 @@ func (s *Server) runBackupJob(jobId int) error {
 		return fmt.Errorf("invalid keeper protocol %d", job.Storage.Protocol)
 	}
 
-	// Issue backup group id
-	backupId, err := s.issueDbId(BackupBucketName)
-	if err != nil {
-		return fmt.Errorf("failed to issue backup id; %w", err)
+	s.rwMutex.Lock()
+	defer s.rwMutex.Unlock()
+	log.WithFields(logrus.Fields{
+		"id":      job.Id,
+		"running": job.running,
+	}).Debug("job")
+	if job.running {
+		return fmt.Errorf("job-%d is already running now", job.Id)
 	}
+	job.running = true
 
 	go func() {
+		defer func() {
+			job.running = false
+		}()
+		time.Sleep(63 * time.Second)
+		// Issue backup group id
+		backupId, err := s.issueDbId(BackupBucketName)
+		if err != nil {
+			log.Error(fmt.Errorf("failed to issue backup id; %w", err))
+			return
+		}
+
 		started := time.Now()
 		backup := NewBackup(backupId, job, s.dbDir, keeper, started)
 		summaries, err := backup.Start()
@@ -277,4 +309,33 @@ func (s *Server) getChangesLog(id int) ([]byte, error) { // wondory
 		return nil, err
 	}
 	return ioutil.ReadFile(logPath)
+}
+
+func (s *Server) findJobById(jobId int) (*Job, int) {
+	var job *Job
+	var idx int
+
+	s.rwMutex.RLock()
+	defer s.rwMutex.RUnlock()
+
+	for i, j := range s.config.Jobs {
+		if j.Id == jobId {
+			job = s.config.Jobs[i]
+			idx = i
+			break
+		}
+	}
+	if job != nil {
+		job.Storage = s.findStorageById(job.StorageId)
+	}
+	return job, idx
+}
+
+func (s *Server) findStorageById(id int) *Storage {
+	for i, storage := range s.config.Storages {
+		if storage.Id == id {
+			return s.config.Storages[i]
+		}
+	}
+	return nil
 }

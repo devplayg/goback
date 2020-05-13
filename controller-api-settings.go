@@ -2,8 +2,11 @@ package goback
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
+	"github.com/robfig/cron/v3"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
 )
@@ -25,15 +28,60 @@ func (c *Controller) UpdateJob(w http.ResponseWriter, r *http.Request) {
 		Response(w, r, err, http.StatusInternalServerError)
 		return
 	}
-	id, _ := strconv.Atoi(vars["id"])
-
+	jobId, _ := strconv.Atoi(vars["id"])
 	input.Tune()
-	for i, job := range c.server.config.Jobs {
-		if job.Id == id {
-			c.server.config.Jobs[i] = input
-			break
-		}
+
+	// Parse cron
+	cronParser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.DowOptional)
+	_, err = cronParser.Parse(input.Schedule)
+	if err != nil {
+		Response(w, r, fmt.Errorf("failed to parse scheduler; %w", err), http.StatusInternalServerError)
+		return
 	}
+
+	job, jobIdx := c.server.findJobById(jobId)
+	if job == nil {
+		Response(w, r, errors.New("job not found"), http.StatusInternalServerError)
+		return
+	}
+	c.server.config.Jobs[jobIdx] = &input
+
+	c.server.rwMutex.Lock()
+	defer func() {
+		c.server.rwMutex.Unlock()
+	}()
+
+	if job.running {
+		Response(w, r, errors.New("job is running"), http.StatusInternalServerError)
+		return
+	}
+
+	if job.cronEntryId != nil {
+		log.WithFields(logrus.Fields{
+			//"schedule":    job.Schedule,
+			"jobId":       job.Id,
+			"cronEntryId": job.cronEntryId,
+		}).Info("SCHEDULE REMOVED")
+		c.server.cron.Remove(*job.cronEntryId)
+	}
+	entryId, err := c.server.cron.AddFunc(job.Schedule, func() {
+		log.WithFields(logrus.Fields{
+			"jobId": job.Id,
+		}).Info("RUN SCHEDULER")
+		if err := c.server.runBackupJob(jobId); err != nil {
+			log.Error(err)
+		}
+	})
+	log.WithFields(logrus.Fields{
+		"schedule":    job.Schedule,
+		"jobId":       job.Id,
+		"cronEntryId": entryId,
+	}).Info("SCHEDULE RESERVED")
+	if err != nil {
+		Response(w, r, err, http.StatusInternalServerError)
+		return
+	}
+	input.cronEntryId = &entryId
 
 	if err := c.server.saveConfig(); err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
@@ -59,7 +107,7 @@ func (c *Controller) UpdateStorage(w http.ResponseWriter, r *http.Request) {
 			} else if job.Id == 2 {
 				input.Protocol = Sftp
 			}
-			c.server.config.Storages[i] = input
+			c.server.config.Storages[i] = &input
 			break
 		}
 	}
@@ -82,6 +130,7 @@ func (c *Controller) RunBackupJob(w http.ResponseWriter, r *http.Request) {
 
 	if err := c.server.runBackupJob(jobId); err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
+		return
 	}
 
 	w.Write([]byte(vars["id"]))

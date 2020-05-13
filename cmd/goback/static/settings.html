@@ -48,7 +48,6 @@
                         </div>
                     </div>
                     <div class="card-body">
-
                         {{if eq $storage.Protocol 1}}
                         <div class="form-group">
                             <label class="form-label">Local Directory Path</label>
@@ -199,7 +198,7 @@
                         window.location.reload();
                     }).fail(function (jqXHR, textStatus, errorThrown) {
                         console.error(jqXHR);
-                        Swal.fire("Error", jqXHR.message, "warning");
+                        Swal.fire("Error", jqXHR.responseJSON.error, "warning");
                     }).always(function() {
                     });
                 },
@@ -226,7 +225,7 @@
                 console.log(data);
             }).fail(function (jqXHR, textStatus, errorThrown) {
                 console.error(jqXHR);
-                Swal.fire("Error", jqXHR.message, "warning");
+                Swal.fire("Error", jqXHR.responseJSON.error, "warning");
             }).always(function() {
             });
         });

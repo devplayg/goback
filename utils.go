@@ -46,10 +46,14 @@ func IsValidDir(dir string) (string, error) {
 }
 
 func DirExists(name string) bool {
-	if _, err := os.Stat(name); !os.IsNotExist(err) {
+	if !filepath.IsAbs(name) {
+		return false
+	}
+	fi, err := os.Stat(name)
+	if !os.IsNotExist(err) {
 		return true
 	}
-	if filepath.IsAbs(name) {
+	if fi != nil {
 		return true
 	}
 	return false
