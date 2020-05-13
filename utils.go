@@ -46,10 +46,13 @@ func IsValidDir(dir string) (string, error) {
 }
 
 func DirExists(name string) bool {
-	if _, err := os.Stat(name); os.IsNotExist(err) {
-		return false
+	if _, err := os.Stat(name); !os.IsNotExist(err) {
+		return true
 	}
-	return true
+	if filepath.IsAbs(name) {
+		return true
+	}
+	return false
 }
 
 func UniqueStrings(arr []string) []string {
