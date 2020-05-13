@@ -24,7 +24,7 @@ type SftpKeeper struct {
 	password  string
 	conn      *sftp.Client
 	active    bool
-	date      time.Time
+	started   time.Time
 	backupDir string
 }
 
@@ -49,7 +49,7 @@ func NewSftpKeeper(storage *Storage) *SftpKeeper {
 }
 
 func (k *SftpKeeper) Init(t time.Time) error {
-	k.date = t
+	k.started = t
 	var auths []ssh.AuthMethod
 	if conn, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
 		auths = append(auths, ssh.PublicKeysCallback(agent.NewClient(conn).Signers))
@@ -73,7 +73,7 @@ func (k *SftpKeeper) Init(t time.Time) error {
 
 	k.conn = ftpConn
 	k.active = true
-	k.backupDir = k.FindProperBackupDirName(filepath.Join(k.dstDir, k.date.Format("20060102")))
+	k.backupDir = k.FindProperBackupDirName(filepath.Join(k.dstDir, k.started.Format("20060102")))
 	return nil
 }
 

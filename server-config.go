@@ -40,6 +40,29 @@ func (s *Server) loadConfig() error {
 	return nil
 }
 
+func (s *Server) findJobById(jobId int) *Job {
+	s.rwMutex.RLock()
+	defer s.rwMutex.RUnlock()
+	for i, j := range s.config.Jobs {
+		if j.Id == jobId {
+			return s.config.Jobs[i]
+		}
+	}
+
+	return nil
+}
+
+func (s *Server) findStorageById(id int) *Storage {
+	s.rwMutex.RLock()
+	defer s.rwMutex.RUnlock()
+	for i, storage := range s.config.Storages {
+		if storage.Id == id {
+			return s.config.Storages[i]
+		}
+	}
+	return nil
+}
+
 func (s *Server) saveConfig() error {
 	data, err := json.Marshal(s.config)
 	if err != nil {

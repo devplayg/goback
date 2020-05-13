@@ -59,7 +59,7 @@ func DirExists(name string) bool {
 	return false
 }
 
-func UniqueStrings(arr []string) []string {
+func uniqueStrings(arr []string) []string {
 	keys := make(map[string]bool)
 	list := make([]string, 0)
 	for _, e := range arr {

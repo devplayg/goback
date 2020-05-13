@@ -44,3 +44,40 @@ func (s *Server) findSummaryById(id int) (*Summary, error) {
 	}
 	return &summary, err
 }
+
+func (s *Server) issueDbId(bucketName []byte) (int, error) {
+	var id int
+	err := s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucketName)
+		if b == nil {
+			return ErrorBucketNotFound
+		}
+		newId, _ := b.NextSequence()
+		id = int(newId)
+
+		return b.Put(iToB(id), nil)
+	})
+	return id, err
+}
+
+func (s *Server) writeSummaries(results []*Summary) error {
+	return s.db.Batch(func(tx *bolt.Tx) error {
+		b := tx.Bucket(SummaryBucketName)
+		for i := range results {
+
+			newSummaryId, _ := b.NextSequence()
+			id := int(newSummaryId)
+			results[i].Id = id
+			data, err := results[i].Marshal()
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+			if err := b.Put(iToB(id), data); err != nil {
+				log.Error(err)
+				continue
+			}
+		}
+		return nil
+	})
+}

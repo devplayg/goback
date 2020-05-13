@@ -11,6 +11,13 @@ type Config struct {
 	Jobs     []*Job     `json:"jobs"`
 }
 
+func NewConfig() *Config {
+	return &Config{
+		Storages: nil,
+		Jobs:     nil,
+	}
+}
+
 type Job struct {
 	Id          int      `json:"id" schema:"id"`
 	BackupType  int      `json:"backup-type"`
@@ -26,26 +33,18 @@ type Job struct {
 
 func (j *Job) IsValid() error {
 	if len(j.SrcDirs) < 1 {
-		return fmt.Errorf("empty source directory")
+		return fmt.Errorf("no directories")
 	}
 	return nil
 }
 
 func (j *Job) Tune() {
-	j.SrcDirs = UniqueStrings(j.SrcDirs)
+	j.SrcDirs = uniqueStrings(j.SrcDirs)
 	j.Schedule = strings.TrimSpace(j.Schedule)
-	j.Storage.Tune()
+	if j.Storage != nil {
+		j.Storage.Tune()
+	}
 }
-
-//
-// func (c *Config) Save() error {
-// 	b, err := yaml.Marshal(c)
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	return ioutil.WriteFile("config_.yaml", b, 0644)
-// }
 
 type Storage struct {
 	Id       int    `json:"id"`
@@ -66,34 +65,6 @@ func (s *Storage) Tune() {
 	s.Password = strings.TrimSpace(s.Password)
 	s.Dir = strings.TrimSpace(s.Dir)
 }
-
-//
-//func (c *Config) findJobById(id int) *Job {
-//	var job *Job
-//
-//	c.rwMutex.RLock()
-//	defer c.rwMutex.RUnlock()
-//
-//	for i, j := range c.Jobs {
-//		if j.Id == id {
-//			job = &c.Jobs[i]
-//			break
-//		}
-//	}
-//	if job != nil {
-//		job.Storage = c.findStorageById(job.StorageId)
-//	}
-//	return job
-//}
-//
-//func (c *Config) findStorageById(id int) *Storage {
-//	for i, storage := range c.Storages {
-//		if storage.Id == id {
-//			return &c.Storages[i]
-//		}
-//	}
-//	return nil
-//}
 
 type AppConfig struct {
 	Address     string

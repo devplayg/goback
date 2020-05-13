@@ -2,11 +2,9 @@ package goback
 
 import (
 	"crypto/md5"
-	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"hash"
 	"path/filepath"
 )
 
@@ -18,12 +16,8 @@ const (
 	FileBackupFailed    = -1
 	FileBackupSucceeded = 1
 
-	//DbDir = "db"
-	FilesDbName       = "files-%s.db"
-	SummaryDbName     = "summary.db"
-	SummaryTempDbName = "summary.db.lock"
-	ChangesDbName     = "changes-%s-%d.db"
-	//ConfigFileName    = "config. yaml"
+	FilesDbName   = "files-%s.db"
+	ChangesDbName = "changes-%s-%d.db"
 
 	Initial     = 1
 	Incremental = 2
@@ -32,8 +26,6 @@ const (
 	LocalDisk = 1
 	Ftp       = 2
 	Sftp      = 4
-
-	// Failed = -1
 
 	GobEncoding  = 1
 	JsonEncoding = 2
@@ -80,13 +72,6 @@ var fileSizeCategories = []int64{
 }
 
 var log *logrus.Logger
-
-type Fields *logrus.Fields
-
-var (
-	HashKey     = sha256.Sum256([]byte("goback"))
-	Highwayhash hash.Hash
-)
 
 type dirInfo struct {
 	checksum string

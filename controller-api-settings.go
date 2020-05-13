@@ -39,12 +39,15 @@ func (c *Controller) UpdateJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	job, jobIdx := c.server.findJobById(jobId)
+	job := c.server.findJobById(jobId)
 	if job == nil {
 		Response(w, r, errors.New("job not found"), http.StatusInternalServerError)
 		return
 	}
-	c.server.config.Jobs[jobIdx] = &input
+	job.Schedule = input.Schedule
+	job.SrcDirs = input.SrcDirs
+	job.Enabled = input.Enabled
+	job.BackupType = input.BackupType
 
 	c.server.rwMutex.Lock()
 	defer func() {
@@ -58,30 +61,33 @@ func (c *Controller) UpdateJob(w http.ResponseWriter, r *http.Request) {
 
 	if job.cronEntryId != nil {
 		log.WithFields(logrus.Fields{
-			//"schedule":    job.Schedule,
 			"jobId":       job.Id,
 			"cronEntryId": job.cronEntryId,
 		}).Info("SCHEDULE REMOVED")
 		c.server.cron.Remove(*job.cronEntryId)
+		job.cronEntryId = nil
 	}
-	entryId, err := c.server.cron.AddFunc(job.Schedule, func() {
-		log.WithFields(logrus.Fields{
-			"jobId": job.Id,
-		}).Info("RUN SCHEDULER")
-		if err := c.server.runBackupJob(jobId); err != nil {
-			log.Error(err)
+
+	if job.Enabled {
+		entryId, err := c.server.cron.AddFunc(job.Schedule, func() {
+			log.WithFields(logrus.Fields{
+				"jobId": job.Id,
+			}).Info("RUN SCHEDULER")
+			if err := c.server.runBackupJob(jobId); err != nil {
+				log.Error(err)
+			}
+		})
+		if err != nil {
+			Response(w, r, err, http.StatusInternalServerError)
+			return
 		}
-	})
-	log.WithFields(logrus.Fields{
-		"schedule":    job.Schedule,
-		"jobId":       job.Id,
-		"cronEntryId": entryId,
-	}).Info("SCHEDULE RESERVED")
-	if err != nil {
-		Response(w, r, err, http.StatusInternalServerError)
-		return
+		job.cronEntryId = &entryId
+		log.WithFields(logrus.Fields{
+			"schedule":    job.Schedule,
+			"jobId":       job.Id,
+			"cronEntryId": entryId,
+		}).Info("SCHEDULE RESERVED")
 	}
-	input.cronEntryId = &entryId
 
 	if err := c.server.saveConfig(); err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
@@ -97,20 +103,21 @@ func (c *Controller) UpdateStorage(w http.ResponseWriter, r *http.Request) {
 		Response(w, r, err, http.StatusInternalServerError)
 		return
 	}
-	id, _ := strconv.Atoi(vars["id"])
+
+	storageId, _ := strconv.Atoi(vars["id"])
 	input.Tune()
 
-	for i, job := range c.server.config.Storages {
-		if job.Id == id {
-			if id == 1 {
-				input.Protocol = LocalDisk
-			} else if job.Id == 2 {
-				input.Protocol = Sftp
-			}
-			c.server.config.Storages[i] = &input
-			break
-		}
+	storage := c.server.findStorageById(storageId)
+	if storage == nil {
+		Response(w, r, errors.New("storage not found"), http.StatusInternalServerError)
+		return
 	}
+	storage.Id = input.Id
+	storage.Dir = input.Dir
+	storage.Username = input.Username
+	storage.Password = input.Password
+	storage.Port = input.Port
+	storage.Host = input.Host
 
 	if err := c.server.saveConfig(); err != nil {
 		Response(w, r, err, http.StatusInternalServerError)

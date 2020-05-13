@@ -56,11 +56,7 @@ func (b *Backup) init() error {
 
 func (b *Backup) initKeeper() error {
 	if err := b.keeper.Init(b.started); err != nil {
-		log.WithFields(logrus.Fields{
-			"protocol": b.keeper.Description().Protocol,
-			"host":     b.keeper.Description().Host,
-		}).Errorf("failed to initialize the keeper; %s", err.Error())
-		return err
+		return fmt.Errorf("failed to initialize the keeper; %w", err)
 	}
 
 	return nil
@@ -71,10 +67,6 @@ func (b *Backup) Start() ([]*Summary, error) {
 	if err := b.init(); err != nil {
 		return nil, err
 	}
-	// Log.WithFields(Log.Fields{
-	// 	"directory": b.dstDir,
-	// 	"backupId":  b.Id,
-	// }).Infof("backup started")
 
 	// Backup directory sequentially
 	for _, dir := range b.job.SrcDirs {

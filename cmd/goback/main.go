@@ -1,13 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"github.com/devplayg/goback"
 	"time"
 )
 
 func main() {
-	config := goback.AppConfig{
+	engine := goback.NewEngine(&goback.AppConfig{
 		Name:        "goback",
 		Description: "smart bak",
 		Version:     "service beta",
@@ -19,9 +18,10 @@ func main() {
 		Debug:       true,
 		Trace:       false,
 		Address:     ":8000",
-	}
-	engine := goback.NewEngine(&config)
+	})
+
+	// Start
 	if err := engine.Start(); err != nil {
-		fmt.Println(err.Error())
+		panic(err)
 	}
 }

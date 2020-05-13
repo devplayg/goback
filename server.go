@@ -3,43 +3,17 @@ package goback
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"github.com/boltdb/bolt"
-	"github.com/devplayg/himma/v2"
 	"github.com/devplayg/hippo/v2"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sync"
 	"time"
 )
-
-type Server struct {
-	hippo.Launcher // DO NOT REMOVE
-	appConfig      *AppConfig
-	config         *Config
-	configFile     *os.File
-	dbDir          string
-	rwMutex        *sync.RWMutex
-	db             *bolt.DB
-	cron           *cron.Cron
-}
-
-func NewServer(appConfig *AppConfig) *Server {
-	return &Server{
-		config: &Config{
-			Storages: nil,
-			Jobs:     nil,
-		},
-		appConfig: appConfig,
-		dbDir:     "db",
-		rwMutex:   new(sync.RWMutex),
-	}
-}
 
 func NewEngine(appConfig *AppConfig) *hippo.Engine {
 	server := NewServer(appConfig)
@@ -53,218 +27,100 @@ func NewEngine(appConfig *AppConfig) *hippo.Engine {
 	return engine
 }
 
+func NewServer(appConfig *AppConfig) *Server {
+	return &Server{
+		dbDir:     "db",
+		appConfig: appConfig,
+		config:    NewConfig(),
+		rwMutex:   new(sync.RWMutex),
+	}
+}
+
+type Server struct {
+	hippo.Launcher // DO NOT REMOVE
+	appConfig      *AppConfig
+	config         *Config
+	configFile     *os.File
+	dbDir          string
+	rwMutex        *sync.RWMutex
+	db             *bolt.DB
+	cron           *cron.Cron
+}
+
 func (s *Server) Start() error {
+	// Initialize server
 	if err := s.init(); err != nil {
 		return err
 	}
 
 	ch := make(chan struct{})
+
+	// Start HTTP server
 	go func() {
+		defer close(ch)
 		if err := s.startHttpServer(); err != nil {
 			s.Log.Error(err)
+			return
 		}
-		close(ch)
 	}()
 
+	// Start scheduler
 	s.cron.Start()
 
-	defer func() {
-		<-ch
-	}()
+	// Wait for HTTP server to stop
+	<-ch
 
-	for {
-		// Do your repetitive jobs
-		// s.Log.Info("server is working on it")
-
-		// Intentional error
-		// s.Cancel() // send cancel signal to engine
-		// return errors.New("intentional error")
-
-		select {
-		case <-s.Ctx.Done(): // for gracefully shutdown
-			s.Log.Debug("server canceled; no longer works")
-			return nil
-		case <-time.After(2 * time.Second):
-		}
-	}
-}
-
-func (s *Server) startHttpServer() error {
-	app := himma.Config{
-		AppName:     s.appConfig.Name,
-		Description: s.appConfig.Description,
-		Url:         s.appConfig.Url,
-		Phrase1:     s.appConfig.Text1,
-		Phrase2:     s.appConfig.Text2,
-		Year:        s.appConfig.Year,
-		Version:     s.appConfig.Version,
-		Company:     s.appConfig.Company,
-	}
-
-	//addr := s.config.Server.Address
-	//if len(addr) < 1 {
-	//	addr = ":8000"
-	//}
-	controller := NewController(s, &app)
-	if err := controller.Start(); err != nil {
-		log.Error(err)
-	}
 	return nil
 }
 
 func (s *Server) Stop() error {
-	s.Log.Info("server has been stopped")
-	if err := s.configFile.Close(); err != nil {
-		return err
-	}
-
-	// if err := s.tempDbFile.Close(); err != nil {
-	//	return err
-	// }
-
-	// if err := s.tempDbFile.Close(); err != nil {
-	// 	return err
-	// }
-	// os.Remove(s.tempDbFile.Name())
-	//
-	// if err := s.dbFile.Close(); err != nil {
-	// 	return err
-	// }
-
 	s.cron.Stop()
 
 	if err := s.db.Close(); err != nil {
 		return err
 	}
 
+	s.Log.Info("server has been stopped")
 	return nil
-}
-
-func (s *Server) init() error {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	log = s.Log
-
-	if err := s.initDirectories(); err != nil {
-		return fmt.Errorf("failed to initialize directorie; %w", err)
-	}
-
-	if err := s.initDatabase(); err != nil {
-		return fmt.Errorf("failed to initialize database; %w", err)
-	}
-
-	if err := s.loadConfig(); err != nil {
-		return fmt.Errorf("failed to load configuration; %w", err)
-	}
-
-	if err := s.initScheduler(); err != nil {
-		return fmt.Errorf("failed to initialize scheduler; %w", err)
-	}
-	return nil
-}
-
-func (s *Server) initScheduler() error {
-	loc := time.Local
-	s.cron = cron.New(cron.WithLocation(loc))
-	//var secondParser = cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.DowOptional)
-	//cron.NewParser()
-	return nil
-}
-
-func (s *Server) initDirectories() error {
-	dbDir := filepath.Join(s.WorkingDir, s.dbDir)
-	if _, err := os.Stat(dbDir); os.IsNotExist(err) {
-		if err := os.Mkdir(dbDir, 0600); err != nil {
-			return fmt.Errorf("unable to create database directory: %w", err)
-		}
-	}
-	s.dbDir = dbDir
-	return nil
-}
-
-func (s *Server) initDatabase() error {
-	db, err := bolt.Open(filepath.Join(s.dbDir, s.appConfig.Name+".db"), 0600, &bolt.Options{Timeout: 1 * time.Second})
-	if err != nil {
-		return err
-	}
-	s.db = db
-	return db.Batch(func(tx *bolt.Tx) error {
-		if _, err := tx.CreateBucketIfNotExists(SummaryBucketName); err != nil {
-			return fmt.Errorf("failed to create summary bucket; %w", err)
-		}
-		if _, err := tx.CreateBucketIfNotExists(BackupBucketName); err != nil {
-			return fmt.Errorf("failed to create backup group bucket; %w", err)
-		}
-		if _, err := tx.CreateBucketIfNotExists(ConfigBucketName); err != nil {
-			return fmt.Errorf("failed to create backup group bucket; %w", err)
-		}
-		return nil
-	})
-}
-
-func (s *Server) issueDbId(bucketName []byte) (int, error) {
-	var id int
-	err := s.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(bucketName)
-		if b == nil {
-			return ErrorBucketNotFound
-		}
-		newId, _ := b.NextSequence()
-		id = int(newId)
-
-		return b.Put(iToB(id), nil)
-	})
-	return id, err
-}
-
-func (s *Server) writeSummaries(results []*Summary) error {
-	return s.db.Batch(func(tx *bolt.Tx) error {
-		b := tx.Bucket(SummaryBucketName)
-		for i := range results {
-
-			newSummaryId, _ := b.NextSequence()
-			id := int(newSummaryId)
-			results[i].Id = id
-			data, err := results[i].Marshal()
-			if err != nil {
-				log.Error(err)
-				continue
-			}
-			if err := b.Put(iToB(id), data); err != nil {
-				log.Error(err)
-				continue
-			}
-		}
-		return nil
-	})
 }
 
 func (s *Server) runBackupJob(jobId int) error {
-	job, _ := s.findJobById(jobId)
+
+	// Get job
+	job := s.findJobById(jobId)
 	if job == nil {
-		return errors.New("backup job not found")
+		return fmt.Errorf("job-%d not found", jobId)
+	}
+	if job.running {
+		return fmt.Errorf("job-%d is already running now", job.Id)
 	}
 
+	// Get storage
+	job.Storage = s.findStorageById(job.StorageId)
+	if job.Storage == nil {
+		return fmt.Errorf("storage-%d not found", job.StorageId)
+	}
+
+	// Get keeper
 	keeper := NewKeeper(job)
 	if keeper == nil {
 		return fmt.Errorf("invalid keeper protocol %d", job.Storage.Protocol)
 	}
 
+	//log.WithFields(logrus.Fields{
+	//	"id":      job.Id,
+	//	"running": job.running,
+	//}).Debug("job")
+
 	s.rwMutex.Lock()
-	defer s.rwMutex.Unlock()
-	log.WithFields(logrus.Fields{
-		"id":      job.Id,
-		"running": job.running,
-	}).Debug("job")
-	if job.running {
-		return fmt.Errorf("job-%d is already running now", job.Id)
-	}
 	job.running = true
+	s.rwMutex.Unlock()
 
 	go func() {
 		defer func() {
 			job.running = false
 		}()
-		time.Sleep(63 * time.Second)
+
 		// Issue backup group id
 		backupId, err := s.issueDbId(BackupBucketName)
 		if err != nil {
@@ -276,7 +132,11 @@ func (s *Server) runBackupJob(jobId int) error {
 		backup := NewBackup(backupId, job, s.dbDir, keeper, started)
 		summaries, err := backup.Start()
 		if err != nil {
-			log.Error(err)
+			log.WithFields(logrus.Fields{
+				"jobId":      job.Id,
+				"backupType": job.BackupType,
+				"storageId":  job.StorageId,
+			}).Error(err)
 			return
 		}
 
@@ -309,33 +169,4 @@ func (s *Server) getChangesLog(id int) ([]byte, error) { // wondory
 		return nil, err
 	}
 	return ioutil.ReadFile(logPath)
-}
-
-func (s *Server) findJobById(jobId int) (*Job, int) {
-	var job *Job
-	var idx int
-
-	s.rwMutex.RLock()
-	defer s.rwMutex.RUnlock()
-
-	for i, j := range s.config.Jobs {
-		if j.Id == jobId {
-			job = s.config.Jobs[i]
-			idx = i
-			break
-		}
-	}
-	if job != nil {
-		job.Storage = s.findStorageById(job.StorageId)
-	}
-	return job, idx
-}
-
-func (s *Server) findStorageById(id int) *Storage {
-	for i, storage := range s.config.Storages {
-		if storage.Id == id {
-			return s.config.Storages[i]
-		}
-	}
-	return nil
 }

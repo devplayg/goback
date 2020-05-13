@@ -1,6 +1,8 @@
 package goback
 
 import (
+	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -13,7 +15,7 @@ import (
 // LocalKeeper saves added or modified files in local disk.
 type LocalKeeper struct {
 	*KeeperDesc
-	date      time.Time
+	started   time.Time
 	dstDir    string
 	tempDir   string
 	backupDir string
@@ -31,13 +33,21 @@ func NewLocalKeeper(dstDir string) *LocalKeeper {
 }
 
 func (k *LocalKeeper) Init(t time.Time) error {
-	k.date = t
+	if len(k.dstDir) < 1 {
+		return errors.New("storage directory required")
+	}
+
+	if !DirExists(k.dstDir) {
+		return fmt.Errorf("storage directory does not exist: %s", k.dstDir)
+	}
+
+	k.started = t
 	tempDir, err := ioutil.TempDir(k.dstDir, "backup-")
 	if err != nil {
 		return err
 	}
 	k.tempDir = tempDir
-	k.backupDir = FindProperBackupDirName(filepath.Join(k.dstDir, k.date.Format("20060102")))
+	k.backupDir = FindProperBackupDirName(filepath.Join(k.dstDir, k.started.Format("20060102")))
 	return nil
 }
 
