@@ -36,7 +36,7 @@ var (
 	BackupBucketName  = []byte("backup")
 	ConfigBucketName  = []byte("config")
 	KeyStorage        = []byte("storage")
-	KeyJobs           = []byte("jobs")
+	//KeyJobs           = []byte("jobs")
 )
 
 const (
