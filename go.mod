@@ -6,6 +6,7 @@ go 1.13
 
 require (
 	github.com/boltdb/bolt v1.3.1
+	github.com/devplayg/goback v2.0.0-beta
 	github.com/devplayg/golibs v1.0.1
 	github.com/devplayg/himma/v2 v2.0.1
 	github.com/devplayg/hippo/v2 v2.2.0

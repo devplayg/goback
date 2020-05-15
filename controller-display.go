@@ -65,7 +65,6 @@ func (c *Controller) DisplaySettings(w http.ResponseWriter, r *http.Request) {
 	}{
 		c.app, c.server.config,
 	}
-	//spew.Dump(aa)
 	if err := tmpl.Execute(w, aa); err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
 	}
