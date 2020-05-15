@@ -52,7 +52,7 @@ func (s *Server) initDirectories() error {
 }
 
 func (s *Server) initDatabase() error {
-	db, err := bolt.Open(filepath.Join(s.dbDir, s.appConfig.Name+".db"), 0600, &bolt.Options{Timeout: 1 * time.Second})
+	db, err := bolt.Open(filepath.Join(s.dbDir, s.appConfig.Name+".db"), 0755, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		return err
 	}
