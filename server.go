@@ -155,7 +155,7 @@ func (s *Server) runBackupJob(jobId int) error {
 	return nil
 }
 
-func (s *Server) getChangesLog(id int) ([]byte, error) { // wondory
+func (s *Server) getChangesLog(id int) ([]byte, error) {
 	// get summary
 	summary, err := s.findSummaryById(id)
 	if err != nil {
