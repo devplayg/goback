@@ -23,7 +23,7 @@ func NewEngine(appConfig *AppConfig) *hippo.Engine {
 		Version:     appConfig.Version,
 		Debug:       appConfig.Debug,
 		Trace:       appConfig.Trace,
-		LogDir:      ".",
+		LogDir:      "",
 	})
 	return engine
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/boltdb/bolt"
 	"github.com/robfig/cron/v3"
+	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -35,6 +36,38 @@ func (s *Server) init() error {
 func (s *Server) initScheduler() error {
 	loc := time.Local
 	s.cron = cron.New(cron.WithLocation(loc))
+
+	for i, job := range s.config.Jobs {
+		if !job.Enabled {
+			continue
+		}
+		if job.SrcDirs == nil || len(job.SrcDirs) < 1 {
+			continue
+		}
+
+		if len(job.Schedule) < 1 {
+			continue
+		}
+
+		entryId, err := s.cron.AddFunc(s.config.Jobs[i].Schedule, func() {
+			log.WithFields(logrus.Fields{
+				"jobId": job.Id,
+			}).Info("RUN SCHEDULER")
+			if err := s.runBackupJob(job.Id); err != nil {
+				log.Error(err)
+			}
+		})
+		if err != nil {
+			return fmt.Errorf("failed to load scheduler %d; %w", job.Id, err)
+		}
+		job.cronEntryId = &entryId
+		log.WithFields(logrus.Fields{
+			"jobId":     job.Id,
+			"scheduler": job.Schedule,
+		}).Info("backup scheduler loaded")
+
+	}
+
 	//var secondParser = cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.DowOptional)
 	//cron.NewParser()
 	return nil
