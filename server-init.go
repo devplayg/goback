@@ -49,18 +49,19 @@ func (s *Server) initScheduler() error {
 			continue
 		}
 
+		jobId := s.config.Jobs[i].Id
 		entryId, err := s.cron.AddFunc(s.config.Jobs[i].Schedule, func() {
 			log.WithFields(logrus.Fields{
-				"jobId": job.Id,
+				"jobId": jobId,
 			}).Info("RUN SCHEDULER")
-			if err := s.runBackupJob(job.Id); err != nil {
+			if err := s.runBackupJob(jobId); err != nil {
 				log.Error(err)
 			}
 		})
 		if err != nil {
 			return fmt.Errorf("failed to load scheduler %d; %w", job.Id, err)
 		}
-		job.cronEntryId = &entryId
+		s.config.Jobs[i].cronEntryId = &entryId
 		log.WithFields(logrus.Fields{
 			"jobId":     job.Id,
 			"scheduler": job.Schedule,
