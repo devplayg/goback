@@ -23,8 +23,17 @@
 {{end}}
 
 {{define "content"}}
+    <div class="subheader">
+        <h1 class="subheader-title">
+            <i class="fal fa-tag mr-1"></i> Backup logs
+            <small>
+                Backup log by directory
+            </small>
+        </h1>
+    </div>
+
     <div class="panel">
-        <div class="panel-hdr">
+        <div class="panel-hdr d-none">
             <h2>
                 <i class="fal fa-tag mr-1"></i> BACKUP
                 <span class="fw-300">
@@ -317,13 +326,10 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h2 class="modal-title">
-                        <button type="button" class="btn btn-primary waves-effect waves-themed">
+                        <button type="button" class="btn btn-primary btn-primary-50 waves-effect waves-themed">
                             BACKUP-<span class="summary-id"></span>
                         </button>
                         <span class="summary-srcDir ml-2"></span>
-                        <div class="float-right">
-                            <span class="h5 summary-date"></span>
-                        </div>
 
                     </h2>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -334,21 +340,42 @@
                     <div class="row">
                         <div class="col-lg-2">
                             <div>
-                                <button type="button" class="btn btn-xs btn-default waves-effect waves-themed">Files</button>
+                                <button type="button" class="btn btn-default waves-effect waves-themed pt-0 pb-0">Files</button>
                                 <div class="summary-totalCount h3"></div>
                             </div>
-                            <div class="mt-1">
-                                <button type="button" class="btn btn-xs btn-default waves-effect waves-themed">Size</button>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-default waves-effect waves-themed pt-0 pb-0">Size</button>
                                 <div class="summary-totalSize h3"></div>
                             </div>
-                            <div class="mt-1">
-                                <button type="button" class="btn btn-xs btn-default waves-effect waves-themed">Execution time</button>
+                            <div class="mt-2 mb-3">
+                                <button type="button" class="btn btn-default waves-effect waves-themed pt-0 pb-0">Execution time</button>
                                 <div class="summary-execTime h3"></div>
 
                                 <div>- Reading: <span class="summary-readingTime 53"></span></div>
                                 <div>- Comparing: <span class="summary-comparingTime 53"></span></div>
                                 <div>- Coping: <span class="summary-backupTime 53"></span></div>
                                 <div>- Logging: <span class="summary-loggingTime 53"></span></div>
+                            </div>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-default waves-effect waves-themed pt-0 pb-0">Added</button>
+                                <div>
+                                    <span class="h3 summary-countAdded"></span>
+                                    (<span class="summary-sizeAdded"></span>)
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-default waves-effect waves-themed pt-0 pb-0">Modified</button>
+                                <div>
+                                    <span class="h3 summary-countModified"></span>
+                                    (<span class="summary-sizeModified"></span>)
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-default waves-effect waves-themed pt-0 pb-0">Deleted</button>
+                                <div>
+                                    <span class="h3 summary-countDeleted"></span>
+                                    (<span class="summary-sizeDeleted"></span>)
+                                </div>
                             </div>
                         </div>
                         <div class="col-lg-5">
@@ -732,6 +759,12 @@
                 $(".summary-totalSize").text(bytesToSize(row.totalSize));
                 $(".summary-srcDir").text(row.srcDir);
                 $(".summary-date").text(row.date);
+                $(".summary-countAdded").text(row.countAdded);
+                $(".summary-sizeAdded").html(byteSizeFormatter(row.sizeAdded));
+                $(".summary-countModified").text(row.countModified);
+                $(".summary-sizeModified").html(byteSizeFormatter(row.sizeModified));
+                $(".summary-countDeleted").text(row.countDeleted);
+                $(".summary-sizeDeleted").html(byteSizeFormatter(row.sizeDeleted));
                 $(".summary-execTime").text(row.execTime.toFixed(2) + " sec");
                 $(".summary-readingTime").text( (moment.parseZone(row.readingTime).diff(moment.parseZone(row.date)) / 1000).toFixed(2) );
                 $(".summary-comparingTime").text( (moment.parseZone(row.comparisonTime).diff(moment.parseZone(row.readingTime)) / 1000).toFixed(2) );
