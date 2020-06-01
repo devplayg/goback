@@ -22,6 +22,8 @@ func (c *Controller) ParseForm(r *http.Request, o interface{}) (map[string]strin
 }
 
 func (c *Controller) UpdateJob(w http.ResponseWriter, r *http.Request) {
+
+	// Parse form
 	var input Job
 	vars, err := c.ParseForm(r, &input)
 	if err != nil {
@@ -31,6 +33,17 @@ func (c *Controller) UpdateJob(w http.ResponseWriter, r *http.Request) {
 	jobId, _ := strconv.Atoi(vars["id"])
 	input.Tune()
 
+	// Find job
+	job := c.server.findJobById(jobId)
+	if job == nil {
+		Response(w, r, errors.New("job not found"), http.StatusInternalServerError)
+		return
+	}
+	if job.running {
+		Response(w, r, errors.New("job is running"), http.StatusInternalServerError)
+		return
+	}
+
 	// Parse cron
 	cronParser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.DowOptional)
 	_, err = cronParser.Parse(input.Schedule)
@@ -39,11 +52,7 @@ func (c *Controller) UpdateJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	job := c.server.findJobById(jobId)
-	if job == nil {
-		Response(w, r, errors.New("job not found"), http.StatusInternalServerError)
-		return
-	}
+	// Update job
 	job.Schedule = input.Schedule
 	job.SrcDirs = input.SrcDirs
 	job.Enabled = input.Enabled
@@ -53,12 +62,6 @@ func (c *Controller) UpdateJob(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		c.server.rwMutex.Unlock()
 	}()
-
-	if job.running {
-		Response(w, r, errors.New("job is running"), http.StatusInternalServerError)
-		return
-	}
-
 	if job.cronEntryId != nil {
 		log.WithFields(logrus.Fields{
 			"jobId":       job.Id,
@@ -67,7 +70,6 @@ func (c *Controller) UpdateJob(w http.ResponseWriter, r *http.Request) {
 		c.server.cron.Remove(*job.cronEntryId)
 		job.cronEntryId = nil
 	}
-
 	if job.Enabled {
 		entryId, err := c.server.cron.AddFunc(job.Schedule, func() {
 			log.WithFields(logrus.Fields{
@@ -89,7 +91,7 @@ func (c *Controller) UpdateJob(w http.ResponseWriter, r *http.Request) {
 		}).Info("SCHEDULE RESERVED")
 	}
 
-	if err := c.server.saveConfig(); err != nil {
+	if err := c.server.saveConfig(input.Checksum); err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
 		return
 	}
@@ -119,7 +121,7 @@ func (c *Controller) UpdateStorage(w http.ResponseWriter, r *http.Request) {
 	storage.Port = input.Port
 	storage.Host = input.Host
 
-	if err := c.server.saveConfig(); err != nil {
+	if err := c.server.saveConfig(input.Checksum); err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
 		return
 	}

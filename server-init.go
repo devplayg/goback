@@ -92,13 +92,13 @@ func (s *Server) initDatabase() error {
 	}
 	s.db = db
 	return db.Batch(func(tx *bolt.Tx) error {
-		if _, err := tx.CreateBucketIfNotExists(SummaryBucketName); err != nil {
+		if _, err := tx.CreateBucketIfNotExists(SummaryBucket); err != nil {
 			return fmt.Errorf("failed to create summary bucket; %w", err)
 		}
-		if _, err := tx.CreateBucketIfNotExists(BackupBucketName); err != nil {
+		if _, err := tx.CreateBucketIfNotExists(BackupBucket); err != nil {
 			return fmt.Errorf("failed to create backup group bucket; %w", err)
 		}
-		if _, err := tx.CreateBucketIfNotExists(ConfigBucketName); err != nil {
+		if _, err := tx.CreateBucketIfNotExists(ConfigBucket); err != nil {
 			return fmt.Errorf("failed to create backup group bucket; %w", err)
 		}
 		return nil

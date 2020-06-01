@@ -19,15 +19,17 @@ func NewConfig() *Config {
 }
 
 type Job struct {
-	Id          int      `json:"id" schema:"id"`
-	BackupType  int      `json:"backup-type"`
-	SrcDirs     []string `json:"dirs" schema:"srcDirs"`
-	Schedule    string   `json:"schedule" schema:"schedule"`
-	Ignore      []string `json:"ignore"`
-	StorageId   int      `json:"storage-id"`
-	Enabled     bool     `json:"enabled"`
-	Storage     *Storage `json:"-"`
-	running     bool
+	Id         int      `json:"id" schema:"id"`
+	BackupType int      `json:"backup-type"`
+	SrcDirs    []string `json:"dirs" schema:"srcDirs"`
+	Schedule   string   `json:"schedule" schema:"schedule"`
+	Ignore     []string `json:"ignore"`
+	StorageId  int      `json:"storage-id"`
+	Enabled    bool     `json:"enabled"`
+	Storage    *Storage `json:"-"`
+	running    bool
+
+	Checksum    string `json:"-"`
 	cronEntryId *cron.EntryID
 }
 
@@ -54,6 +56,8 @@ type Storage struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Dir      string `json:"dir"`
+
+	Checksum string `json:"-"`
 }
 
 func (s *Storage) Tune() {

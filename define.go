@@ -32,11 +32,11 @@ const (
 )
 
 var (
-	SummaryBucketName = []byte("summary")
-	BackupBucketName  = []byte("backup")
-	ConfigBucketName  = []byte("config")
-	KeyStorage        = []byte("storage")
-	//KeyJobs           = []byte("jobs")
+	SummaryBucket     = []byte("summary")
+	BackupBucket      = []byte("backup")
+	ConfigBucket      = []byte("config")
+	KeyConfig         = []byte("config")
+	KeyConfigChecksum = []byte("config_checksum")
 )
 
 const (

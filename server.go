@@ -123,7 +123,7 @@ func (s *Server) runBackupJob(jobId int) error {
 		}()
 
 		// Issue backup group id
-		backupId, err := s.issueDbId(BackupBucketName)
+		backupId, err := s.issueDbId(BackupBucket)
 		if err != nil {
 			log.Error(fmt.Errorf("failed to issue backup id; %w", err))
 			return

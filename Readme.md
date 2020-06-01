@@ -37,4 +37,11 @@ powered by **BoltDB**
 
 |Key|Value|
 |---|---|
-|storage|JSON|
+|backup|JSON|
+|backup_checksum|sha256|
+
+
+## To do
+
+- [ ] load schedule on service start
+- [ ] setting with Ajax

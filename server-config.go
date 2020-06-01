@@ -1,16 +1,20 @@
 package goback
 
 import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"github.com/boltdb/bolt"
 )
 
 func (s *Server) loadConfig() error {
 	err := s.db.View(func(tx *bolt.Tx) error {
 		// Config bucket
-		b := tx.Bucket(ConfigBucketName)
+		b := tx.Bucket(ConfigBucket)
 
-		data := b.Get(KeyStorage)
+		data := b.Get(KeyConfig)
 		if data != nil {
 			var config Config
 			if err := json.Unmarshal(data, &config); err != nil {
@@ -22,7 +26,7 @@ func (s *Server) loadConfig() error {
 
 		s.config.Storages = []*Storage{
 			{Id: 1, Protocol: LocalDisk, Host: "", Port: 0, Username: "", Password: "", Dir: ""},
-			{Id: 2, Protocol: Sftp, Host: "", Port: 0, Username: "", Password: "", Dir: ""},
+			//{Id: 2, Protocol: Sftp, Host: "", Port: 0, Username: "", Password: "", Dir: ""},
 		}
 
 		s.config.Jobs = []*Job{
@@ -63,13 +67,32 @@ func (s *Server) findStorageById(id int) *Storage {
 	return nil
 }
 
-func (s *Server) saveConfig() error {
+func (s *Server) saveConfig(inputChecksum string) error {
 	data, err := json.Marshal(s.config)
+	checksum := sha256.Sum256(data)
 	if err != nil {
 		return err
 	}
 	return s.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(ConfigBucketName)
-		return b.Put(KeyStorage, data)
+		b := tx.Bucket(ConfigBucket)
+
+		oldChecksum := b.Get(KeyConfigChecksum)
+		_inputChecksum, err := hex.DecodeString(inputChecksum)
+		if err != nil {
+			return err
+		}
+		if bytes.Compare(oldChecksum, _inputChecksum) != 0 {
+			return fmt.Errorf("checkem error; refresh page")
+		}
+
+		if err := b.Put(KeyConfig, data); err != nil {
+			return err
+		}
+		if err := b.Put(KeyConfigChecksum, checksum[:]); err != nil {
+			return err
+		}
+
+		return nil
+
 	})
 }

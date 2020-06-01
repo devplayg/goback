@@ -9,7 +9,7 @@ import (
 func (s *Server) findSummaries() ([]*Summary, error) {
 	summaries := make([]*Summary, 0)
 	err := s.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket(SummaryBucketName)
+		b := tx.Bucket(SummaryBucket)
 		b.ForEach(func(id, data []byte) error {
 			var summary Summary
 			if err := json.Unmarshal(data, &summary); err != nil {
@@ -28,7 +28,7 @@ func (s *Server) findSummaries() ([]*Summary, error) {
 func (s *Server) findSummaryById(id int) (*Summary, error) {
 	var data []byte
 	err := s.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket(SummaryBucketName)
+		b := tx.Bucket(SummaryBucket)
 		if b == nil {
 			return ErrorBucketNotFound
 		}
@@ -62,7 +62,7 @@ func (s *Server) issueDbId(bucketName []byte) (int, error) {
 
 func (s *Server) writeSummaries(results []*Summary) error {
 	return s.db.Batch(func(tx *bolt.Tx) error {
-		b := tx.Bucket(SummaryBucketName)
+		b := tx.Bucket(SummaryBucket)
 		for i := range results {
 
 			newSummaryId, _ := b.NextSequence()
@@ -80,4 +80,17 @@ func (s *Server) writeSummaries(results []*Summary) error {
 		}
 		return nil
 	})
+}
+
+func (s *Server) getDbValue(bucket, key []byte) ([]byte, error) {
+	var data []byte
+	err := s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucket)
+		if b == nil {
+			return ErrorBucketNotFound
+		}
+		data = b.Get(key)
+		return nil
+	})
+	return data, err
 }

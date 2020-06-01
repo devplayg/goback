@@ -26,7 +26,7 @@ type Summary struct {
 	DeletedCount  uint64 `json:"countDeleted"`
 	DeletedSize   uint64 `json:"sizeDeleted"`
 
-	// Backup
+	// BackupreadingTime
 	FailedCount  uint64 `json:"countFailed"`
 	FailedSize   uint64 `json:"sizeFailed"`
 	SuccessCount uint64 `json:"countSuccess"`
