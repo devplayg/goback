@@ -15,7 +15,10 @@
 
 {{define "sidebar"}}
     <li>
-        <a href="/backup/" title="Backup"><i class="fal fa-database"></i><span class="nav-link-text">Backup</span></a>
+        <a href="/backup/" title="Backup"><i class="fal fa-list-ul"></i><span class="nav-link-text">Backup logs</span></a>
+    </li>
+    <li>
+        <a href="/stats/" title="Statistics"><i class="fal fa-chart-bar"></i><span class="nav-link-text">Statistics</span></a>
     </li>
     <li>
         <a href="/settings/" title="Settings"><i class="fal fa-cog"></i><span class="nav-link-text">Settings</span></a>
@@ -25,9 +28,9 @@
 {{define "content"}}
     <div class="subheader">
         <h1 class="subheader-title">
-            <i class="fal fa-tag mr-1"></i> Backup logs
+            <i class="fal fa-list-ul mr-1"></i> Backup Logs
             <small>
-                Backup log by directory
+                Backup history
             </small>
         </h1>
     </div>

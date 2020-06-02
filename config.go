@@ -82,5 +82,5 @@ type AppConfig struct {
 	Company     string
 	Debug       bool
 	Trace       bool
-	LogImgPath  string
+	//LogImgPath  string
 }

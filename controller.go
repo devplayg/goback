@@ -69,6 +69,7 @@ func (c *Controller) init() error {
 	// fmt.Println(base64.StdEncoding.EncodeToString(d))
 	// himma.Add(uiAssetMap,"/assets/img/logo.png", LogoImg)
 	uiAssetMap.Add("/assets/img/logo.png", LogoImg)
+	uiAssetMap.Add("/assets/js/custom.js", customScript())
 	WebAssetMap = uiAssetMap
 
 	//if err := c.loadSummaryDb(); err != nil {
@@ -96,6 +97,9 @@ func (c *Controller) initRouter() error {
 	c.router.HandleFunc("/backup/", c.DisplayBackup)
 	c.router.HandleFunc("/summaries", c.GetSummaries)
 	c.router.HandleFunc("/summaries/{id:[0-9]+}/changes", c.GetChangesLog)
+
+	// Statistics
+	c.router.HandleFunc("/stats/", c.DisplayStats)
 
 	// Settings
 	c.router.HandleFunc("/settings/", c.DisplaySettings)
