@@ -1,3 +1,7 @@
+package goback
+
+func displayStats() string {
+	return `
 {{define "css"}}
     <style>
         .pagination .page-link {
@@ -67,6 +71,8 @@
                         data-buttons-class="default"
                         class="table table-sm"
                         data-toggle="table"
+						data-cookie="true"
+						data-cookie-id-table="stats"
                         data-toolbar="#toolbar-stats"
                         data-search="true"
                         data-pagination="true"
@@ -214,3 +220,5 @@
 
     </script>
 {{end}}
+`
+}

@@ -5,6 +5,10 @@ github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/devplayg/eggcrate v1.0.3/go.mod h1:yL7PuksJXC6U+weTsbLADyOKDqUx6MTfrElnOJo/XB0=
 github.com/devplayg/golibs v1.0.1/go.mod h1:ejqC+44p6NJpDZo+oxyGVdBwrS56EEbQQqJ86Dpo9rE=
 github.com/devplayg/himma/v2 v2.0.1/go.mod h1:2m6+LkiQzeXPay4N7L8e5zMLpSGd9G5gSN3OmAFjb7E=
+github.com/devplayg/himma/v2 v2.0.2 h1:OW1I2/CAqSb5IjNFZI6p48CbeJ/f0WdrIbRMFKERSEI=
+github.com/devplayg/himma/v2 v2.0.2/go.mod h1:2m6+LkiQzeXPay4N7L8e5zMLpSGd9G5gSN3OmAFjb7E=
+github.com/devplayg/himma/v2 v2.0.3 h1:0PFetFtpNqkL10Z/Vh8L/CkkZkdCbuOwi8kuTfxiB1E=
+github.com/devplayg/himma/v2 v2.0.3/go.mod h1:2m6+LkiQzeXPay4N7L8e5zMLpSGd9G5gSN3OmAFjb7E=
 github.com/devplayg/hippo/v2 v2.2.0 h1:wl7vMu6Qzm8t0Z1kqDCVsLObmbQu/htxJNiUEgyUwys=
 github.com/devplayg/hippo/v2 v2.2.0/go.mod h1:pJWWmu4NI55BSwRQEyKDrHnIi3Ze4MoBkRTCSMXeSZs=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=

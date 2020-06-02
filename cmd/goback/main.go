@@ -7,15 +7,15 @@ import (
 
 func main() {
 	engine := goback.NewEngine(&goback.AppConfig{
-		Name:        "goback",
-		Description: "smart bak",
-		Version:     "service beta",
-		Url:         "https://",
-		Text1:       "ph1",
-		Text2:       "ph2",
+		Name:        "GoBack",
+		Description: "Smart incremental backup",
+		Version:     "2.0",
+		Url:         "https://github.com/devplayg/goback",
+		Text1:       "MAKE YOUR DATA SAFE",
+		Text2:       "powered by Go",
 		Year:        time.Now().Year(),
-		Company:     "dev",
-		Debug:       true,
+		Company:     "DevPlayG",
+		Debug:       false,
 		Trace:       false,
 		Address:     ":8000",
 	})

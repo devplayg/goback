@@ -9,6 +9,10 @@
             font-weight: 400;
         }
 
+        .bg-gray-light {
+            background-color: #f7f7f7;
+        }
+
         @media print{@page {size: landscape}}
     </style>
 {{end}}
@@ -96,12 +100,12 @@
                         <th data-field="sizeDeleted" data-sortable="true" data-formatter="byteSizeFormatter">Deleted</th>
                         {{/*                        <th data-field="sizeDeleted" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Deleted (B)</th>*/}}
 
-                        <th data-field="countFailed" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupStatsEvents">Failed</th>
-                        <th data-field="sizeFailed" data-sortable="true" data-formatter="byteSizeFormatter">Failed</th>
+                        <th data-field="countFailed" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupStatsEvents" class="bg-gray-light">Failed</th>
+                        <th data-field="sizeFailed" data-sortable="true" data-formatter="byteSizeFormatter" class="bg-gray-light">Failed</th>
                         {{/*                        <th data-field="sizeFailed" data-sortable="true" data-formatter="thCommaFormatter" data-visible="false">Failed (B)</th>*/}}
 
-                        <th data-field="countSuccess" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupStatsEvents">Backup Files</th>
-                        <th data-field="sizeSuccess" data-sortable="true" data-formatter="byteSizeFormatter">Backup Size</th>
+                        <th data-field="countSuccess" data-sortable="true" data-formatter="backupResultFormatter" data-events="backupStatsEvents" class="bg-gray-light">Backup Files</th>
+                        <th data-field="sizeSuccess" data-sortable="true" data-formatter="byteSizeFormatter" class="bg-gray-light">Backup Size</th>
 
                         <th data-field="message" data-sortable="false">Read / Compare / Copy / Write</th>
 
@@ -826,6 +830,5 @@
                 ext: [ext]
             });
         });
-
     </script>
 {{end}}

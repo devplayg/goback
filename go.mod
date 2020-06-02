@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/boltdb/bolt v1.3.1
 	github.com/devplayg/golibs v1.0.1
-	github.com/devplayg/himma/v2 v2.0.1
+	github.com/devplayg/himma/v2 v2.0.3
 	github.com/devplayg/hippo/v2 v2.2.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/gorilla/mux v1.7.4
