@@ -79,7 +79,7 @@ func (k *LocalKeeper) keep(path string) (string, float64, error) {
 		p = strings.ReplaceAll(path, ":", "")
 	}
 	dstPath := filepath.Join(k.tempDir, p)
-	if err := os.MkdirAll(filepath.Dir(dstPath), 0644); err != nil {
+	if err := os.MkdirAll(filepath.Dir(dstPath), 0755); err != nil {
 		return "", 0.0, err
 	}
 	dstFile, err := os.OpenFile(dstPath, os.O_RDWR|os.O_CREATE, 0600)

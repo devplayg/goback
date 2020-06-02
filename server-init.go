@@ -77,7 +77,7 @@ func (s *Server) initScheduler() error {
 func (s *Server) initDirectories() error {
 	dbDir := filepath.Join(s.WorkingDir, s.dbDir)
 	if _, err := os.Stat(dbDir); os.IsNotExist(err) {
-		if err := os.Mkdir(dbDir, 0600); err != nil {
+		if err := os.Mkdir(dbDir, 0755); err != nil {
 			return fmt.Errorf("unable to create database directory: %w", err)
 		}
 	}
