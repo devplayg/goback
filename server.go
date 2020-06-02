@@ -165,7 +165,7 @@ func (s *Server) getChangesLog(id int) ([]byte, error) {
 	// read changes data in file
 	h := md5.Sum([]byte(summary.SrcDir))
 	key := hex.EncodeToString(h[:])
-	logPath := filepath.Join(s.dbDir, fmt.Sprintf(ChangesDbName, key, summary.BackupId))
+	logPath := filepath.Join(s.dbDir, fmt.Sprintf(ChangesDbName, summary.BackupId, key))
 	if _, err := os.Stat(logPath); os.IsNotExist(err) {
 		return nil, err
 	}

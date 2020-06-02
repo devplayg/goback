@@ -17,7 +17,7 @@ const (
 	FileBackupSucceeded = 1
 
 	FilesDbName   = "files-%s.db"
-	ChangesDbName = "changes-%s-%d.db"
+	ChangesDbName = "changes-%d-%s.db"
 
 	Initial     = 1
 	Incremental = 2
