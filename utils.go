@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var ErrorBucketNotFound = errors.New("bucket not found")
@@ -178,4 +179,44 @@ func DecodeSummaries(data []byte) ([]*Summary, int, int, error) {
 
 	lastIdx := len(summaries) - 1
 	return summaries, summaries[lastIdx].BackupId, summaries[lastIdx].Id, err
+}
+
+func newSummaryStats(s *Summary) *Summary {
+	t, _ := time.ParseInLocation("2006-01-02 15:04:05", s.Date.Format("2006-01")+"-01 00:00:00", time.Local)
+
+	return &Summary{
+		//Id:             0,
+		//BackupId:       0,
+		Date:   t,
+		SrcDir: s.SrcDir,
+		//BackupDir:      "",
+		//BackupType:     0,
+		//State:          0,
+		//WorkerCount:    0,
+		//TotalSize:      0,
+		//TotalCount:     0,
+		AddedCount:    0,
+		AddedSize:     0,
+		ModifiedCount: 0,
+		ModifiedSize:  0,
+		DeletedCount:  0,
+		DeletedSize:   0,
+		FailedCount:   0,
+		FailedSize:    0,
+		SuccessCount:  0,
+		SuccessSize:   0,
+		//ReadingTime:    time.Time{},
+		//ComparisonTime: time.Time{},
+		//BackupTime:     time.Time{},
+		//LoggingTime:    time.Time{},
+		//ExecutionTime:  0,
+		//Message:        "",
+		//Version:        0,
+		//Stats:          nil,
+		//Keeper:         nil,
+		//addedFiles:     nil,
+		//modifiedFiles:  nil,
+		//deletedFiles:   nil,
+		//failedFiles:    nil,
+	}
 }

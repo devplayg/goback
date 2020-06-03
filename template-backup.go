@@ -78,6 +78,7 @@ func displayBackup() string {
                         data-toggle="table"
 						data-cookie="true"
 						data-cookie-id-table="backup"
+                        data-cookies-enabled="['bs.table.columns']"      					
                         data-toolbar="#toolbar-backup"
                         data-search="true"
                         data-url="/summaries"

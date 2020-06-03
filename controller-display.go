@@ -40,7 +40,7 @@ func (c *Controller) DisplayStats(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
 	}
-	// if tmpl, err = tmpl.Parse(DisplayWithLocalFile("stats")); err != nil {
+	//if tmpl, err = tmpl.Parse(DisplayWithLocalFile("stats")); err != nil {
 	if tmpl, err = tmpl.Parse(displayStats()); err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
 	}

@@ -19,6 +19,17 @@ func (c *Controller) GetSummaries(w http.ResponseWriter, r *http.Request) {
 	w.Write(b)
 }
 
+func (c *Controller) GetStats(w http.ResponseWriter, r *http.Request) {
+	stats, err := c.server.findStats()
+	if err != nil {
+		Response(w, r, err, http.StatusInternalServerError)
+	}
+
+	b, _ := json.Marshal(stats)
+	w.Header().Add("Content-Type", "application/json")
+	w.Write(b)
+}
+
 func (c *Controller) GetChangesLog(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])

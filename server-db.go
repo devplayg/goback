@@ -25,6 +25,39 @@ func (s *Server) findSummaries() ([]*Summary, error) {
 	return summaries, err
 }
 
+func (s *Server) findStats() ([]*Summary, error) {
+	summaries, err := s.findSummaries()
+	if err != nil {
+		return nil, err
+	}
+
+	statsMap := make(map[string]*Summary)
+	for _, s := range summaries {
+		month := s.Date.Format("2006-01")
+		dir := s.SrcDir
+		key := month + dir
+		if _, have := statsMap[key]; !have {
+			statsMap[key] = newSummaryStats(s)
+		}
+		statsMap[key].AddedCount += s.AddedCount
+		statsMap[key].AddedSize += s.AddedSize
+		statsMap[key].ModifiedCount += s.ModifiedCount
+		statsMap[key].ModifiedSize += s.ModifiedSize
+		statsMap[key].DeletedCount += s.DeletedCount
+		statsMap[key].DeletedSize += s.DeletedSize
+		statsMap[key].SuccessCount += s.SuccessCount
+		statsMap[key].SuccessSize += s.SuccessSize
+		statsMap[key].FailedCount += s.FailedCount
+		statsMap[key].FailedSize += s.FailedSize
+	}
+
+	var stats []*Summary
+	for _, s := range statsMap {
+		stats = append(stats, s)
+	}
+	return stats, err
+}
+
 func (s *Server) findSummaryById(id int) (*Summary, error) {
 	var data []byte
 	err := s.db.View(func(tx *bolt.Tx) error {

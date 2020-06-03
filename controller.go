@@ -96,6 +96,7 @@ func (c *Controller) initRouter() error {
 	// Backup
 	c.router.HandleFunc("/backup/", c.DisplayBackup)
 	c.router.HandleFunc("/summaries", c.GetSummaries)
+	c.router.HandleFunc("/stats", c.GetStats)
 	c.router.HandleFunc("/summaries/{id:[0-9]+}/changes", c.GetChangesLog)
 
 	// Statistics

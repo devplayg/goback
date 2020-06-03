@@ -64,18 +64,22 @@
                     </select>
                 </div>
                 <table  id="table-stats"
-                        data-buttons-class="default"
                         class="table table-sm"
+                        data-buttons-class="default"
+                        data-url="/stats"
                         data-toggle="table"
+                        data-cookie-id-table="stats"
+                        data-cookie="true"
+                        data-cookies-enabled="['bs.table.columns']"
                         data-toolbar="#toolbar-stats"
                         data-search="true"
+                        data-side-pagination="client"
                         data-pagination="true"
                         data-show-export="true"
                         data-export-types="['csv', 'txt', 'excel']"
-                        data-side-pagination="client"
                         data-show-refresh="true"
                         data-show-columns="true"
-                        data-sort-name="id"
+                        data-sort-name="date"
                         data-page-size="20"
                         data-sort-order="desc">
                     <thead>
@@ -111,78 +115,8 @@
     <script>
         const Monthly = "monthly",
               Weekly = "weekly",
-              sysTz = "Asia/Seoul";
-        // console.log(moment);
-        // var moment = require('moment-timezone');
-        // moment().tz("America/Los_Angeles").format();
-        // import moment from 'moment';
-        // import 'moment-timezone';
-        // console.log(moment.tz);
-        moment.tz.setDefault(sysTz);
-
-        $.ajax({
-            url: "/summaries",
-        }).done(function(summaries) {
-            // console.log(summaries);
-
-            let stats = {};
-            if ( $("#select-period").val() === Monthly) {
-                $.each(summaries, function(i, r) {
-                    let key = moment(r.date).format("YYYY-MM");
-                    // console.log(key);
-                    if (!(key in stats)) {
-                        stats[key] = {};
-                        // console.log("new! " + key);
-                    }
-
-                    if (!(r.srcDir in stats[key])) {
-                        stats[key][r.srcDir] = {
-                            date: key,
-                            srcDir: r.srcDir,
-                            countAdded: 0, sizeAdded: 0,
-                            countModified: 0, sizeModified: 0,
-                            countDeleted: 0, sizeDeleted: 0,
-                            countFailed: 0, sizeFailed: 0,
-                            countSuccess: 0, sizeSuccess: 0,
-                        };
-
-                    }
-
-                    stats[key][r.srcDir].countAdded    += r.countAdded;
-                    stats[key][r.srcDir].sizeAdded     += r.sizeAdded;
-                    stats[key][r.srcDir].countModified += r.countModified;
-                    stats[key][r.srcDir].sizeModified  += r.sizeModified;
-                    stats[key][r.srcDir].countDeleted  += r.countDeleted;
-                    stats[key][r.srcDir].sizeDeleted   += r.sizeDeleted;
-                    stats[key][r.srcDir].countFailed   += r.countFailed;
-                    stats[key][r.srcDir].sizeFailed    += r.sizeFailed;
-                    stats[key][r.srcDir].countSuccess  += r.countSuccess;
-                    stats[key][r.srcDir].sizeSuccess   += r.sizeSuccess;
-
-                    console.log(r.date + " => " + key );
-                });
-            }
-
-            let rows = [];
-            $.each(stats, function(date, statsByDir) {
-                // console.log(dir);
-                $.each(statsByDir, function(dir, data) {
-                    rows.push(data);
-                });
-            });
-            console.log(rows);
-
-            // console.log( Object.values(stats));
-
-            // Initialize directory selector
-            initDirSelector(getSrcDirs(summaries));
-
-            // Update table
-            $("#table-stats").bootstrapTable("load", rows);
-        });
-
-        console.log(moment.tz);
-
+              SystemTz = "Asia/Seoul";
+        moment.tz.setDefault(SystemTz);
         $( "#select-srcDirs" ).change(function () {
             if (this.value.length > 0) {
                 $("#table-stats").bootstrapTable('filterBy', {
@@ -191,26 +125,30 @@
                 return;
             }
 
-            $("#table-backup").bootstrapTable('filterBy',{});
+            $("#table-stats").bootstrapTable('filterBy',{});
         });
-
-        function initDirSelector(dirs) {
-            $("#select-srcDirs").empty();
-            $("<option/>", {
-                "value": "",
-            }).text("Directories").appendTo($("#select-srcDirs"));
-            $.each(dirs, function(i, dir) {
-                console.log(dir);
-                $("<option/>", {
-                    "value": dir
-                }).text(dir).appendTo($("#select-srcDirs"));
-            });
-        }
 
         $(".table")
             .on('all.bs.table', function (e, data) {
                 $('.has-tooltip').tooltip();
             })
+            .on('load-success.bs.table', function(e, rows) {
+                let dirMap = {};
+                $.each(rows, function(i, s) {
+                    dirMap[s.srcDir] = true;
+                });
+                Object.keys(dirMap).sort();
+
+                $("#select-srcDirs").empty();
+                $("<option/>", {
+                    "value": "",
+                }).text("Directories").appendTo($("#select-srcDirs"));
+                $.each(dirMap, function(dir, r) {
+                    $("<option/>", {
+                        "value": dir
+                    }).text(dir).appendTo($("#select-srcDirs"));
+                });
+            });
 
     </script>
 {{end}}
