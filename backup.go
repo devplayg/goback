@@ -35,7 +35,7 @@ func NewBackup(id int, job *Job, dbDir string, keeper Keeper, started time.Time)
 		job:               job,
 		srcDirMap:         make(map[string]*dirInfo),
 		workerCount:       runtime.GOMAXPROCS(0) * 2,
-		version:           2,
+		version:           3,
 		started:           started,
 		rank:              50,
 		minFileSizeToRank: 10 * MB,

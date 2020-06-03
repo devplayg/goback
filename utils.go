@@ -17,7 +17,7 @@ import (
 
 var ErrorBucketNotFound = errors.New("bucket not found")
 
-func iToB(v int) []byte {
+func IntToByte(v int) []byte {
 	b := make([]byte, 8)
 	binary.BigEndian.PutUint64(b, uint64(v))
 	return b

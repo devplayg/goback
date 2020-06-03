@@ -32,7 +32,7 @@ func (s *Server) findSummaryById(id int) (*Summary, error) {
 		if b == nil {
 			return ErrorBucketNotFound
 		}
-		data = b.Get(iToB(id))
+		data = b.Get(IntToByte(id))
 		return nil
 	})
 	var summary Summary
@@ -55,7 +55,7 @@ func (s *Server) issueDbId(bucketName []byte) (int, error) {
 		newId, _ := b.NextSequence()
 		id = int(newId)
 
-		return b.Put(iToB(id), nil)
+		return b.Put(IntToByte(id), nil)
 	})
 	return id, err
 }
@@ -73,7 +73,7 @@ func (s *Server) writeSummaries(results []*Summary) error {
 				log.Error(err)
 				continue
 			}
-			if err := b.Put(iToB(id), data); err != nil {
+			if err := b.Put(IntToByte(id), data); err != nil {
 				log.Error(err)
 				continue
 			}
