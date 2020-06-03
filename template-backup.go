@@ -94,12 +94,12 @@ func displayBackup() string {
                     <thead>
                     <tr>
                         <th data-field="id" data-sortable="true">ID</th>
-                        <th data-field="workerCount" data-sortable="true" data-visible="false">Workers</th>
                         <th data-field="backupId" data-sortable="true" data-visible="false">Backup ID</th>
                         <th data-field="date" data-sortable="true" data-formatter="dateFormatter">Date</th>
                         <th data-field="srcDir" data-sortable="true" data-formatter="shortDirFormatter">Source</th>
                         <th data-field="keeper.protocol" data-sortable="true" data-formatter="backupKeeperFormatter" data-visible="false">Storage</th>
                         <th data-field="backupType" data-sortable="true" data-formatter="backupTypeFormatter">Type</th>
+                        <th data-field="workerCount" data-sortable="true" data-visible="false">Workers</th>
                         <th data-field="state" data-sortable="true" data-formatter="backupStateFormatter">State</th>
                         <th data-field="execTime" data-sortable="true" data-formatter="toFixedFormatter">Time(Sec)</th>
 

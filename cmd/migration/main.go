@@ -62,19 +62,23 @@ func main() {
 	fmt.Printf("done. Found %d backup logs\n", len(oldSummaries))
 
 	var newSummaries []*goback.Summary
+	maxBackupId := 0
 	for _, s := range oldSummaries {
 		fmt.Printf("[%d/%d] %v vertsion=%d\n", s.BackupId, s.Id, s.Date, s.Version)
 		newSummaries = append(newSummaries, s.toNew())
-
-		if err := db.Update(func(tx *bolt.Tx) error {
-			b := tx.Bucket(goback.BackupBucket)
-			newId, _ := b.NextSequence()
-			id := int(newId)
-
-			return b.Put(goback.IntToByte(id), nil)
-		}); err != nil {
-			fmt.Printf("[error] %s\n", err.Error())
+		if s.BackupId > maxBackupId {
+			maxBackupId = s.BackupId
 		}
+
+		//if err := db.Update(func(tx *bolt.Tx) error {
+		//	b := tx.Bucket(goback.BackupBucket)
+		//	newId, _ := b.NextSequence()
+		//	id := int(newId)
+		//
+		//	return b.Put(goback.IntToByte(id), nil)
+		//}); err != nil {
+		//	fmt.Printf("[error] %s\n", err.Error())
+		//}
 
 		// Copy changes
 		h := md5.Sum([]byte(s.SrcDir))
@@ -86,6 +90,18 @@ func main() {
 				fmt.Printf("[error] %s\n", err.Error())
 			}
 			continue
+		}
+	}
+
+	for i := 1; i <= maxBackupId; i++ {
+		if err := db.Update(func(tx *bolt.Tx) error {
+			b := tx.Bucket(goback.BackupBucket)
+			newId, _ := b.NextSequence()
+			id := int(newId)
+
+			return b.Put(goback.IntToByte(id), nil)
+		}); err != nil {
+			fmt.Printf("[error] %s\n", err.Error())
 		}
 	}
 
