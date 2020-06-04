@@ -69,7 +69,8 @@ func (c *Controller) init() error {
 	// fmt.Println(base64.StdEncoding.EncodeToString(d))
 	// himma.Add(uiAssetMap,"/assets/img/logo.png", LogoImg)
 	uiAssetMap.AddZippedAndBase64Encoded("/assets/img/logo.png", LogoImg)
-	uiAssetMap.AddRaw("/assets/js/custom.js", customScript())
+	uiAssetMap.AddRaw("/assets/js/custom.js", customJavaScript())
+	uiAssetMap.AddRaw("/assets/css/custom.css", customCss())
 	WebAssetMap = uiAssetMap
 
 	//if err := c.loadSummaryDb(); err != nil {

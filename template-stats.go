@@ -3,22 +3,7 @@ package goback
 func displayStats() string {
 	return `
 {{define "css"}}
-    <style>
-        .pagination .page-link {
-            border-width: 1px;
-        }
-
-        .badge-stats {
-            margin-right: 3px;
-            font-weight: 400;
-        }
-
-        .bg-gray-light {
-            background-color: #f7f7f7;
-        }
-
-        @media print{@page {size: landscape}}
-    </style>
+    <link rel="stylesheet" media="screen, print" href="/assets/css/custom.css">
 {{end}}
 
 {{define "sidebar"}}
@@ -88,8 +73,8 @@ func displayStats() string {
                         data-sort-order="desc">
                     <thead>
                     <tr>
-                        <th data-field="date" data-sortable="true">Date</th>
-                        <th data-field="srcDir" data-sortable="true" data-formatter="shortDirFormatter">Source</th>
+                        <th data-field="date" data-sortable="true" data-formatter="yyyymmFormatter">Date</th>
+                        <th data-field="srcDir" data-sortable="true" data-formatter="shortDirFormatter">Directory</th>
 
                         <th data-field="countAdded" data-sortable="true" data-formatter="thousandCommaSep">Added</th>
                         <th data-field="sizeAdded" data-sortable="true" data-formatter="byteSizeFormatter">Added</th>
@@ -118,8 +103,8 @@ func displayStats() string {
     <script src="/assets/js/custom.js"></script>
     <script>
         const Monthly = "monthly",
-              Weekly = "weekly",
-              SystemTz = "Asia/Seoul";
+            Weekly = "weekly",
+            SystemTz = "Asia/Seoul";
         moment.tz.setDefault(SystemTz);
         $( "#select-srcDirs" ).change(function () {
             if (this.value.length > 0) {

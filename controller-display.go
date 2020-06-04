@@ -25,7 +25,7 @@ func (c *Controller) DisplayBackup(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
 	}
-	// if tmpl, err = tmpl.Parse(DisplayWithLocalFile("backup")); err != nil {
+	//if tmpl, err = tmpl.Parse(DisplayWithLocalFile("backup")); err != nil {
 	if tmpl, err = tmpl.Parse(displayBackup()); err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
 	}
@@ -70,7 +70,7 @@ func (c *Controller) DisplaySettings(w http.ResponseWriter, r *http.Request) {
 	// if tmpl, err = tmpl.Parse(DisplayWithLocalFile("settings")); err != nil {
 	// 	Response(w, r, err, http.StatusInternalServerError)
 	// }
-	// if tmpl, err = tmpl.Funcs(funcMap).Parse(DisplayWithLocalFile("settings")); err != nil {
+	//if tmpl, err = tmpl.Funcs(funcMap).Parse(DisplayWithLocalFile("settings")); err != nil {
 	if tmpl, err = tmpl.Funcs(funcMap).Parse(displaySettings()); err != nil {
 		Response(w, r, err, http.StatusInternalServerError)
 	}

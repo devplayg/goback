@@ -2,17 +2,7 @@ package goback
 
 func displaySettings() string {
 	return `{{define "css"}}
-    <style>
-        .pagination .page-link {
-            border-width: 1px;
-        }
-
-        .badge-stats {
-            margin-right: 3px;
-            font-weight: 400;
-        }
-        @media print{@page {size: landscape}}
-    </style>
+    <link rel="stylesheet" media="screen, print" href="/assets/css/custom.css">
 {{end}}
 
 {{define "sidebar"}}
@@ -28,7 +18,6 @@ func displaySettings() string {
 {{end}}
 
 {{define "content"}}
-
     <div class="subheader">
         <h1 class="subheader-title">
             <i class="subheader-icon fal fa-cog"></i> Settings
@@ -104,7 +93,7 @@ func displaySettings() string {
                             {{end}}
                         </div>
                         <div class="card-body">
-                            <button class="btn btn-primary float-right">Update</button>
+                            <button class="btn btn-primary">Update</button>
                         </div>
                     </div>
                 </form>
@@ -119,7 +108,7 @@ func displaySettings() string {
 
                     <div class="card border mb-4">
                         <div class="card-header d-flex pr-2 align-items-center flex-wrap">
-                            <div class="card-title">Backup Job #{{$job.Id}} </div>
+                            <div class="card-title">#{{$job.Id}} </div>
                             <div class="custom-control d-flex custom-switch ml-auto">
                                 <input id="job-checkbox-{{$job.Id}}" type="checkbox" name="enabled" class="custom-control-input" {{if $job.Enabled}}checked{{end}}>
                                 <label class="custom-control-label fw-500" for="job-checkbox-{{$job.Id}}"></label>
@@ -183,8 +172,8 @@ func displaySettings() string {
                                 </div>
                             </div>
 
-                            <div class="float-right">
-                                <button type="button" class="btn btn-danger runBackup" data-id="{{$job.Id}}">Run backup</button>
+                            <div>
+                                <button type="button" class="btn btn-danger runBackup d-none" data-id="{{$job.Id}}">Run backup</button>
                                 <button class="btn btn-primary">Update</button>
                             </div>
                         </div>
