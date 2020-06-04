@@ -15,15 +15,19 @@ import (
 	"time"
 )
 
-func NewEngine(appConfig *AppConfig) *hippo.Engine {
-	server := NewServer(appConfig)
+func NewEngine(app *AppConfig) *hippo.Engine {
+	server := NewServer(app)
+	logDir := "."
+	if app.Verbose {
+		logDir = ""
+	}
 	engine := hippo.NewEngine(server, &hippo.Config{
-		Name:        appConfig.Name,
-		Description: appConfig.Description,
-		Version:     appConfig.Version,
-		Debug:       appConfig.Debug,
-		Trace:       appConfig.Trace,
-		LogDir:      "",
+		Name:        app.Name,
+		Description: app.Description,
+		Version:     app.Version,
+		Debug:       app.Debug,
+		Trace:       app.Trace,
+		LogDir:      logDir,
 	})
 	return engine
 }
@@ -68,6 +72,8 @@ func (s *Server) Start() error {
 	// Start scheduler
 	s.cron.Start()
 
+	log.Infof("server has been started; listening on %s", s.appConfig.Address)
+
 	// Wait for HTTP server to stop
 	<-ch
 
@@ -108,10 +114,10 @@ func (s *Server) runBackupJob(jobId int) error {
 		return fmt.Errorf("invalid keeper protocol %d", job.Storage.Protocol)
 	}
 
-	//log.WithFields(logrus.Fields{
+	// log.WithFields(logrus.Fields{
 	//	"id":      job.Id,
 	//	"running": job.running,
-	//}).Debug("job")
+	// }).Debug("job")
 
 	s.rwMutex.Lock()
 	job.running = true

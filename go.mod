@@ -13,5 +13,6 @@ require (
 	github.com/pkg/sftp v1.11.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/sirupsen/logrus v1.6.0
-	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
+	github.com/spf13/pflag v1.0.5 // indirect
+	golang.org/x/crypto v0.0.0-20200602180216-279210d13fed
 )

@@ -129,19 +129,18 @@ func (c *Controller) Start() error {
 	ch := make(chan struct{})
 	go func() {
 		<-c.server.Ctx.Done()
-		c.server.Log.Info("2) got stop signal from engine")
 		if err := srv.Shutdown(context.Background()); err != nil {
 			c.server.Log.Error(err)
 		}
 		close(ch)
 	}()
 
-	c.server.Log.Debug("1) HTTP server has been started")
+	// c.server.Log.Debug("1) HTTP server has been started")
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		c.server.Log.Fatalf("HTTP server ListenAndServe: %v", err)
 	}
 	<-ch
-	c.server.Log.Debug("3) HTTP server has been stopped")
+	// c.server.Log.Debug("3) HTTP server has been stopped")
 	return nil
 }
 
