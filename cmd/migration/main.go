@@ -6,8 +6,7 @@ import (
 	"fmt"
 	"github.com/boltdb/bolt"
 	"github.com/devplayg/goback"
-	"github.com/devplayg/golibs/compress"
-	"github.com/devplayg/golibs/converter"
+	"github.com/devplayg/goutils"
 	"io"
 	"io/ioutil"
 	"os"
@@ -141,13 +140,13 @@ func readSummaryDb(path string) ([]*OldSummary, error) {
 	if err != nil {
 		return nil, err
 	}
-	decompressed, err := compress.Decompress(data, compress.GZIP)
+	decompressed, err := goutils.Gzip(data)
 	if err != nil {
 		return nil, err
 	}
 
 	var summaries []*OldSummary
-	if err := converter.DecodeFromBytes(decompressed, &summaries); err != nil {
+	if err := goutils.GobDecode(decompressed, &summaries); err != nil {
 		return nil, err
 	}
 

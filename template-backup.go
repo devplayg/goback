@@ -528,7 +528,6 @@ func displayBackup() string {
                     backup.stats.extRanking[i].rate = (r.count / total *100).toFixed(2);
                 });
             }
-            console.log(backup);
             $("#table-backup-stats-ext").bootstrapTable("load", backup.stats.extRanking);
             $("#table-backup-stats-size").bootstrapTable("load", backup.stats.sizeDist);
             $("#modal-backup-stats").modal("show");
@@ -613,11 +612,11 @@ func displayBackup() string {
                 $(".summary-srcDir").text(row.srcDir);
                 $(".summary-date").text(row.date);
                 $(".summary-countAdded").text(row.countAdded);
-                $(".summary-sizeAdded").html(byteSizeFormatter(row.sizeAdded));
+                $(".summary-sizeAdded").html(bytesToSize(row.sizeAdded));
                 $(".summary-countModified").text(row.countModified);
-                $(".summary-sizeModified").html(byteSizeFormatter(row.sizeModified));
+                $(".summary-sizeModified").html(bytesToSize(row.sizeModified));
                 $(".summary-countDeleted").text(row.countDeleted);
-                $(".summary-sizeDeleted").html(byteSizeFormatter(row.sizeDeleted));
+                $(".summary-sizeDeleted").html(bytesToSize(row.sizeDeleted));
                 $(".summary-execTime").text(row.execTime.toFixed(2) + " sec");
                 $(".summary-readingTime").text( (moment.parseZone(row.readingTime).diff(moment.parseZone(row.date)) / 1000).toFixed(2) );
                 $(".summary-comparingTime").text( (moment.parseZone(row.comparisonTime).diff(moment.parseZone(row.readingTime)) / 1000).toFixed(2) );

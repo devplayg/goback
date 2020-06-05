@@ -2,7 +2,6 @@ package goback
 
 import (
 	"encoding/json"
-	"github.com/devplayg/golibs/compress"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
@@ -39,7 +38,7 @@ func (c *Controller) GetChangesLog(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	w.Header().Set("Content-Encoding", compress.GZIP)
+	w.Header().Set("Content-Encoding", GZIP)
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(data)
 }

@@ -2,7 +2,7 @@ package goback
 
 import (
 	"fmt"
-	"github.com/devplayg/golibs/converter"
+	"github.com/devplayg/goutils"
 	"github.com/dustin/go-humanize"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -128,7 +128,7 @@ func (b *Backup) loadLastFileMap(dir string) (*sync.Map, error) {
 	}
 
 	var files []*File
-	if err := converter.DecodeFromBytes(data, &files); err != nil {
+	if err := goutils.GobDecode(data, &files); err != nil {
 		return nil, err
 	}
 

@@ -2,7 +2,7 @@ package goback
 
 import (
 	"fmt"
-	"github.com/devplayg/golibs/converter"
+	"github.com/devplayg/goutils"
 	"io/ioutil"
 	"path/filepath"
 	"sync"
@@ -40,7 +40,7 @@ func (b *Backup) writeFileMaps(fileMaps []*sync.Map) error {
 		})
 	}
 
-	data, err := converter.EncodeToBytes(files)
+	data, err := goutils.GobEncode(files)
 	if err != nil {
 		return fmt.Errorf("failed to encode file map: %w", err)
 	}

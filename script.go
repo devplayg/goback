@@ -71,7 +71,6 @@ func customJavaScript() string {
 				return '<span class="text-muted ">' + bytesToSize(val) + '</span>';
 			}
 
-
 			let textCss = (field.endsWith("Failed")) ? "text-danger" : "";
 			//if (val < 1000) {
 			//	return bytesToSize(val);

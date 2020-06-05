@@ -5,8 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/devplayg/golibs/compress"
-	"github.com/devplayg/golibs/converter"
+	"github.com/devplayg/goutils"
 	"github.com/dustin/go-humanize"
 	"io/ioutil"
 	"os"
@@ -98,7 +97,7 @@ func WriteBackupData(data interface{}, path string, encoding int) error {
 
 	// Encode
 	if encoding == GobEncoding {
-		encoded, err = converter.EncodeToBytes(data)
+		encoded, err = goutils.GobEncode(data)
 	} else if encoding == JsonEncoding {
 		encoded, err = json.Marshal(data)
 	} else {
@@ -109,43 +108,13 @@ func WriteBackupData(data interface{}, path string, encoding int) error {
 	}
 
 	// Compress
-	compressed, err := compress.Compress(encoded, compress.GZIP)
+	compressed, err := goutils.Gunzip(encoded)
 	if err != nil {
 		return fmt.Errorf("failed to compress data: %w", err)
 	}
 	if err := ioutil.WriteFile(path, compressed, 0644); err != nil {
 		return err
 	}
-	return nil
-}
-
-func LoadBackupData(path string, output interface{}, encoding int) error {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return fmt.Errorf("database not found: %s", path)
-	}
-
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-
-	decompressed, err := compress.Decompress(data, compress.GZIP)
-	if err != nil {
-		return err
-	}
-
-	if encoding == GobEncoding {
-		if err := converter.DecodeFromBytes(decompressed, output); err != nil {
-			return err
-		}
-	} else if encoding == JsonEncoding {
-		if err := json.Unmarshal(decompressed, output); err != nil {
-			return err
-		}
-	} else {
-		return fmt.Errorf("failed to restore  data: invalid encoding(%d)", encoding)
-	}
-
 	return nil
 }
 
@@ -167,18 +136,6 @@ func FindProperBackupDirName(dir string) string {
 		}
 		i++
 	}
-}
-
-func DecodeSummaries(data []byte) ([]*Summary, int, int, error) {
-	if len(data) < 1 {
-		return make([]*Summary, 0), 0, 0, nil
-	}
-
-	var summaries []*Summary
-	err := converter.DecodeFromBytes(data, &summaries)
-
-	lastIdx := len(summaries) - 1
-	return summaries, summaries[lastIdx].BackupId, summaries[lastIdx].Id, err
 }
 
 func newSummaryStats(s *Summary) *Summary {
