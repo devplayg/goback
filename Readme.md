@@ -43,5 +43,8 @@ powered by **BoltDB**
 
 ## To do
 
-- [ ] load schedule on service start
-- [ ] setting with Ajax
+- [X] Loading scheduler on starting
+- [ ] Displaying disk partion usage
+- [ ] Graphing file growth
+- [ ] Adding build note
+- [ ] Changing badge to button on UI
