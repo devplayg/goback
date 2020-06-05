@@ -237,45 +237,6 @@ type Stats struct {
 	SizeDist    []*goback.SizeDistStats `json:"sizeDist"`
 }
 
-//func (s *Stats) toNew() *goback.Stats {
-//	newStats := goback.Stats{
-//		ExtRanking:  nil,
-//		NameRanking: nil,
-//		SizeRanking: nil,
-//		SizeDist:    nil,
-//	}
-//}
-
-//
-//type ExtStats struct {
-//	Ext   string `json:"ext"`
-//	Size  int64  `json:"size"`
-//	Count int64  `json:"count"`
-//}
-//
-//type NameStats struct {
-//	Name  string   `json:"name"`
-//	Size  int64    `json:"size"`
-//	Paths []string `json:"paths"`
-//	Count int64    `json:"count"`
-//}
-//
-//type SizeDistStats struct {
-//	SizeDist int64 `json:"sizeDist"`
-//	Size     int64 `json:"size"`
-//	Count    int64 `json:"count"`
-//}
-//
-//type FileGrid struct {
-//	State   int       `json:"state"`
-//}
-//
-//type FileGrid struct {
-//	State    int       `json:"state"`
-//	ExecTime float64   `json:"execTime"`
-//	Message  string    `json:"msg"`
-//}
-
 func copy(src, dst string) (int64, error) {
 	sourceFileStat, err := os.Stat(src)
 	if err != nil {
