@@ -108,7 +108,7 @@ func WriteBackupData(data interface{}, path string, encoding int) error {
 	}
 
 	// Compress
-	compressed, err := goutils.Gunzip(encoded)
+	compressed, err := goutils.Gzip(encoded)
 	if err != nil {
 		return fmt.Errorf("failed to compress data: %w", err)
 	}

@@ -624,7 +624,6 @@ func Backup() string {
             },
             'click .changed': function (e, val, row, idx) {
                 let $btn = $(e.currentTarget);
-                console.log(   $btn.data("field") );
 
                 let tags = '<button type="button" class="btn btn-sm btn-outline-default mr-1">Backup ID: ' + row.id + '</button>';
                 tags += '<button type="button" class="btn btn-sm btn-outline-default mr-1">' + row.totalCount + ' files</button>';
