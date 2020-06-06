@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	appName        = "GoBack"
+	appName        = "goback"
 	appDescription = "Smart incremental backup"
 	appVersion     = "3.0.0 alpha"
 )
