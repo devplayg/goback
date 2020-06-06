@@ -140,7 +140,7 @@ func readSummaryDb(path string) ([]*OldSummary, error) {
 	if err != nil {
 		return nil, err
 	}
-	decompressed, err := goutils.Gzip(data)
+	decompressed, err := goutils.Gunzip(data)
 	if err != nil {
 		return nil, err
 	}
