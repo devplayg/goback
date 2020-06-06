@@ -44,6 +44,7 @@ func init() {
 }
 func main() {
 
+	// Check arguments
 	if len(os.Args) < 2 {
 		return
 	}
@@ -63,26 +64,16 @@ func main() {
 	var newSummaries []*goback.Summary
 	maxBackupId := 0
 	for _, s := range oldSummaries {
-		fmt.Printf("[%d/%d] %v vertsion=%d\n", s.BackupId, s.Id, s.Date, s.Version)
 		newSummaries = append(newSummaries, s.toNew())
 		if s.BackupId > maxBackupId {
 			maxBackupId = s.BackupId
 		}
 
-		//if err := db.Update(func(tx *bolt.Tx) error {
-		//	b := tx.Bucket(goback.BackupBucket)
-		//	newId, _ := b.NextSequence()
-		//	id := int(newId)
-		//
-		//	return b.Put(goback.IntToByte(id), nil)
-		//}); err != nil {
-		//	fmt.Printf("[error] %s\n", err.Error())
-		//}
-
 		// Copy changes
 		h := md5.Sum([]byte(s.SrcDir))
 		key := hex.EncodeToString(h[:])
 		srcFile := filepath.Join(backupDir, filepath.Base(s.BackupDir), fmt.Sprintf("changes-%s.db", key))
+		fmt.Printf("[%d/%d] %v / src=%s\n", s.BackupId, s.Id, s.Date.Format("2006-01-02 15:04:05"), s.BackupDir)
 		dstFile := filepath.Join(dbDir, fmt.Sprintf("changes-%d-%s.db", s.BackupId, key))
 		if _, err := copy(srcFile, dstFile); err != nil {
 			if s.BackupType != goback.Initial {
@@ -107,7 +98,6 @@ func main() {
 	if err := save(dbDir, newSummaries); err != nil {
 		panic(err)
 	}
-	//spew.Dump(oldSummaries)
 }
 
 func save(dbDir string, summary []*goback.Summary) error {

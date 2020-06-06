@@ -71,17 +71,18 @@ func (s *Storage) Tune() {
 }
 
 type AppConfig struct {
-	Address     string
-	Name        string
-	Description string
-	Version     string
-	Url         string
-	Text1       string
-	Text2       string
-	Year        int
-	Company     string
-	Debug       bool
-	Trace       bool
-	Verbose     bool
+	Address       string
+	Name          string
+	Description   string
+	Version       string
+	Url           string
+	Text1         string
+	Text2         string
+	Year          int
+	Company       string
+	Debug         bool
+	Trace         bool
+	Verbose       bool
+	DeveloperMode bool
 	// LogImgPath  string
 }

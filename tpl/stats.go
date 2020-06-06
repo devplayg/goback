@@ -1,3 +1,7 @@
+package tpl
+
+func Stats() string {
+	return `
 {{define "css"}}
     <link rel="stylesheet" media="screen, print" href="/assets/css/custom.css">
 {{end}}
@@ -134,6 +138,7 @@
                     }).text(dir).appendTo($("#select-srcDirs"));
                 });
             });
-
     </script>
 {{end}}
+`
+}

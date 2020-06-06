@@ -15,6 +15,10 @@ func (s *Server) init() error {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	log = s.Log
 
+	if err := s.initAccessKey(); err != nil {
+		return err
+	}
+
 	if err := s.initDirectories(); err != nil {
 		return fmt.Errorf("failed to initialize directorie; %w", err)
 	}
@@ -29,6 +33,17 @@ func (s *Server) init() error {
 
 	if err := s.initScheduler(); err != nil {
 		return fmt.Errorf("failed to initialize scheduler; %w", err)
+	}
+	return nil
+}
+
+func (s *Server) initAccessKey() error {
+	if len(os.Getenv(AccessKey)) < 1 {
+		return fmt.Errorf("access key not found in environment variables; %s", AccessKey)
+	}
+
+	if len(os.Getenv(SecretKey)) < 1 {
+		return fmt.Errorf("secret key not found in environment variables; %s", SecretKey)
 	}
 	return nil
 }

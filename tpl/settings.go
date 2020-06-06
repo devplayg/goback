@@ -1,6 +1,6 @@
-package goback
+package tpl
 
-func displaySettings() string {
+func Settings() string {
 	return `{{define "css"}}
     <link rel="stylesheet" media="screen, print" href="/assets/css/custom.css">
 {{end}}

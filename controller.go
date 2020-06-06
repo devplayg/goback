@@ -41,7 +41,7 @@ func NewController(server *Server, app *himma.Config) *Controller {
 }
 
 func (c *Controller) init() error {
-	if err := c.initRouter(); err != nil {
+	if err := c.setRouter(); err != nil {
 		return err
 	}
 	uiAssetMap, err := himma.GetAssetMap(
@@ -64,41 +64,6 @@ func (c *Controller) init() error {
 	uiAssetMap.AddRaw("/assets/js/custom.js", customJavaScript())
 	uiAssetMap.AddRaw("/assets/css/custom.css", customCss())
 	WebAssetMap = uiAssetMap
-
-	return nil
-}
-
-func (c *Controller) initRouter() error {
-	c.router = mux.NewRouter()
-	c.router.HandleFunc("/", c.DisplayDefault)
-
-	// Assets
-	c.router.HandleFunc("/assets/{u1}/{u2}", func(w http.ResponseWriter, r *http.Request) {
-		GetAsset(w, r)
-	})
-	c.router.HandleFunc("/assets/{u1}/{u2}/{u3}", func(w http.ResponseWriter, r *http.Request) {
-		GetAsset(w, r)
-	})
-	c.router.HandleFunc("/assets/{u1}/{u2}/{u3}/{u4}", func(w http.ResponseWriter, r *http.Request) {
-		GetAsset(w, r)
-	})
-
-	// Backup
-	c.router.HandleFunc("/backup/", c.DisplayBackup)
-	c.router.HandleFunc("/summaries", c.GetSummaries)
-	c.router.HandleFunc("/stats", c.GetStats)
-	c.router.HandleFunc("/summaries/{id:[0-9]+}/changes", c.GetChangesLog)
-
-	// Statistics
-	c.router.HandleFunc("/stats/", c.DisplayStats)
-
-	// Settings
-	c.router.HandleFunc("/settings/", c.DisplaySettings)
-	c.router.HandleFunc("/settings/job/id/{id:[0-9]+}", c.UpdateJob).Methods(http.MethodPatch)
-	c.router.HandleFunc("/settings/storage/id/{id:[0-9]+}", c.UpdateStorage).Methods(http.MethodPatch)
-	c.router.HandleFunc("/backup/{id:[0-9]+}/run", c.RunBackupJob).Methods(http.MethodGet)
-
-	http.Handle("/", c.router)
 
 	return nil
 }

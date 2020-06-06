@@ -13,10 +13,10 @@ import (
 
 func (c *Controller) ParseForm(r *http.Request, o interface{}) (map[string]string, error) {
 	if err := r.ParseForm(); err != nil {
-		return nil, errors.New("parse error")
+		return nil, err
 	}
 	if err := schema.NewDecoder().Decode(o, r.PostForm); err != nil {
-		return nil, errors.New("parse error")
+		return nil, err
 	}
 	return mux.Vars(r), nil
 }

@@ -1,9 +1,12 @@
 package goback
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -25,7 +28,7 @@ func (c *Controller) GetStats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	b, _ := json.Marshal(stats)
-	w.Header().Add("Content-Type", "application/json")
+	w.Header().Add("Content-Type", ApplicationJson)
 	w.Write(b)
 }
 
@@ -39,7 +42,7 @@ func (c *Controller) GetChangesLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Encoding", GZIP)
-	w.Header().Add("Content-Type", "application/json")
+	w.Header().Add("Content-Type", ApplicationJson)
 	w.Write(data)
 }
 
@@ -59,4 +62,56 @@ func (c *Controller) findSummaryById(id int) *Summary {
 	}
 
 	return nil
+}
+
+func (c *Controller) DoLogout(w http.ResponseWriter, r *http.Request) {
+	session, err := store.Get(r, SignInSessionId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	session.Options.MaxAge = -1
+	session.Save(r, w)
+	http.Redirect(w, r, LoginUri, http.StatusSeeOther)
+}
+
+func (c *Controller) DoLogin(w http.ResponseWriter, r *http.Request) {
+	var signIn SignIn
+	_, err := c.ParseForm(r, &signIn)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	session, err := store.Get(r, SignInSessionId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	// inputPwdHash := sha256.Sum256([]byte(SecretKey))
+	serverPwdHash := sha256.Sum256([]byte(os.Getenv(SecretKey)))
+
+	m := map[string]interface{}{
+		"logged": false,
+		"url":    "",
+	}
+	if !(os.Getenv(AccessKey) == signIn.AccessKey && signIn.SecretKey == hex.EncodeToString(serverPwdHash[:])) {
+		b, _ := json.Marshal(m)
+		w.Header().Add("Content-Type", ApplicationJson)
+		w.Write(b)
+		return
+	}
+	m["logged"] = true
+	m["url"] = HomeUri
+
+	session.Values[AccessKey] = r.RemoteAddr
+	err = session.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	b, _ := json.Marshal(m)
+	w.Header().Add("Content-Type", ApplicationJson)
+	w.Write(b)
+	//http.Redirect(w, r, HomeUri, http.StatusSeeOther)
 }

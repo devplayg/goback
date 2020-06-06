@@ -81,10 +81,15 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Stop() error {
-	s.cron.Stop()
 
-	if err := s.db.Close(); err != nil {
-		return err
+	if s.cron != nil {
+		s.cron.Stop()
+	}
+
+	if s.db != nil {
+		if err := s.db.Close(); err != nil {
+			return err
+		}
 	}
 
 	s.Log.Info("server has been stopped")

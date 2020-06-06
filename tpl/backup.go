@@ -1,19 +1,6 @@
-package goback
+package tpl
 
-import (
-	"fmt"
-	"io/ioutil"
-)
-
-func DisplayWithLocalFile(name string) string {
-	b, err := ioutil.ReadFile(fmt.Sprintf("static/%s.html", name))
-	if err != nil {
-		log.Error(err)
-	}
-	return string(b)
-}
-
-func displayBackup() string {
+func Backup() string {
 	return `{{define "css"}}
     <link rel="stylesheet" media="screen, print" href="/assets/css/custom.css">
 {{end}}
@@ -27,6 +14,9 @@ func displayBackup() string {
     </li>
     <li>
         <a href="/settings/" title="Settings"><i class="fal fa-cog"></i><span class="nav-link-text">Settings</span></a>
+    </li>
+	<li>
+        <a href="/logout" title="Sign out"><i class="fal fa-sign-out"></i><span class="nav-link-text">Sign out</span></a>
     </li>
 {{end}}
 

@@ -28,23 +28,25 @@ var (
 	// batchTimeout = fs.Int("batchtime", 1000, "Batch timeout, in milliseconds")
 	// worker       = fs.Int("worker", 0, "Worker count")
 	// monitor      = fs.Bool("mon", false, "Monitoring operation on HTTP")
-	port = fs.Uint16P("port", "p", 8000, "Monitoring address")
+	port    = fs.Uint16P("port", "p", 8000, "Monitoring address")
+	devMode = fs.Bool("dev", false, "Developer mode")
 )
 
 func main() {
 	engine := goback.NewEngine(&goback.AppConfig{
-		Name:        appName,
-		Description: appDescription,
-		Version:     appVersion,
-		Url:         "https://github.com/devplayg/goback",
-		Text1:       "MAKE YOUR DATA SAFE",
-		Text2:       "powered by Go",
-		Year:        time.Now().Year(),
-		Company:     "DevPlayG",
-		Debug:       *debug,
-		Trace:       false,
-		Address:     ":" + strconv.Itoa(int(*port)),
-		Verbose:     *verbose,
+		Name:          appName,
+		Description:   appDescription,
+		Version:       appVersion,
+		Url:           "https://github.com/devplayg/goback",
+		Text1:         "MAKE YOUR DATA SAFE",
+		Text2:         "powered by Go",
+		Year:          time.Now().Year(),
+		Company:       "DevPlayG",
+		Debug:         *debug,
+		Trace:         false,
+		Address:       ":" + strconv.Itoa(int(*port)),
+		Verbose:       *verbose,
+		DeveloperMode: *devMode,
 	})
 
 	// Start
