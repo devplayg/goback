@@ -12,6 +12,9 @@
     <li>
         <a href="/settings/" title="Settings"><i class="fal fa-cog"></i><span class="nav-link-text">Settings</span></a>
     </li>
+    <li>
+        <a href="/logout" title="Sign out"><i class="fal fa-sign-out"></i><span class="nav-link-text">Sign out</span></a>
+    </li>
 {{end}}
 
 {{define "content"}}
@@ -462,14 +465,6 @@
     <script src="/assets/js/custom.js"></script>
     <script>
         function backupRowStyle(row, index) {
-            let classes = [
-                'bg-blue',
-                'bg-green',
-                'bg-orange',
-                'bg-yellow',
-                'bg-red'
-            ]
-
             if (row.state === -1) {
                 return {
                     classes: 'bg-warning-100'
@@ -548,29 +543,22 @@
         * Formatters
         */
 
-        // function backupBackupCountFormatter(val, row, idx) {
-        //     return backupResultFormatter(row.countAdded + row.countModified);
-        // }
-        // function backupBackupSizeFormatter(val, row, idx) {
-        //     return byteSizeFormatter(row.sizeAdded + row.sizeModified);
-        // }
-
-
         $("#modal-backup-changes, #modal-backup-stats")
-            .on('show.bs.modal', function (e) {
-
-            })
-            .on('hidden.bs.modal', function (e) {
+            .on("hidden.bs.modal", function (e) {
                 $(".table-data").bootstrapTable("load", []);
                 $(".table-data").bootstrapTable("filterBy", {}); // reset filter
                 $(".stats-data").empty();
             });
 
         $(".table")
-            .on('all.bs.table', function (e, data) {
+            .on("refresh.bs.table", function (e) {
+                console.log(333);
+                $("#table-backup").waitMe(waitMeOptions);
+            })
+            .on("all.bs.table", function (e, data) {
                 $('.has-tooltip').tooltip();
             })
-            .on('load-success.bs.table', function(e, rows) {
+            .on("load-success.bs.table", function(e, rows) {
                 let srcDir = {};
                 $.each(rows, function(i, s) {
                     srcDir[s.srcDir] = true;
@@ -618,7 +606,6 @@
             },
             'click .changed': function (e, val, row, idx) {
                 let $btn = $(e.currentTarget);
-                console.log(   $btn.data("field") );
 
                 let tags = '<button type="button" class="btn btn-sm btn-outline-default mr-1">Backup ID: ' + row.id + '</button>';
                 tags += '<button type="button" class="btn btn-sm btn-outline-default mr-1">' + row.totalCount + ' files</button>';

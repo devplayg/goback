@@ -24,6 +24,14 @@ func customCss() string {
 
 func customJavaScript() string {
 	script := `
+        let waitMeOptions = {
+			effect : "stretch",
+			text : 'Loading..',
+			bg : "rgba(255,255,255,0.7)",
+			color : "#616469"
+		};
+		
+
 		function dateFormatter(val, row, idx) {
 			return moment(val).format();
 		}

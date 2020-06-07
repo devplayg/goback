@@ -192,6 +192,7 @@ func (s *OldSummary) toNew() *goback.Summary {
 		BackupId:       s.BackupId,
 		Date:           s.Date,
 		SrcDir:         s.SrcDir,
+		State:          s.State,
 		BackupDir:      s.BackupDir,
 		BackupType:     s.BackupType,
 		WorkerCount:    s.WorkerCount,
