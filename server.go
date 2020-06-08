@@ -178,7 +178,7 @@ func (s *Server) getChangesLog(id int) ([]byte, error) {
 	key := hex.EncodeToString(h[:])
 	logPath := filepath.Join(s.dbDir, fmt.Sprintf(ChangesDbName, summary.BackupId, key))
 	if _, err := os.Stat(logPath); os.IsNotExist(err) {
-		return nil, err
+		return nil, fmt.Errorf("database '%s' not found", filepath.Base(logPath))
 	}
 	return ioutil.ReadFile(logPath)
 }

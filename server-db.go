@@ -2,6 +2,7 @@ package goback
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/boltdb/bolt"
 )
 
@@ -16,6 +17,7 @@ func (s *Server) findSummaries() ([]*Summary, error) {
 				log.Error(err)
 				return nil
 			}
+			summary.Stats = nil
 			summaries = append(summaries, &summary)
 			return nil
 		})
@@ -69,11 +71,16 @@ func (s *Server) findSummaryById(id int) (*Summary, error) {
 		return nil
 	})
 	var summary Summary
-	if err == nil {
-		err := json.Unmarshal(data, &summary)
-		if err != nil {
-			return nil, err
-		}
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, fmt.Errorf("summary-%d not found", id)
+	}
+
+	err = json.Unmarshal(data, &summary)
+	if err != nil {
+		return nil, err
 	}
 	return &summary, err
 }

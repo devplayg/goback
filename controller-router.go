@@ -21,12 +21,16 @@ func (c *Controller) setRouter() error {
 		GetAsset(w, r)
 	})
 
+	// System
+	c.router.HandleFunc("/sysInfo", c.SysInfo).Methods(http.MethodGet)
+
 	// Backup
 	c.router.HandleFunc("/login", c.DisplayLogin).Methods(http.MethodGet)
 	c.router.HandleFunc("/login", c.DoLogin).Methods(http.MethodPost)
 	c.router.HandleFunc("/logout", c.DoLogout)
 	c.router.HandleFunc("/backup/", c.DisplayBackup)
 	c.router.HandleFunc("/summaries", c.GetSummaries)
+	c.router.HandleFunc("/summaries/{id:[0-9]+}", c.GetSummary)
 	c.router.HandleFunc("/stats", c.GetStats)
 	c.router.HandleFunc("/summaries/{id:[0-9]+}/changes", c.GetChangesLog)
 

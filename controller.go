@@ -61,7 +61,7 @@ func (c *Controller) init() error {
 		return err
 	}
 	uiAssetMap.AddZippedAndBase64Encoded("/assets/img/logo.png", LogoImg)
-	uiAssetMap.AddRaw("/assets/js/custom.js", customJavaScript())
+	uiAssetMap.AddRaw("/assets/js/custom.js", customScript())
 	uiAssetMap.AddRaw("/assets/css/custom.css", customCss())
 	WebAssetMap = uiAssetMap
 
@@ -119,7 +119,7 @@ func DetectContentType(ext string) string {
 	return ctype
 }
 
-func Response(w http.ResponseWriter, r *http.Request, err error, statusCode int) {
+func ResponseErr(w http.ResponseWriter, r *http.Request, err error, statusCode int) {
 	if statusCode != http.StatusOK {
 		log.WithFields(logrus.Fields{
 			"ip":     r.RemoteAddr,
@@ -128,10 +128,26 @@ func Response(w http.ResponseWriter, r *http.Request, err error, statusCode int)
 			"length": r.ContentLength,
 		}).Error(err)
 	}
-	w.Header().Add("Content-Type", "application/json")
+	w.Header().Add("Content-Type", ApplicationJson)
 	b, _ := json.Marshal(map[string]interface{}{
 		"error": err.Error(),
 	})
 	w.WriteHeader(statusCode)
 	w.Write(b)
+}
+
+func ResponseData(w http.ResponseWriter, r *http.Request, data interface{}) {
+	json, err := json.Marshal(data)
+	if err != nil {
+		ResponseErr(w, r, err, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Add("Content-Type", ApplicationJson)
+	w.Write(json)
+}
+
+func ResponseZippedRaw(w http.ResponseWriter, r *http.Request, data []byte) {
+	w.Header().Add("Content-Type", ApplicationJson)
+	w.Header().Set("Content-Encoding", GZIP)
+	w.Write(data)
 }

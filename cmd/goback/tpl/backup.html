@@ -23,6 +23,7 @@
             <i class="fal fa-list-ul mr-1"></i> Backup Logs
             <small>
                 Backup history
+                --<span class="sysInfo-time" data-format="lll"></span>--
             </small>
         </h1>
     </div>
@@ -115,10 +116,10 @@
         <div class="modal-dialog mw-100 w-75" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2 class="modal-title">
-                        <i class="fal fa-file-alt"></i> Changes
+                    <h1 class="modal-title">
+                        Changes
                         <i class="summary fw-300 small ml-2"></i>
-                    </h2>
+                    </h1>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true"><i class="fal fa-times"></i></span>
                     </button>
@@ -323,13 +324,13 @@
         <div class="modal-dialog mw-100 w-75" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2 class="modal-title">
-                        <button type="button" class="btn btn-primary btn-primary-50 waves-effect waves-themed">
-                            BACKUP-<span class="summary-id"></span>
-                        </button>
-                        <span class="summary-srcDir ml-2"></span>
-
-                    </h2>
+                    <h1 class="modal-title">
+                        Backup #<span class="summary-id"></span>
+                        <small class="mb-0">
+                            <div class="summary-date"></div>
+                            <div class="summary-srcDir"></div>
+                        </small>
+                    </h1>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true"><i class="fal fa-times"></i></span>
                     </button>
@@ -349,7 +350,7 @@
                                     </div>
                                     <div class="mt-2 mb-3">
                                         <button type="button" class="btn btn-default waves-effect waves-themed pt-0 pb-0">Execution time</button>
-                                        <div class="summary-execTime h3"></div>
+                                        <div class="summary-execTime h3 mb-0"></div>
 
                                         <div>- Reading: <span class="summary-readingTime 53"></span></div>
                                         <div>- Comparing: <span class="summary-comparingTime 53"></span></div>
@@ -464,6 +465,40 @@
 {{define "script"}}
     <script src="/assets/js/custom.js"></script>
     <script>
+        //
+        let sysInfo = null;
+
+
+        setInterval(function() {
+            if (sysInfo === null) {
+                return;
+            }
+
+
+        }, 1000);
+
+        function updateSysInfo() {
+            $.ajax({
+                url: "/sysInfo",
+            }).done(function(sys) {
+                sysInfo = sys;
+                $(".sysInfo-time").each(function(i, e) {
+                    let format = $(this).data("format");
+                    if (format !== undefined) {
+                        format = "";
+                    }
+
+                    $(this).text( moment(sysInfo.time).format(format));
+                });
+            });
+        }
+
+        updateSysInfo();
+
+
+
+
+
         function backupRowStyle(row, index) {
             if (row.state === -1) {
                 return {
@@ -494,22 +529,46 @@
 
                 $("#modal-backup-changes").modal("show");
                 $('#tabs-backup-changes a[href="#tab-backup-' + getTab(field) + '"]').tab('show');
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.log(jqXHR);
+                let msg = "";
+                if (jqXHR.responseJSON !== undefined && jqXHR.responseJSON.error !== undefined) {
+                    msg = jqXHR.responseJSON.error;
+                } else {
+                    msg = textStatus;
+                }
+                Swal.fire("Error", msg, "warning");
             });
         }
 
-        function showStats(backup) {
-            let total = 0;
-            $.each(backup.stats.extRanking, function(i, r) {
-                total += r.count;
-            });
-            if (total > 0) {
-                $.each(backup.stats.extRanking, function(i, r) {
-                    backup.stats.extRanking[i].rate = (r.count / total *100).toFixed(2);
+        function showStats(id) {
+            console.log(id);
+            let url = "/summaries/" + id;
+            $.ajax({
+                url: url,
+            }).done(function(summary) {
+                let total = 0;
+                $.each(summary.stats.extRanking, function(i, r) {
+                    total += r.count;
                 });
-            }
-            $("#table-backup-stats-ext").bootstrapTable("load", backup.stats.extRanking);
-            $("#table-backup-stats-size").bootstrapTable("load", backup.stats.sizeDist);
-            $("#modal-backup-stats").modal("show");
+                if (total > 0) {
+                    $.each(summary.stats.extRanking, function(i, r) {
+                        summary.stats.extRanking[i].rate = (r.count / total *100).toFixed(2);
+                    });
+                }
+                $("#table-backup-stats-ext").bootstrapTable("load", summary.stats.extRanking);
+                $("#table-backup-stats-size").bootstrapTable("load", summary.stats.sizeDist);
+                $("#modal-backup-stats").modal("show");
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.log(jqXHR);
+                let msg = "";
+                if (jqXHR.responseJSON !== undefined && jqXHR.responseJSON.error !== undefined) {
+                    msg = jqXHR.responseJSON.error;
+                } else {
+                    msg = textStatus;
+                }
+                Swal.fire("Error", msg, "warning");
+            });
         }
 
         function updateBackupStats(how, what, colorSuffix) {
@@ -552,8 +611,6 @@
 
         $(".table")
             .on("refresh.bs.table", function (e) {
-                console.log(333);
-                $("#table-backup").waitMe(waitMeOptions);
             })
             .on("all.bs.table", function (e, data) {
                 $('.has-tooltip').tooltip();
@@ -577,12 +634,13 @@
             });
 
         window.backupStatsEvents = {
+
             'click .stats': function (e, val, row, idx) {
                 $(".summary-id").text(row.id);
                 $(".summary-totalCount").text(thousandCommaSep(row.totalCount));
                 $(".summary-totalSize").text(bytesToSize(row.totalSize));
                 $(".summary-srcDir").text(row.srcDir);
-                $(".summary-date").text(row.date);
+                $(".summary-date").html('<span class="text-soft">' + moment(row.date).format("lll") + '</span>');
                 $(".summary-countAdded").text(row.countAdded);
                 $(".summary-sizeAdded").html(bytesToSize(row.sizeAdded));
                 $(".summary-countModified").text(row.countModified);
@@ -595,14 +653,7 @@
                 $(".summary-backupTime").text( (moment.parseZone(row.backupTime).diff(moment.parseZone(row.comparisonTime)) / 1000).toFixed(2) );
                 $(".summary-loggingTime").text( (moment.parseZone(row.loggingTime).diff(moment.parseZone(row.backupTime)) / 1000).toFixed(2) );
 
-
-                // let $btn = $(e.currentTarget);
-                // let tags = '<button type="button" class="btn btn-sm btn-outline-default mr-1">Backup ID: ' + row.id + '</button>';
-                // tags += '<button type="button" class="btn btn-sm btn-outline-default mr-1">' + row.totalCount + ' files</button>';
-                // tags += '<button type="button" class="btn btn-sm btn-outline-default mr-1">' + bytesToSize(row.totalSize) + '</button>';
-                // tags += '<button type="button" class="btn btn-sm btn-outline-default">' + row.srcDir + '</button>';
-                // $("#modal-backup-stats .modal-title .summary").html(tags);
-                showStats(row);
+                showStats(row.id);
             },
             'click .changed': function (e, val, row, idx) {
                 let $btn = $(e.currentTarget);

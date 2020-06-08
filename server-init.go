@@ -39,11 +39,15 @@ func (s *Server) init() error {
 
 func (s *Server) initAccessKey() error {
 	if len(os.Getenv(AccessKey)) < 1 {
-		return fmt.Errorf("access key not found in environment variables; %s", AccessKey)
+		str := fmt.Sprintf("Access key not found in environment variables; %s", AccessKey)
+		fmt.Printf("%s\n", str)
+		return fmt.Errorf(str)
 	}
 
 	if len(os.Getenv(SecretKey)) < 1 {
-		return fmt.Errorf("secret key not found in environment variables; %s", SecretKey)
+		str := fmt.Sprintf("Secret key not found in environment variables; %s", SecretKey)
+		fmt.Printf("%s\n", str)
+		return fmt.Errorf(str)
 	}
 	return nil
 }

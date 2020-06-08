@@ -17,28 +17,62 @@ func customCss() string {
             background-color: #f7f7f7;
         }
 
+        .text-soft {
+			color: #aaaaaa	 !important;
+		}
+
+		.bred {
+			border: 1px solid red;
+		}
+
         @media print{@page {size: landscape}}
 `
 	return strings.TrimSpace(css)
 }
 
-func customJavaScript() string {
+func customScript() string {
 	script := `
         let waitMeOptions = {
-			effect : "stretch",
+			effect : "bounce",
 			text : 'Loading..',
 			bg : "rgba(255,255,255,0.7)",
 			color : "#616469"
 		};
-		
 
-		function dateFormatter(val, row, idx) {
-			return moment(val).format();
-		}
+		function thousandCommaSep(n) {
+            return n.toLocaleString();
+        }
+
 		function bytesToSize(bytes) {
 			return humanizedSize(bytes, true, 1);
 		}
-		
+
+		function thousandCommaSep(n) {
+			return n.toLocaleString();
+		}
+
+		function getSrcDirs(summaries) {
+			let dir = {};
+			$.each(summaries, function(i, r) {
+				dir[r.srcDir] = true;
+			});
+			return Object.keys(dir).sort();
+		}
+
+		function basename(path) {
+            return path.replace(/^.*[\\\/]/, '');
+        }
+
+		function getRate(i, total) {
+            let per =  Math.round((1 - (i / total)) * 100);
+            per = (per - (per % 10) - 20) * 10;
+            if (per < 100) {
+                per = 50;
+            }
+            return per;
+            ss
+        }
+
 		function humanizedSize(bytes, si, toFixed) {
 			let thresh = si ? 1000 : 1024;
 			if(Math.abs(bytes) < thresh) {
@@ -54,16 +88,18 @@ func customJavaScript() string {
 			} while(Math.abs(bytes) >= thresh && u < units.length - 1);
 			return bytes.toFixed(toFixed)+' '+units[u];
 		}
+
+
+		// Formatters
+		function dateFormatter(val, row, idx) {
+			return moment(val).format();
+		}
 		
 		function thCommaFormatter(val, row, idx) {
 			if (val === 0) {
 				return '<span class="text-muted">0</span>';
 			}
 			return thousandCommaSep(val);
-		}
-		
-		function thousandCommaSep(n) {
-			return n.toLocaleString();
 		}
 		
 		function shortDirFormatter(val, row, idx) {
@@ -86,17 +122,6 @@ func customJavaScript() string {
 			return '<span class="has-tooltip ' + textCss + '" title="' + val.toLocaleString() + ' Bytes">' + bytesToSize(val) + '</span>';
 		}
 		
-		function getSrcDirs(summaries) {
-			let dir = {};
-			$.each(summaries, function(i, r) {
-				dir[r.srcDir] = true;
-			});
-			return Object.keys(dir).sort();
-		}
-		function basename(path) {
-            return path.replace(/^.*[\\\/]/, '');
-        }
-
 		function yyyymmFormatter(val, row, idx) {
 			return moment(val).format("ll");
 		}
@@ -106,16 +131,6 @@ func customJavaScript() string {
                 return;
             }
             return val;
-        }
-
-		function getRate(i, total) {
-            let per =  Math.round((1 - (i / total)) * 100);
-            per = (per - (per % 10) - 20) * 10;
-            if (per < 100) {
-                per = 50;
-            }
-            return per;
-            ss
         }
 
 		function backupKeeperFormatter(val, row, idx) {
@@ -217,9 +232,6 @@ func customJavaScript() string {
                 return '<span class="text-muted">0</span>';
             }
             return thousandCommaSep(val);
-        }
-        function thousandCommaSep(n) {
-            return n.toLocaleString();
         }
 `
 

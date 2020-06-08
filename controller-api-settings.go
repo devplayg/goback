@@ -27,7 +27,7 @@ func (c *Controller) UpdateJob(w http.ResponseWriter, r *http.Request) {
 	var input Job
 	vars, err := c.ParseForm(r, &input)
 	if err != nil {
-		Response(w, r, err, http.StatusInternalServerError)
+		ResponseErr(w, r, err, http.StatusInternalServerError)
 		return
 	}
 	jobId, _ := strconv.Atoi(vars["id"])
@@ -36,11 +36,11 @@ func (c *Controller) UpdateJob(w http.ResponseWriter, r *http.Request) {
 	// Find job
 	job := c.server.findJobById(jobId)
 	if job == nil {
-		Response(w, r, errors.New("job not found"), http.StatusInternalServerError)
+		ResponseErr(w, r, errors.New("job not found"), http.StatusInternalServerError)
 		return
 	}
 	if job.running {
-		Response(w, r, errors.New("job is running"), http.StatusInternalServerError)
+		ResponseErr(w, r, errors.New("job is running"), http.StatusInternalServerError)
 		return
 	}
 
@@ -48,7 +48,7 @@ func (c *Controller) UpdateJob(w http.ResponseWriter, r *http.Request) {
 	cronParser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.DowOptional)
 	_, err = cronParser.Parse(input.Schedule)
 	if err != nil {
-		Response(w, r, fmt.Errorf("failed to parse scheduler; %w", err), http.StatusInternalServerError)
+		ResponseErr(w, r, fmt.Errorf("failed to parse scheduler; %w", err), http.StatusInternalServerError)
 		return
 	}
 
@@ -80,7 +80,7 @@ func (c *Controller) UpdateJob(w http.ResponseWriter, r *http.Request) {
 			}
 		})
 		if err != nil {
-			Response(w, r, err, http.StatusInternalServerError)
+			ResponseErr(w, r, err, http.StatusInternalServerError)
 			return
 		}
 		job.cronEntryId = &entryId
@@ -92,7 +92,7 @@ func (c *Controller) UpdateJob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := c.server.saveConfig(input.Checksum); err != nil {
-		Response(w, r, err, http.StatusInternalServerError)
+		ResponseErr(w, r, err, http.StatusInternalServerError)
 		return
 	}
 	w.Write([]byte(vars["id"]))
@@ -102,7 +102,7 @@ func (c *Controller) UpdateStorage(w http.ResponseWriter, r *http.Request) {
 	var input Storage
 	vars, err := c.ParseForm(r, &input)
 	if err != nil {
-		Response(w, r, err, http.StatusInternalServerError)
+		ResponseErr(w, r, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -111,7 +111,7 @@ func (c *Controller) UpdateStorage(w http.ResponseWriter, r *http.Request) {
 
 	storage := c.server.findStorageById(storageId)
 	if storage == nil {
-		Response(w, r, errors.New("storage not found"), http.StatusInternalServerError)
+		ResponseErr(w, r, errors.New("storage not found"), http.StatusInternalServerError)
 		return
 	}
 	storage.Id = input.Id
@@ -122,7 +122,7 @@ func (c *Controller) UpdateStorage(w http.ResponseWriter, r *http.Request) {
 	storage.Host = input.Host
 
 	if err := c.server.saveConfig(input.Checksum); err != nil {
-		Response(w, r, err, http.StatusInternalServerError)
+		ResponseErr(w, r, err, http.StatusInternalServerError)
 		return
 	}
 	w.Write([]byte(vars["id"]))
@@ -132,13 +132,13 @@ func (c *Controller) RunBackupJob(w http.ResponseWriter, r *http.Request) {
 	var input Job
 	vars, err := c.ParseForm(r, &input)
 	if err != nil {
-		Response(w, r, err, http.StatusInternalServerError)
+		ResponseErr(w, r, err, http.StatusInternalServerError)
 		return
 	}
 	jobId, _ := strconv.Atoi(vars["id"])
 
 	if err := c.server.runBackupJob(jobId); err != nil {
-		Response(w, r, err, http.StatusInternalServerError)
+		ResponseErr(w, r, err, http.StatusInternalServerError)
 		return
 	}
 

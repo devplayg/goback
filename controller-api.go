@@ -8,66 +8,62 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
+
+func (c *Controller) SysInfo(w http.ResponseWriter, r *http.Request) {
+	m := map[string]interface{}{
+		"time": time.Now(),
+	}
+	ResponseData(w, r, m)
+}
 
 func (c *Controller) GetSummaries(w http.ResponseWriter, r *http.Request) {
 	summaries, err := c.server.findSummaries()
 	if err != nil {
-		Response(w, r, err, http.StatusInternalServerError)
+		ResponseErr(w, r, err, http.StatusInternalServerError)
+		return
 	}
 
-	b, _ := json.Marshal(summaries)
-	w.Header().Add("Content-Type", "application/json")
-	w.Write(b)
+	ResponseData(w, r, summaries)
 }
 
 func (c *Controller) GetStats(w http.ResponseWriter, r *http.Request) {
 	stats, err := c.server.findStats()
 	if err != nil {
-		Response(w, r, err, http.StatusInternalServerError)
+		ResponseErr(w, r, err, http.StatusInternalServerError)
+		return
 	}
 
-	b, _ := json.Marshal(stats)
-	w.Header().Add("Content-Type", ApplicationJson)
-	w.Write(b)
+	ResponseData(w, r, stats)
 }
 
 func (c *Controller) GetChangesLog(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, _ := strconv.Atoi(vars["id"])
+	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 	data, err := c.server.getChangesLog(id)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		ResponseErr(w, r, err, http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Encoding", GZIP)
-	w.Header().Add("Content-Type", ApplicationJson)
-	w.Write(data)
+
+	ResponseZippedRaw(w, r, data)
 }
 
-func (c *Controller) findSummaryById(id int) *Summary {
-	if c.summaries == nil || len(c.summaries) < 1 {
-		return nil
-	}
-	if len(c.summaries) >= id {
-		if c.summaries[id-1].Id == id {
-			return c.summaries[id-1]
-		}
-	}
-	for _, s := range c.summaries {
-		if s.Id == id {
-			return s
-		}
+func (c *Controller) GetSummary(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+	summary, err := c.server.findSummaryById(id)
+	if err != nil {
+		ResponseErr(w, r, err, http.StatusInternalServerError)
+		return
 	}
 
-	return nil
+	ResponseData(w, r, summary)
 }
 
 func (c *Controller) DoLogout(w http.ResponseWriter, r *http.Request) {
 	session, err := store.Get(r, SignInSessionId)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		ResponseErr(w, r, err, http.StatusInternalServerError)
 		return
 	}
 	session.Options.MaxAge = -1
@@ -75,16 +71,17 @@ func (c *Controller) DoLogout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, LoginUri, http.StatusSeeOther)
 }
 
+// DoLogin
 func (c *Controller) DoLogin(w http.ResponseWriter, r *http.Request) {
 	var signIn SignIn
 	_, err := c.ParseForm(r, &signIn)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		ResponseErr(w, r, err, http.StatusInternalServerError)
 		return
 	}
 	session, err := store.Get(r, SignInSessionId)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		ResponseErr(w, r, err, http.StatusInternalServerError)
 		return
 	}
 	// inputPwdHash := sha256.Sum256([]byte(SecretKey))
@@ -106,12 +103,9 @@ func (c *Controller) DoLogin(w http.ResponseWriter, r *http.Request) {
 	session.Values[AccessKey] = r.RemoteAddr
 	err = session.Save(r, w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		ResponseErr(w, r, err, http.StatusInternalServerError)
 		return
 	}
 
-	b, _ := json.Marshal(m)
-	w.Header().Add("Content-Type", ApplicationJson)
-	w.Write(b)
-	//http.Redirect(w, r, HomeUri, http.StatusSeeOther)
+	ResponseData(w, r, m)
 }

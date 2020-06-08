@@ -103,3 +103,16 @@ func newDirInfo(srcDir, dbDir string) *dirInfo {
 		dbPath:   filepath.Join(dbDir, fmt.Sprintf(FilesDbName, checksum)),
 	}
 }
+
+//type ResponseError struct {
+//	Err error
+//}
+//
+//func NewResponseError(err error) *ResponseError{
+//	return &ResponseError{Err:err}
+//}
+//
+//func (r ResponseError) Json() []byte {
+//	b, _ := json.Marshal(r)
+//	return b
+//}
