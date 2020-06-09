@@ -15,7 +15,7 @@ func Backup() string {
     <li>
         <a href="/settings/" title="Settings"><i class="fal fa-cog"></i><span class="nav-link-text">Settings</span></a>
     </li>
-	<li>
+    <li>
         <a href="/logout" title="Sign out"><i class="fal fa-sign-out"></i><span class="nav-link-text">Sign out</span></a>
     </li>
 {{end}}
@@ -26,6 +26,9 @@ func Backup() string {
             <i class="fal fa-list-ul mr-1"></i> Backup Logs
             <small>
                 Backup history
+                <div class="float-right">
+                    <span class="sysInfo-time" data-format="ll LTS"></span>
+                </div>
             </small>
         </h1>
     </div>
@@ -78,7 +81,6 @@ func Backup() string {
                         <th data-field="state" data-sortable="true" data-formatter="backupStateFormatter">State</th>
                         <th data-field="execTime" data-sortable="true" data-formatter="toFixedFormatter">Time(Sec)</th>
 
-
                         <th data-field="totalCount" data-sortable="true" data-formatter="backupTotalCountFormatter" data-events="backupStatsEvents">Files</th>
                         <th data-field="totalSize" data-sortable="true" data-formatter="byteSizeFormatter">Total Size</th>
 
@@ -118,202 +120,274 @@ func Backup() string {
         <div class="modal-dialog mw-100 w-75" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2 class="modal-title">
-                        <i class="fal fa-file-alt"></i> Changes
-                        <i class="summary fw-300 small ml-2"></i>
-                    </h2>
+                    <h1 class="modal-title">
+                        Changes #<span class="summary-id"></span>
+                        <small class="mb-0">
+                            <div class="summary-date"></div>
+                            <div class="summary-srcDir"></div>
+                        </small>
+                    </h1>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true"><i class="fal fa-times"></i></span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <ul id="tabs-backup-changes" class="nav nav-tabs" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link fs-lg" data-toggle="tab" href="#tab-backup-added" role="tab">
-                                Added
-                                <span class="badge border border-info rounded-pill bg-primary-500 stats-data stats-added"></span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link fs-lg" data-toggle="tab" href="#tab-backup-modified" role="tab">
-                                Modified
-                                <span class="badge border border-info rounded-pill bg-success-500 stats-data stats-modified"></span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link fs-lg" data-toggle="tab" href="#tab-backup-deleted" role="tab">
-                                Deleted
-                                <span class="badge border border-warning rounded-pill bg-warning-500 stats-data stats-deleted"></span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link fs-lg" data-toggle="tab" href="#tab-backup-failed" role="tab">
-                                Failed
-                                <span class="badge border border-danger rounded-pill bg-danger-500 stats-data stats-failed"></span>
-                            </a>
-                        </li>
-                    </ul>
-                    <div class="tab-content p-3">
-                        <div class="tab-pane fade show active" id="tab-backup-added" role="tabpanel">
-                            <div class="row">
-                                <div class="col-lg-8">
-                                    <div id="toolbar-backup-added">
-                                        <h3 class="stats-data stats-added-size"></h3>
+                    <div class="row">
+                        <div class="col-lg-2">
+                            <div class="alert alert-primary">
+                                <div class="row">
+                                    <div class="col-sm-6 col-md-6 col-lg-12">
+                                        <div>
+                                            <div class="badge border border-primary text-primary">Files</div>
+                                            <div class="summary-totalCount h2"></div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <div class="badge border border-primary text-primary">Size</div>
+                                            <div class="summary-totalSize h2"></div>
+                                        </div>
+                                        <div class="mt-2 mb-3">
+                                            <div class="badge border border-primary text-primary">Execution time</div>
+                                            <div class="summary-execTime h2 mb-0"></div>
+                                            <div class="pl-2">- Reading: <span class="summary-readingTime 53"></span></div>
+                                            <div class="pl-2">- Comparing: <span class="summary-comparingTime 53"></span></div>
+                                            <div class="pl-2">- Coping: <span class="summary-backupTime 53"></span></div>
+                                            <div class="pl-2">- Logging: <span class="summary-loggingTime 53"></span></div>
+                                        </div>
                                     </div>
-                                    <table  id="table-backup-added"
-                                            data-buttons-class="default"
-                                            class="table table-data table-sm"
-                                            data-toolbar="#toolbar-backup-added"
-                                            data-toggle="table"
-                                            data-search="true"
-                                            data-pagination="true"
-                                            data-show-export="true"
-                                            data-pagination-v-align="bottom"
-                                            data-show-columns="true"
-                                            data-export-types="['csv', 'txt', 'excel']"
-                                            data-side-pagination="client"
-                                            data-sort-name="size"
-                                            data-page-size="15"
-                                            data-row-style="backupRowStyle"
-                                            data-sort-order="desc">
-                                        <thead>
-                                        <tr>
-                                            <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
-                                            <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
-                                            <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
-                                            <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
-                                            <th data-field="mtime" data-visible="false" data-formatter="dateFormatter">ModTime</th>
-                                            <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
-                                            <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
-                                        </tr>
-                                        </thead>
-                                    </table>
-                                </div>
-                                <div class="col-lg-4">
-                                    <div class="stats-data stats-added-ext"></div>
+
+                                    <div class="col-sm-6 col-md-6 col-lg-12">
+                                        <div>
+                                            <div class="badge border border-primary text-primary">Added</div>
+                                            <div>
+                                                <span class="h2 summary-countAdded"></span>
+                                                (<span class="summary-sizeAdded"></span>)
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <div class="badge border border-primary text-primary">Modified</div>
+                                            <div>
+                                                <span class="h2 summary-countModified"></span>
+                                                (<span class="summary-sizeModified"></span>)
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <div class="badge border border-primary text-primary">Deleted</div>
+                                            <div>
+                                                <span class="h2 summary-countDeleted"></span>
+                                                (<span class="summary-sizeDeleted"></span>)
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-2">
+                                            <div class="badge border border-secondary text-secondary">Backup success</div>
+                                            <div>
+                                                <span class="h2 summary-countSuccess"></span>
+                                                (<span class="summary-sizeSuccess"></span>)
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <div class="badge border border-danger text-danger">Backup failure</div>
+                                            <div>
+                                                <span class="h2 summary-countFailed"></span>
+                                                (<span class="summary-sizeFailed"></span>)
+                                            </div>
+                                        </div>
+
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="tab-pane fade" id="tab-backup-modified" role="tabpanel">
-                            <div class="row">
-                                <div class="col-lg-8">
-                                    <div id="toolbar-backup-modified">
-                                        <h3 class="stats-data stats-modified-size"></h3>
+                        <div class="col-lg-10">
+                            <ul id="tabs-backup-changes" class="nav nav-tabs" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link fs-lg" data-toggle="tab" href="#tab-backup-added" role="tab">
+                                        Added
+                                        <span class="badge border border-info rounded-pill bg-primary-500 stats-data stats-added"></span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link fs-lg" data-toggle="tab" href="#tab-backup-modified" role="tab">
+                                        Modified
+                                        <span class="badge border border-info rounded-pill bg-success-500 stats-data stats-modified"></span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link fs-lg" data-toggle="tab" href="#tab-backup-deleted" role="tab">
+                                        Deleted
+                                        <span class="badge border border-warning rounded-pill bg-warning-500 stats-data stats-deleted"></span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link fs-lg" data-toggle="tab" href="#tab-backup-failed" role="tab">
+                                        Failed
+                                        <span class="badge border border-danger rounded-pill bg-danger-500 stats-data stats-failed"></span>
+                                    </a>
+                                </li>
+                            </ul>
+                            <div class="tab-content p-3">
+                                <div class="tab-pane fade show active" id="tab-backup-added" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-lg-9">
+                                            <div id="toolbar-backup-added">
+                                                <h3 class="stats-data stats-added-size"></h3>
+                                            </div>
+                                            <table  id="table-backup-added"
+                                                    data-buttons-class="default"
+                                                    class="table table-data table-sm"
+                                                    data-toolbar="#toolbar-backup-added"
+                                                    data-toggle="table"
+                                                    data-search="true"
+                                                    data-pagination="true"
+                                                    data-show-export="true"
+                                                    data-pagination-v-align="bottom"
+                                                    data-show-columns="true"
+                                                    data-export-types="['csv', 'txt', 'excel']"
+                                                    data-side-pagination="client"
+                                                    data-sort-name="size"
+                                                    data-page-size="15"
+                                                    data-row-style="backupRowStyle"
+                                                    data-sort-order="desc">
+                                                <thead>
+                                                <tr>
+                                                    <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
+                                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
+                                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
+                                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
+                                                    <th data-field="mtime" data-visible="false" data-formatter="dateFormatter">ModTime</th>
+                                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
+                                                    <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                        <div class="col-lg-3">
+                                            <div class="stats-data stats-added-ext"></div>
+                                        </div>
                                     </div>
-                                    <table  id="table-backup-modified"
-                                            data-buttons-class="default"
-                                            class="table table-data table-sm"
-                                            data-toolbar="#toolbar-backup-modified"
-                                            data-toggle="table"
-                                            data-search="true"
-                                            data-pagination="true"
-                                            data-show-export="true"
-                                            data-pagination-v-align="bottom"
-                                            data-show-columns="true"
-                                            data-export-types="['csv', 'txt', 'excel']"
-                                            data-side-pagination="client"
-                                            data-sort-name="size"
-                                            data-page-size="15"
-                                            data-row-style="backupRowStyle"
-                                            data-sort-order="desc">
-                                        <thead>
-                                        <tr>
-                                            <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
-                                            <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
-                                            <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
-                                            <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
-                                            <th data-field="mtime" data-visible="false" data-formatter="dateFormatter">ModTime</th>
-                                            <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
-                                            <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
-                                        </tr>
-                                        </thead>
-                                    </table>
                                 </div>
-                                <div class="col-lg-4">
-                                    <div class="stats-data stats-modified-ext"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="tab-backup-deleted" role="tabpanel">
-                            <div class="row">
-                                <div class="col-lg-8">
-                                    <div id="toolbar-backup-deleted">
-                                        <h3 class="stats-data stats-deleted-size"></h3>
+                                <div class="tab-pane fade" id="tab-backup-modified" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-lg-9">
+                                            <div id="toolbar-backup-modified">
+                                                <h3 class="stats-data stats-modified-size"></h3>
+                                            </div>
+                                            <table  id="table-backup-modified"
+                                                    data-buttons-class="default"
+                                                    class="table table-data table-sm"
+                                                    data-toolbar="#toolbar-backup-modified"
+                                                    data-toggle="table"
+                                                    data-search="true"
+                                                    data-pagination="true"
+                                                    data-show-export="true"
+                                                    data-pagination-v-align="bottom"
+                                                    data-show-columns="true"
+                                                    data-export-types="['csv', 'txt', 'excel']"
+                                                    data-side-pagination="client"
+                                                    data-sort-name="size"
+                                                    data-page-size="15"
+                                                    data-row-style="backupRowStyle"
+                                                    data-sort-order="desc">
+                                                <thead>
+                                                <tr>
+                                                    <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
+                                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
+                                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
+                                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
+                                                    <th data-field="mtime" data-visible="false" data-formatter="dateFormatter">ModTime</th>
+                                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
+                                                    <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                        <div class="col-lg-3">
+                                            <div class="stats-data stats-modified-ext"></div>
+                                        </div>
                                     </div>
-                                    <table  id="table-backup-deleted"
-                                            data-buttons-class="default"
-                                            class="table table-data table-sm"
-                                            data-toolbar="#toolbar-backup-deleted"
-                                            data-toggle="table"
-                                            data-search="true"
-                                            data-pagination="true"
-                                            data-show-export="true"
-                                            data-pagination-v-align="bottom"
-                                            data-show-columns="true"
-                                            data-export-types="['csv', 'txt', 'excel']"
-                                            data-side-pagination="client"
-                                            data-sort-name="size"
-                                            data-page-size="15"
-                                            data-row-style="backupRowStyle"
-                                            data-sort-order="desc">
-                                        <thead>
-                                        <tr>
-                                            <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
-                                            <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
-                                            <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
-                                            <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
-                                            <th data-field="mtime" data-visible="false" data-formatter="dateFormatter">ModTime</th>
-                                            <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
-                                        </tr>
-                                        </thead>
-                                    </table>
                                 </div>
-                                <div class="col-lg-4">
-                                    <div class="stats-data stats-deleted-ext"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="tab-backup-failed" role="tabpanel">
-                            <div class="row">
-                                <div class="col-lg-8">
-                                    <div id="toolbar-backup-failed">
-                                        <h3 class="stats-data stats-failed-size"></h3>
+                                <div class="tab-pane fade" id="tab-backup-deleted" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-lg-9">
+                                            <div id="toolbar-backup-deleted">
+                                                <h3 class="stats-data stats-deleted-size"></h3>
+                                            </div>
+                                            <table  id="table-backup-deleted"
+                                                    data-buttons-class="default"
+                                                    class="table table-data table-sm"
+                                                    data-toolbar="#toolbar-backup-deleted"
+                                                    data-toggle="table"
+                                                    data-search="true"
+                                                    data-pagination="true"
+                                                    data-show-export="true"
+                                                    data-pagination-v-align="bottom"
+                                                    data-show-columns="true"
+                                                    data-export-types="['csv', 'txt', 'excel']"
+                                                    data-side-pagination="client"
+                                                    data-sort-name="size"
+                                                    data-page-size="15"
+                                                    data-row-style="backupRowStyle"
+                                                    data-sort-order="desc">
+                                                <thead>
+                                                <tr>
+                                                    <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
+                                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
+                                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
+                                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
+                                                    <th data-field="mtime" data-visible="false" data-formatter="dateFormatter">ModTime</th>
+                                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                        <div class="col-lg-3">
+                                            <div class="stats-data stats-deleted-ext"></div>
+                                        </div>
                                     </div>
-                                    <table  id="table-backup-failed"
-                                            data-buttons-class="default"
-                                            class="table table-data table-sm"
-                                            data-toolbar="#toolbar-backup-failed"
-                                            data-toggle="table"
-                                            data-search="true"
-                                            data-pagination="true"
-                                            data-show-export="true"
-                                            data-pagination-v-align="bottom"
-                                            data-show-columns="true"
-                                            data-export-types="['csv', 'txt', 'excel']"
-                                            data-side-pagination="client"
-                                            data-sort-name="size"
-                                            data-page-size="15"
-                                            data-row-style="backupRowStyle"
-                                            data-sort-order="desc">
-                                        <thead>
-                                        <tr>
-                                            <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
-                                            <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
-                                            <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
-                                            <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
-                                            <th data-field="mtime" data-visible="false" data-formatter="dateFormatter">ModTime</th>
-                                            <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
-                                            <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
-                                        </tr>
-                                        </thead>
-                                    </table>
                                 </div>
-                                <div class="col-lg-4">
-                                    <div class="stats-data stats-failed-ext"></div>
+                                <div class="tab-pane fade" id="tab-backup-failed" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-lg-9">
+                                            <div id="toolbar-backup-failed">
+                                                <h3 class="stats-data stats-failed-size"></h3>
+                                            </div>
+                                            <table  id="table-backup-failed"
+                                                    data-buttons-class="default"
+                                                    class="table table-data table-sm"
+                                                    data-toolbar="#toolbar-backup-failed"
+                                                    data-toggle="table"
+                                                    data-search="true"
+                                                    data-pagination="true"
+                                                    data-show-export="true"
+                                                    data-pagination-v-align="bottom"
+                                                    data-show-columns="true"
+                                                    data-export-types="['csv', 'txt', 'excel']"
+                                                    data-side-pagination="client"
+                                                    data-sort-name="size"
+                                                    data-page-size="15"
+                                                    data-row-style="backupRowStyle"
+                                                    data-sort-order="desc">
+                                                <thead>
+                                                <tr>
+                                                    <th data-field="dir" data-sortable="true" data-visible="false">Directory</th>
+                                                    <th data-field="name" data-sortable="true" data-formatter="backupChangesNameFormatter">Name</th>
+                                                    <th data-field="size" data-sortable="true" data-formatter="byteSizeFormatter">Size</th>
+                                                    <th data-field="sizeB" data-sortable="true" data-visible="false" data-formatter="sizeBFormatter">Size (B)</th>
+                                                    <th data-field="mtime" data-visible="false" data-formatter="dateFormatter">ModTime</th>
+                                                    <th data-field="ext" data-sortable="true" data-formatter="extFormatter">Extension</th>
+                                                    <th data-field="state" data-sortable="true" data-formatter="backupFileStateFormatter">Backup</th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                        <div class="col-lg-3">
+                                            <div class="stats-data stats-failed-ext"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
@@ -326,13 +400,13 @@ func Backup() string {
         <div class="modal-dialog mw-100 w-75" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2 class="modal-title">
-                        <button type="button" class="btn btn-primary btn-primary-50 waves-effect waves-themed">
-                            BACKUP-<span class="summary-id"></span>
-                        </button>
-                        <span class="summary-srcDir ml-2"></span>
-
-                    </h2>
+                    <h1 class="modal-title">
+                        Backup #<span class="summary-id"></span>
+                        <small class="mb-0">
+                            <div class="summary-date"></div>
+                            <div class="summary-srcDir"></div>
+                        </small>
+                    </h1>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true"><i class="fal fa-times"></i></span>
                     </button>
@@ -340,49 +414,66 @@ func Backup() string {
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-lg-2">
-                            <div class="row">
-                                <div class="col-sm-6 col-md-6 col-lg-12">
-                                    <div>
-                                        <button type="button" class="btn btn-default waves-effect waves-themed pt-0 pb-0">Files</button>
-                                        <div class="summary-totalCount h3"></div>
-                                    </div>
-                                    <div class="mt-2">
-                                        <button type="button" class="btn btn-default waves-effect waves-themed pt-0 pb-0">Size</button>
-                                        <div class="summary-totalSize h3"></div>
-                                    </div>
-                                    <div class="mt-2 mb-3">
-                                        <button type="button" class="btn btn-default waves-effect waves-themed pt-0 pb-0">Execution time</button>
-                                        <div class="summary-execTime h3"></div>
-
-                                        <div>- Reading: <span class="summary-readingTime 53"></span></div>
-                                        <div>- Comparing: <span class="summary-comparingTime 53"></span></div>
-                                        <div>- Coping: <span class="summary-backupTime 53"></span></div>
-                                        <div>- Logging: <span class="summary-loggingTime 53"></span></div>
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-md-6 col-lg-12">
-                                    <div>
-                                        <button type="button" class="btn btn-default waves-effect waves-themed pt-0 pb-0">Added</button>
+                            <div class="alert alert-primary">
+                                <div class="row">
+                                    <div class="col-sm-6 col-md-6 col-lg-12">
                                         <div>
-                                            <span class="h3 summary-countAdded"></span>
-                                            (<span class="summary-sizeAdded"></span>)
+                                            <div class="badge border border-primary text-primary">Files</div>
+                                            <div class="summary-totalCount h2"></div>
                                         </div>
-                                    </div>
-                                    <div class="mt-2">
-                                        <button type="button" class="btn btn-default waves-effect waves-themed pt-0 pb-0">Modified</button>
-                                        <div>
-                                            <span class="h3 summary-countModified"></span>
-                                            (<span class="summary-sizeModified"></span>)
+                                        <div class="mt-2">
+                                            <div class="badge border border-primary text-primary">Size</div>
+                                            <div class="summary-totalSize h2"></div>
                                         </div>
-                                    </div>
-                                    <div class="mt-2">
-                                        <button type="button" class="btn btn-default waves-effect waves-themed pt-0 pb-0">Deleted</button>
-                                        <div>
-                                            <span class="h3 summary-countDeleted"></span>
-                                            (<span class="summary-sizeDeleted"></span>)
+                                        <div class="mt-2 mb-3">
+                                            <div class="badge border border-primary text-primary">Execution time</div>
+                                            <div class="summary-execTime h2 mb-0"></div>
+                                            <div class="pl-2">- Reading: <span class="summary-readingTime 53"></span></div>
+                                            <div class="pl-2">- Comparing: <span class="summary-comparingTime 53"></span></div>
+                                            <div class="pl-2">- Coping: <span class="summary-backupTime 53"></span></div>
+                                            <div class="pl-2">- Logging: <span class="summary-loggingTime 53"></span></div>
                                         </div>
                                     </div>
 
+                                    <div class="col-sm-6 col-md-6 col-lg-12">
+                                        <div>
+                                            <div class="badge border border-primary text-primary">Added</div>
+                                            <div>
+                                                <span class="h2 summary-countAdded"></span>
+                                                (<span class="summary-sizeAdded"></span>)
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <div class="badge border border-primary text-primary">Modified</div>
+                                            <div>
+                                                <span class="h2 summary-countModified"></span>
+                                                (<span class="summary-sizeModified"></span>)
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <div class="badge border border-primary text-primary">Deleted</div>
+                                            <div>
+                                                <span class="h2 summary-countDeleted"></span>
+                                                (<span class="summary-sizeDeleted"></span>)
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-2">
+                                            <div class="badge border border-secondary text-secondary">Backup success</div>
+                                            <div>
+                                                <span class="h2 summary-countSuccess"></span>
+                                                (<span class="summary-sizeSuccess"></span>)
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <div class="badge border border-danger text-danger">Backup failure</div>
+                                            <div>
+                                                <span class="h2 summary-countFailed"></span>
+                                                (<span class="summary-sizeFailed"></span>)
+                                            </div>
+                                        </div>
+
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -467,15 +558,41 @@ func Backup() string {
 {{define "script"}}
     <script src="/assets/js/custom.js"></script>
     <script>
-        function backupRowStyle(row, index) {
-            let classes = [
-                'bg-blue',
-                'bg-green',
-                'bg-orange',
-                'bg-yellow',
-                'bg-red'
-            ]
+        //
+        let sysInfo = null;
 
+        setInterval(function() {
+            if (sysInfo === null) {
+                return;
+            }
+            sysInfo.time = moment(sysInfo.time).add(1, 'seconds').format();
+            updateSysInfoText();
+        }, 1000);
+
+        function updateSysInfoText() {
+            $(".sysInfo-time").each(function(i, e) {
+                let format = $(e).data("format");
+                if (format === undefined) {
+                    format = "";
+                }
+                // console.log(format);
+
+                $(e).text( moment(sysInfo.time).format(format));
+            });
+        }
+
+        function syncSysInfo() {
+            $.ajax({
+                url: "/sysInfo",
+            }).done(function(sys) {
+                sysInfo = sys;
+
+            });
+        }
+
+        syncSysInfo();
+
+        function backupRowStyle(row, index) {
             if (row.state === -1) {
                 return {
                     classes: 'bg-warning-100'
@@ -505,22 +622,45 @@ func Backup() string {
 
                 $("#modal-backup-changes").modal("show");
                 $('#tabs-backup-changes a[href="#tab-backup-' + getTab(field) + '"]').tab('show');
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.log(jqXHR);
+                let msg = "";
+                if (jqXHR.responseJSON !== undefined && jqXHR.responseJSON.error !== undefined) {
+                    msg = jqXHR.responseJSON.error;
+                } else {
+                    msg = textStatus;
+                }
+                Swal.fire("Error", msg, "warning");
             });
         }
 
-        function showStats(backup) {
-            let total = 0;
-            $.each(backup.stats.extRanking, function(i, r) {
-                total += r.count;
-            });
-            if (total > 0) {
-                $.each(backup.stats.extRanking, function(i, r) {
-                    backup.stats.extRanking[i].rate = (r.count / total *100).toFixed(2);
+        function showStats(id) {
+            let url = "/summaries/" + id;
+            $.ajax({
+                url: url,
+            }).done(function(summary) {
+                let total = 0;
+                $.each(summary.stats.extRanking, function(i, r) {
+                    total += r.count;
                 });
-            }
-            $("#table-backup-stats-ext").bootstrapTable("load", backup.stats.extRanking);
-            $("#table-backup-stats-size").bootstrapTable("load", backup.stats.sizeDist);
-            $("#modal-backup-stats").modal("show");
+                if (total > 0) {
+                    $.each(summary.stats.extRanking, function(i, r) {
+                        summary.stats.extRanking[i].rate = (r.count / total *100).toFixed(2);
+                    });
+                }
+                $("#table-backup-stats-ext").bootstrapTable("load", summary.stats.extRanking);
+                $("#table-backup-stats-size").bootstrapTable("load", summary.stats.sizeDist);
+                $("#modal-backup-stats").modal("show");
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.log(jqXHR);
+                let msg = "";
+                if (jqXHR.responseJSON !== undefined && jqXHR.responseJSON.error !== undefined) {
+                    msg = jqXHR.responseJSON.error;
+                } else {
+                    msg = textStatus;
+                }
+                Swal.fire("Error", msg, "warning");
+            });
         }
 
         function updateBackupStats(how, what, colorSuffix) {
@@ -554,29 +694,20 @@ func Backup() string {
         * Formatters
         */
 
-        // function backupBackupCountFormatter(val, row, idx) {
-        //     return backupResultFormatter(row.countAdded + row.countModified);
-        // }
-        // function backupBackupSizeFormatter(val, row, idx) {
-        //     return byteSizeFormatter(row.sizeAdded + row.sizeModified);
-        // }
-
-
         $("#modal-backup-changes, #modal-backup-stats")
-            .on('show.bs.modal', function (e) {
-
-            })
-            .on('hidden.bs.modal', function (e) {
+            .on("hidden.bs.modal", function (e) {
                 $(".table-data").bootstrapTable("load", []);
                 $(".table-data").bootstrapTable("filterBy", {}); // reset filter
                 $(".stats-data").empty();
             });
 
         $(".table")
-            .on('all.bs.table', function (e, data) {
+            .on("refresh.bs.table", function (e) {
+            })
+            .on("all.bs.table", function (e, data) {
                 $('.has-tooltip').tooltip();
             })
-            .on('load-success.bs.table', function(e, rows) {
+            .on("load-success.bs.table", function(e, rows) {
                 let srcDir = {};
                 $.each(rows, function(i, s) {
                     srcDir[s.srcDir] = true;
@@ -595,46 +726,74 @@ func Backup() string {
             });
 
         window.backupStatsEvents = {
+
             'click .stats': function (e, val, row, idx) {
-                $(".summary-id").text(row.id);
-                $(".summary-totalCount").text(thousandCommaSep(row.totalCount));
-                $(".summary-totalSize").text(bytesToSize(row.totalSize));
-                $(".summary-srcDir").text(row.srcDir);
-                $(".summary-date").text(row.date);
-                $(".summary-countAdded").text(row.countAdded);
-                $(".summary-sizeAdded").html(bytesToSize(row.sizeAdded));
-                $(".summary-countModified").text(row.countModified);
-                $(".summary-sizeModified").html(bytesToSize(row.sizeModified));
-                $(".summary-countDeleted").text(row.countDeleted);
-                $(".summary-sizeDeleted").html(bytesToSize(row.sizeDeleted));
-                $(".summary-execTime").text(row.execTime.toFixed(2) + " sec");
-                $(".summary-readingTime").text( (moment.parseZone(row.readingTime).diff(moment.parseZone(row.date)) / 1000).toFixed(2) );
-                $(".summary-comparingTime").text( (moment.parseZone(row.comparisonTime).diff(moment.parseZone(row.readingTime)) / 1000).toFixed(2) );
-                $(".summary-backupTime").text( (moment.parseZone(row.backupTime).diff(moment.parseZone(row.comparisonTime)) / 1000).toFixed(2) );
-                $(".summary-loggingTime").text( (moment.parseZone(row.loggingTime).diff(moment.parseZone(row.backupTime)) / 1000).toFixed(2) );
-
-
-                // let $btn = $(e.currentTarget);
+                // $(".summary-id").text(row.id);
+                // $(".summary-totalCount").text(thousandCommaSep(row.totalCount));
+                // $(".summary-totalSize").text(bytesToSize(row.totalSize));
+                // $(".summary-srcDir").text(row.srcDir);
+                // $(".summary-date").html('<span class="text-soft">' + moment(row.date).format("lll") + '</span>');
+                //
+                // $(".summary-countAdded").text(row.countAdded);
+                // $(".summary-sizeAdded").html(bytesToSize(row.sizeAdded));
+                // $(".summary-countModified").text(row.countModified);
+                // $(".summary-sizeModified").html(bytesToSize(row.sizeModified));
+                // $(".summary-countDeleted").text(row.countDeleted);
+                // $(".summary-sizeDeleted").html(bytesToSize(row.sizeDeleted));
+                // $(".summary-countSuccess").text(row.countSuccess);
+                // $(".summary-sizeFailed").html(bytesToSize(row.sizeFailed));
+                // $(".summary-countFailed").text(row.countFailed);
+                //
+                // $(".summary-sizeSuccess").html(bytesToSize(row.sizeSuccess));
+                //
+                // $(".summary-execTime").text(row.execTime.toFixed(2) + " sec");
+                // $(".summary-readingTime").text( (moment.parseZone(row.readingTime).diff(moment.parseZone(row.date)) / 1000).toFixed(2) );
+                // $(".summary-comparingTime").text( (moment.parseZone(row.comparisonTime).diff(moment.parseZone(row.readingTime)) / 1000).toFixed(2) );
+                // $(".summary-backupTime").text( (moment.parseZone(row.backupTime).diff(moment.parseZone(row.comparisonTime)) / 1000).toFixed(2) );
+                // $(".summary-loggingTime").text( (moment.parseZone(row.loggingTime).diff(moment.parseZone(row.backupTime)) / 1000).toFixed(2) );
+                updateSummary(row);
+                showStats(row.id);
+            },
+            'click .changed': function (e, val, row, idx) {
+                let $btn = $(e.currentTarget);
+                //
                 // let tags = '<button type="button" class="btn btn-sm btn-outline-default mr-1">Backup ID: ' + row.id + '</button>';
                 // tags += '<button type="button" class="btn btn-sm btn-outline-default mr-1">' + row.totalCount + ' files</button>';
                 // tags += '<button type="button" class="btn btn-sm btn-outline-default mr-1">' + bytesToSize(row.totalSize) + '</button>';
                 // tags += '<button type="button" class="btn btn-sm btn-outline-default">' + row.srcDir + '</button>';
-                // $("#modal-backup-stats .modal-title .summary").html(tags);
-                showStats(row);
-            },
-            'click .changed': function (e, val, row, idx) {
-                let $btn = $(e.currentTarget);
-
-                let tags = '<button type="button" class="btn btn-sm btn-outline-default mr-1">Backup ID: ' + row.id + '</button>';
-                tags += '<button type="button" class="btn btn-sm btn-outline-default mr-1">' + row.totalCount + ' files</button>';
-                tags += '<button type="button" class="btn btn-sm btn-outline-default mr-1">' + bytesToSize(row.totalSize) + '</button>';
-                tags += '<button type="button" class="btn btn-sm btn-outline-default">' + row.srcDir + '</button>';
-
-                $("#modal-backup-changes .modal-title .summary").html(tags);
+                //
+                // $("#modal-backup-changes .modal-title .summary").html(tags);
+                updateSummary(row);
 
                 showChangedFiles(row.id, $btn.data("field"));
             },
         };
+
+        function updateSummary(row) {
+            $(".summary-id").text(row.id);
+            $(".summary-totalCount").text(thousandCommaSep(row.totalCount));
+            $(".summary-totalSize").text(bytesToSize(row.totalSize));
+            $(".summary-srcDir").text(row.srcDir);
+            $(".summary-date").html('<span class="text-soft">' + moment(row.date).format("lll") + '</span>');
+
+            $(".summary-countAdded").text(row.countAdded);
+            $(".summary-sizeAdded").html(bytesToSize(row.sizeAdded));
+            $(".summary-countModified").text(row.countModified);
+            $(".summary-sizeModified").html(bytesToSize(row.sizeModified));
+            $(".summary-countDeleted").text(row.countDeleted);
+            $(".summary-sizeDeleted").html(bytesToSize(row.sizeDeleted));
+            $(".summary-countSuccess").text(row.countSuccess);
+            $(".summary-sizeFailed").html(bytesToSize(row.sizeFailed));
+            $(".summary-countFailed").text(row.countFailed);
+
+            $(".summary-sizeSuccess").html(bytesToSize(row.sizeSuccess));
+
+            $(".summary-execTime").text(row.execTime.toFixed(2) + " sec");
+            $(".summary-readingTime").text( (moment.parseZone(row.readingTime).diff(moment.parseZone(row.date)) / 1000).toFixed(2) );
+            $(".summary-comparingTime").text( (moment.parseZone(row.comparisonTime).diff(moment.parseZone(row.readingTime)) / 1000).toFixed(2) );
+            $(".summary-backupTime").text( (moment.parseZone(row.backupTime).diff(moment.parseZone(row.comparisonTime)) / 1000).toFixed(2) );
+            $(".summary-loggingTime").text( (moment.parseZone(row.loggingTime).diff(moment.parseZone(row.backupTime)) / 1000).toFixed(2) );
+        }
 
         $( "#select-srcDirs" ).change(function () {
             if (this.value.length > 0) {

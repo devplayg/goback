@@ -22,7 +22,7 @@ func Login() string {
 	<div class="row">
 		<div class="col-3">
 			<form id="form-login" method="post" class="form" action="/login/">
-				<h2>Sign in</h2>
+				<h1>Sign in</h1>
 				<div class="form-group">
 					<input class="form-control" type="text" name="accessKey" value="" placeholder="Access Key"/>
 				</div>
@@ -53,7 +53,6 @@ func Login() string {
 						secretKey: sha256($("#form-login input[name=secretKey]").val()),
                     },
 				}).done(function (result) {
-console.log(result);
                     if (result.logged) {
                         window.location.href = result.url;
                     }

@@ -23,6 +23,9 @@ func Settings() string {
             <i class="subheader-icon fal fa-cog"></i> Settings
             <small>
                 System configuration
+                <div class="float-right">
+                    <span class="sysInfo-time" data-format="ll LTS"></span>
+                </div>
             </small>
         </h1>
     </div>
@@ -226,7 +229,7 @@ func Settings() string {
                 url: "/backup/" + id + "/run",
                 type: "GET",
             }).done(function(data) {
-                console.log(data);
+                // console.log(data);
             }).fail(function (jqXHR, textStatus, errorThrown) {
                 console.error(jqXHR);
                 Swal.fire("Error", jqXHR.responseJSON.error, "warning");

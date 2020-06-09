@@ -1,8 +1,11 @@
 package goback
 
 import (
+	"github.com/devplayg/himma/v2"
 	"github.com/gorilla/mux"
+	"html/template"
 	"net/http"
+	"strings"
 )
 
 func (c *Controller) setRouter() error {
@@ -43,9 +46,46 @@ func (c *Controller) setRouter() error {
 	c.router.HandleFunc("/settings/storage/id/{id:[0-9]+}", c.UpdateStorage).Methods(http.MethodPatch)
 	c.router.HandleFunc("/backup/{id:[0-9]+}/run", c.RunBackupJob).Methods(http.MethodGet)
 
-	c.router.Use(authMiddleware)
+	c.router.Use(c.authMiddleware)
 
 	http.Handle("/", c.router)
 
 	return nil
+}
+
+func (c *Controller) authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// is static file ?
+		if strings.HasPrefix(r.RequestURI, AssetUriPrefix) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		if r.RequestURI == "/" {
+			http.Redirect(w, r, LoginUri, http.StatusSeeOther)
+			return
+		}
+
+		// Check session
+		if !isLogged(w, r) && !strings.HasPrefix(r.RequestURI, LoginUri) {
+			// http.Error(w, "Forbidden", http.StatusForbidden)
+			tmpl, _ := template.New("error").Parse(himma.Base())
+			tmpl.Parse(errorPageTpl())
+			m := struct {
+				*himma.Config
+				Status     string
+				StatusCode int
+			}{
+				c.app, "Forbidden", http.StatusForbidden,
+			}
+			if err := tmpl.Execute(w, m); err != nil {
+				ResponseErr(w, r, err, http.StatusInternalServerError)
+			}
+
+			tmpl.Execute(w, m)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

@@ -39,17 +39,17 @@ func (c *Controller) DisplayLogin(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, HomeUri, http.StatusSeeOther)
 		return
 	}
-	//tmpl, err := template.New("login").Parse(himma.Base())
-	//if err != nil {
+	// tmpl, err := template.New("login").Parse(himma.Base())
+	// if err != nil {
 	//	ResponseErr(w, r, err, http.StatusInternalServerError)
-	//}
-	//// if tmpl, err = tmpl.Parse(DisplayWithLocalFile("backup")); err != nil {
-	//if tmpl, err = tmpl.Parse(tpl.Login()); err != nil {
+	// }
+	// // if tmpl, err = tmpl.Parse(DisplayWithLocalFile("backup")); err != nil {
+	// if tmpl, err = tmpl.Parse(tpl.Login()); err != nil {
 	//	ResponseErr(w, r, err, http.StatusInternalServerError)
-	//}
-	//if err := tmpl.Execute(w, c.app); err != nil {
+	// }
+	// if err := tmpl.Execute(w, c.app); err != nil {
 	//	ResponseErr(w, r, err, http.StatusInternalServerError)
-	//}
+	// }
 	if c.server.appConfig.DeveloperMode {
 		if err := c.display("login", DisplayWithLocalFile("login"), w, r); err != nil {
 			ResponseErr(w, r, err, http.StatusInternalServerError)
@@ -66,8 +66,8 @@ func (c *Controller) DisplayBackup(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
 	}
-	if tmpl, err = tmpl.Parse(DisplayWithLocalFile("backup")); err != nil {
-		// if tmpl, err = tmpl.Parse(tpl.Backup()); err != nil {
+	// if tmpl, err = tmpl.Parse(DisplayWithLocalFile("backup")); err != nil {
+	if tmpl, err = tmpl.Parse(tpl.Backup()); err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
 	}
 	if err := tmpl.Execute(w, c.app); err != nil {
@@ -115,14 +115,14 @@ func (c *Controller) DisplaySettings(w http.ResponseWriter, r *http.Request) {
 	}
 
 	checksum, _ := c.server.getDbValue(ConfigBucket, KeyConfigChecksum)
-	aa := struct {
+	m := struct {
 		*himma.Config
 		Settings *Config
 		Checksum string
 	}{
 		c.app, c.server.config, hex.EncodeToString(checksum),
 	}
-	if err := tmpl.Execute(w, aa); err != nil {
+	if err := tmpl.Execute(w, m); err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
 	}
 }
