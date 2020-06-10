@@ -17,9 +17,22 @@ Backup
 
 <img src="https://github.com/devplayg/goback/raw/master/screenshots/backup.png" width="800">
 
+- All files
+    
+    <img src="https://github.com/devplayg/goback/raw/master/screenshots/modal-backup.png" width="800">
+    
+- Changes
+
+    <img src="https://github.com/devplayg/goback/raw/master/screenshots/modal-changes.png" width="800">
+    
 Stats
 
 <img src="https://github.com/devplayg/goback/raw/master/screenshots/stats.png" width="800">
+
+Settings
+
+<img src="https://github.com/devplayg/goback/raw/master/screenshots/settings.png" width="800">
+
 
 ### Database
 
