@@ -1,5 +1,5 @@
 # use the latest ubuntu environment (18.04) available on travis
-# dist: bionic
+dist: bionic
 
 language: go
 
@@ -28,4 +28,4 @@ notifications:
 # failing test, we want to see both. Configure golangci-lint with a
 # .golangci.yml file at the top level of your repo.
 script:
-  - go build ./cmd/goback/goback.go # run a bunch of code checkers/linters in parallel
+  - go build ./cmd/goback/main.go # run a bunch of code checkers/linters in parallel
