@@ -2,7 +2,7 @@
 
 Cross-platform incremental backup service
 
-<img src="goback.png" width="200"">
+![title](goback.png){: width="180"}
 
 * Running on service
 * Embedded web supported (Default :8000)
