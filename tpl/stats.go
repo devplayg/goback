@@ -10,11 +10,14 @@ func Stats() string {
     <li>
         <a href="/backup/" title="Backup"><i class="fal fa-list-ul"></i><span class="nav-link-text">Backup logs</span></a>
     </li>
-    <li>
+    <li class="active">
         <a href="/stats/" title="Statistics"><i class="fal fa-chart-bar"></i><span class="nav-link-text">Statistics</span></a>
     </li>
     <li>
         <a href="/settings/" title="Settings"><i class="fal fa-cog"></i><span class="nav-link-text">Settings</span></a>
+    </li>
+    <li>
+        <a href="/logout" title="Sign out"><i class="fal fa-sign-out"></i><span class="nav-link-text">Sign out</span></a>
     </li>
 {{end}}
 

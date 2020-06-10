@@ -6,7 +6,7 @@ func Backup() string {
 {{end}}
 
 {{define "sidebar"}}
-    <li>
+    <li class="active">
         <a href="/backup/" title="Backup"><i class="fal fa-list-ul"></i><span class="nav-link-text">Backup logs</span></a>
     </li>
     <li>
