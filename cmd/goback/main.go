@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	appName        = "SecuBACKUP"
+	appName        = "GoBack"
 	appDescription = "Smart incremental backup"
 	appVersion     = "3.0.1"
 )
@@ -41,7 +41,7 @@ func main() {
 		Text1:         "MAKE YOUR DATA SAFE",
 		Text2:         "powered by Go",
 		Year:          time.Now().Year(),
-		Company:       "SECUSOLUTION",
+		Company:       "devplayg",
 		Debug:         *debug,
 		Trace:         false,
 		Address:       ":" + strconv.Itoa(int(*port)),
