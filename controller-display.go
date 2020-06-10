@@ -39,12 +39,6 @@ func (c *Controller) DisplayLogin(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, HomeUri, http.StatusSeeOther)
 		return
 	}
-	if c.server.appConfig.DeveloperMode {
-		if err := c.display("login", DisplayWithLocalFile("login"), w, r); err != nil {
-			ResponseErr(w, r, err, http.StatusInternalServerError)
-		}
-		return
-	}
 	if err := c.display("login", tpl.Login(), w, r); err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
 	}

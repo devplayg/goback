@@ -4,12 +4,15 @@
 
 Cross-platform incremental backup service
 
-<img src="https://github.com/devplayg/goback/raw/master/goback.png" width="180">
+<img src="raw/master/goback.png" width="180">
 
 * Running on service
 * Embedded web supported (Default :8000)
 * Monthly statistics
 * Crontab format scheduler provided
+
+## Screenshots
+
 
 
 ### Database
