@@ -192,6 +192,7 @@ func Settings() string {
 {{end}}
 
 {{define "script"}}
+	<script src="/assets/js/custom.js"></script>
     <script>
         $(".form").each(function() {
             let c = $(this);

@@ -558,40 +558,7 @@ func Backup() string {
 {{define "script"}}
     <script src="/assets/js/custom.js"></script>
     <script>
-        //
-        let sysInfo = null;
-
-        setInterval(function() {
-            if (sysInfo === null) {
-                return;
-            }
-            sysInfo.time = moment(sysInfo.time).add(1, 'seconds').format();
-            updateSysInfoText();
-        }, 1000);
-
-        function updateSysInfoText() {
-            $(".sysInfo-time").each(function(i, e) {
-                let format = $(e).data("format");
-                if (format === undefined) {
-                    format = "";
-                }
-                // console.log(format);
-
-                $(e).text( moment(sysInfo.time).format(format));
-            });
-        }
-
-        function syncSysInfo() {
-            $.ajax({
-                url: "/sysInfo",
-            }).done(function(sys) {
-                sysInfo = sys;
-
-            });
-        }
-
-        syncSysInfo();
-
+        
         function backupRowStyle(row, index) {
             if (row.state === -1) {
                 return {

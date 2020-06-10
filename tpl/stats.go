@@ -26,7 +26,7 @@ func Stats() string {
         <h1 class="subheader-title">
             <i class="fal fa-chart-bar mr-1"></i> Statistics
             <small>
-                Weekly/Monthly statistics
+                Monthly statistics
                 <div class="float-right">
                     <span class="sysInfo-time" data-format="ll LTS"></span>
                 </div>

@@ -32,6 +32,37 @@ func customCss() string {
 
 func customScript() string {
 	script := `
+		let sysInfo = null;
+
+		function syncSysInfo() {
+            $.ajax({
+                url: "/sysInfo",
+            }).done(function(sys) {
+                sysInfo = sys;
+
+            });
+        }
+
+        syncSysInfo();
+
+
+        setInterval(function() {
+            if (sysInfo === null) {
+                return;
+            }
+            sysInfo.time = moment(sysInfo.time).add(1, 'seconds').format();
+            updateSysInfoText();
+        }, 1000);
+
+        function updateSysInfoText() {
+            $(".sysInfo-time").each(function(i, e) {
+                let format = $(e).data("format");
+                if (format === undefined) {
+                    format = "";
+                }
+                $(e).text( moment(sysInfo.time).format(format));
+            });
+        }
         let waitMeOptions = {
 			effect : "bounce",
 			text : 'Loading..',
