@@ -3,6 +3,7 @@ package goback
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/devplayg/himma/v2"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
@@ -91,7 +92,8 @@ func (c *Controller) Start() error {
 
 	// c.server.Log.Debug("1) HTTP server has been started")
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-		c.server.Log.Fatalf("HTTP server ListenAndServe: %v", err)
+		fmt.Println(err.Error())
+		c.server.Log.Error(err)
 	}
 	<-ch
 	// c.server.Log.Debug("3) HTTP server has been stopped")

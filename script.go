@@ -217,10 +217,16 @@ func customScript() string {
         }
 
         function backupStateFormatter(val, row, idx) {
-            if (val === 5) {
-                return 'Completed';
-            }
-            return val;
+            if (val === 5) return 'Completed';
+			
+			let prefix = '<span class="text-warning" title="Started->Read->Compared->Copied->Logged">',
+				suffix = '</span>';
+			if (val === 4) return 'Copied';
+			if (val === 3) return 'Compared';
+			if (val === 2) return 'Read';
+			if (val === 1) return 'Started';
+		
+            return prefix + val + suffix;
         }
 
         function toFixedFormatter(val, row, idx) {
