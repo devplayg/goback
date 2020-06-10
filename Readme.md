@@ -1,50 +1,34 @@
 # goback
 
-json
-struct
-summary.db.lock - gob encoded
-summary.db - zipped
+Cross-platform incremental backup service
 
-powered by **BoltDB**
+<img src="goback.png" width="200"">
 
-- s.runBackupJob(jobId)
-	- backup.start()
-		- b.startDirBackup(dir)
-			- b.startBackup(srcDir, lastFileMap)
-				- b.issueSummary(srcDir, Incremental)
-				- b.getCurrentFileMaps(srcDir)
-				- b.backupFiles()
-				- b.writeResult(
-					- b.writeChangesLog(lastFileMap)
-					- b.writeFileMaps(currentFileMaps)
-    - s.writeSummaries(summaries)
-	- backupId := lastBackupId + 1
-	
-	
-## Buckets of DB
+* Running on service
+* Embedded web supported (Default :8000)
+* Monthly statistics
+* Crontab format scheduler provided
 
-`summary`
+
+### Database
+
+Powered by BoltDB
+
+1. `summary`
 
 * key: Summary.Id
 * value: Summary
 
-`backup`
+2) `backup`
 
 * key: Backup.Id
 * value: nil
 
-`config`
+3. `config`
 
 |Key|Value|
 |---|---|
-|backup|JSON|
-|backup_checksum|sha256|
+|backup|Config|
+|backup_checksum|sha256(Config)|
 
 
-## To do
-
-- [X] Loading scheduler on starting
-- [ ] Displaying disk partion usage
-- [ ] Graphing file growth
-- [ ] Adding build note
-- [ ] Changing badge to button on UI
