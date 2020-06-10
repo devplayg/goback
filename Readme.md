@@ -1,5 +1,7 @@
 # goback
 
+[![Build Status](https://travis-ci.org/devplayg/goback.svg?branch=master)](https://travis-ci.org/devplayg/goback)
+
 Cross-platform incremental backup service
 
 <img src="https://github.com/devplayg/goback/raw/master/goback.png" width="180">
