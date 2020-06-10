@@ -223,7 +223,7 @@ func customScript() string {
 				return stats;
 			}
 			
-			let prefix = '<span class="text-danger" class="has-tooltip" title="Started-&gt;Read-&gt;Compared-&gt;Copied-&gt;Logged">',
+			let prefix = '<span class="has-tooltip text-danger" title="Started-&gt;Read-&gt;Compared-&gt;Copied-&gt;Logged">',
 				suffix = '</span>';
 			if (val === 4) {
 				stats = 'Copied';
