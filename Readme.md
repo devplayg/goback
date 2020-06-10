@@ -4,7 +4,7 @@
 
 Cross-platform incremental backup service
 
-<img src="https://github.com/devplayg/goback/raw/master/goback.png" width="180">
+<img src="https://github.com/devplayg/goback/raw/master/goback.png" width="640">
 
 * Running on service
 * Embedded web supported (Default :8000)
