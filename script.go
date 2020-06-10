@@ -219,7 +219,7 @@ func customScript() string {
         function backupStateFormatter(val, row, idx) {
             if (val === 5) return 'Completed';
 			
-			let prefix = '<span class="text-danger" title="Started->Read->Compared->Copied->Logged">',
+			let prefix = '<span class="text-danger" title="Started-&gt;Read-&gt;Compared-&gt;Copied-&gt;Logged">',
 				suffix = '</span>';
 			if (val === 4) return 'Copied';
 			if (val === 3) return 'Compared';
