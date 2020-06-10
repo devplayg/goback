@@ -27,7 +27,12 @@ func Backup() string {
             <small>
                 Backup history
                 <div class="float-right">
-                    <span class="sysInfo-time" data-format="ll LTS"></span>
+                    <button class="btn btn-xs btn-secondary">
+                        <span class="sysInfo-time" data-format="ll"></span>
+                    </button>
+                    <button class="btn btn-xs btn-secondary">
+                        <span class="sysInfo-time" data-format="LTS"></span>
+                    </button>
                 </div>
             </small>
         </h1>

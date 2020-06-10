@@ -9,8 +9,11 @@
     <li>
         <a href="/stats/" title="Statistics"><i class="fal fa-chart-bar"></i><span class="nav-link-text">Statistics</span></a>
     </li>
-    <li>
+    <li class="active">
         <a href="/settings/" title="Settings"><i class="fal fa-cog"></i><span class="nav-link-text">Settings</span></a>
+    </li>
+    <li>
+        <a href="/logout" title="Sign out"><i class="fal fa-sign-out"></i><span class="nav-link-text">Sign out</span></a>
     </li>
 {{end}}
 
@@ -21,7 +24,12 @@
             <small>
                 System configuration
                 <div class="float-right">
-                    <span class="sysInfo-time" data-format="ll LTS"></span>
+                    <button class="btn btn-xs btn-secondary">
+                        <span class="sysInfo-time" data-format="ll"></span>
+                    </button>
+                    <button class="btn btn-xs btn-secondary">
+                        <span class="sysInfo-time" data-format="LTS"></span>
+                    </button>
                 </div>
             </small>
         </h1>
@@ -93,7 +101,7 @@
                             {{end}}
                         </div>
                         <div class="card-body">
-                            <button class="btn btn-primary">Update</button>
+                            <button class="btn btn-primary">Apply</button>
                         </div>
                     </div>
                 </form>
@@ -174,7 +182,7 @@
 
                             <div>
                                 <button type="button" class="btn btn-danger runBackup d-none" data-id="{{$job.Id}}">Run backup</button>
-                                <button class="btn btn-primary">Update</button>
+                                <button class="btn btn-primary">Apply</button>
                             </div>
                         </div>
                     </div>
@@ -182,10 +190,11 @@
             {{end}}
 
         </div>
-    </div>
+    </div>123
 {{end}}
 
 {{define "script"}}
+    <script src="/assets/js/custom.js"></script>
     <script>
         $(".form").each(function() {
             let c = $(this);
@@ -233,5 +242,18 @@
             }).always(function() {
             });
         });
+
+        $(".custom-control-input").change(function() {
+            let $card = $(this).closest(".card");
+            $("input[type=text]", $card).prop("readonly", !this.checked);
+            $(".custom-control-label", $card).text((this.checked) ? "Enabled" : "Disabled");
+        });
+
+        $(".custom-control-input").each(function(i, $c) {
+            let $card = $c.closest(".card");
+            $("input[type=text]", $card).prop("readonly", !this.checked);
+            $(".custom-control-label", $card).text((this.checked) ? "Enabled" : "Disabled");
+        });
+
     </script>
 {{end}}

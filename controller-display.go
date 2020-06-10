@@ -106,10 +106,7 @@ func (c *Controller) DisplaySettings(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
 	}
-	// if tmpl, err = tmpl.Parse(DisplayWithLocalFile("settings")); err != nil {
-	// 	ResponseErr(w, r, err, http.StatusInternalServerError)
-	// }
-	// if tmpl, err = tmpl.Funcs(funcMap).Parse(DisplayWithLocalFile("settings")); err != nil {
+	//if tmpl, err = tmpl.Funcs(funcMap).Parse(DisplayWithLocalFile("settings")); err != nil {
 	if tmpl, err = tmpl.Funcs(funcMap).Parse(tpl.Settings()); err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
 	}

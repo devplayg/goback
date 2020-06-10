@@ -27,7 +27,12 @@ func Settings() string {
             <small>
                 System configuration
                 <div class="float-right">
-                    <span class="sysInfo-time" data-format="ll LTS"></span>
+                    <button class="btn btn-xs btn-secondary">
+                        <span class="sysInfo-time" data-format="ll"></span>
+                    </button>
+                    <button class="btn btn-xs btn-secondary">
+                        <span class="sysInfo-time" data-format="LTS"></span>
+                    </button>
                 </div>
             </small>
         </h1>
@@ -99,7 +104,7 @@ func Settings() string {
                             {{end}}
                         </div>
                         <div class="card-body">
-                            <button class="btn btn-primary">Update</button>
+                            <button class="btn btn-primary">Apply</button>
                         </div>
                     </div>
                 </form>
@@ -180,7 +185,7 @@ func Settings() string {
 
                             <div>
                                 <button type="button" class="btn btn-danger runBackup d-none" data-id="{{$job.Id}}">Run backup</button>
-                                <button class="btn btn-primary">Update</button>
+                                <button class="btn btn-primary">Apply</button>
                             </div>
                         </div>
                     </div>
@@ -188,11 +193,11 @@ func Settings() string {
             {{end}}
 
         </div>
-    </div>
+    </div>123
 {{end}}
 
 {{define "script"}}
-	<script src="/assets/js/custom.js"></script>
+    <script src="/assets/js/custom.js"></script>
     <script>
         $(".form").each(function() {
             let c = $(this);
@@ -240,6 +245,19 @@ func Settings() string {
             }).always(function() {
             });
         });
+
+        $(".custom-control-input").change(function() {
+            let $card = $(this).closest(".card");
+            $("input[type=text]", $card).prop("readonly", !this.checked);
+            $(".custom-control-label", $card).text((this.checked) ? "Enabled" : "Disabled");
+        });
+
+        $(".custom-control-input").each(function(i, $c) {
+            let $card = $c.closest(".card");
+            $("input[type=text]", $card).prop("readonly", !this.checked);
+            $(".custom-control-label", $card).text((this.checked) ? "Enabled" : "Disabled");
+        });
+
     </script>
 {{end}}
 `

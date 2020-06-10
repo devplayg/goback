@@ -12,7 +12,7 @@ import (
 const (
 	appName        = "SecuBACKUP"
 	appDescription = "Smart incremental backup"
-	appVersion     = "3.0.0"
+	appVersion     = "3.0.1"
 )
 
 var (
