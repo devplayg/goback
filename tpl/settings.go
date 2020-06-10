@@ -193,7 +193,7 @@ func Settings() string {
             {{end}}
 
         </div>
-    </div>123
+    </div>
 {{end}}
 
 {{define "script"}}
