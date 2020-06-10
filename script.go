@@ -217,16 +217,26 @@ func customScript() string {
         }
 
         function backupStateFormatter(val, row, idx) {
-            if (val === 5) return 'Completed';
+            if (val === 5) {
+				return 'Completed';
+			}
 			
+			let stats = ";"
 			let prefix = '<span class="text-danger" title="Started-&gt;Read-&gt;Compared-&gt;Copied-&gt;Logged">',
 				suffix = '</span>';
-			if (val === 4) return 'Copied';
-			if (val === 3) return 'Compared';
-			if (val === 2) return 'Read';
-			if (val === 1) return 'Started';
+			if (val === 4) {
+				stats = 'Copied';
+			} else if (val === 3) {
+				stats = 'Compared';
+			} else if (val === 2) {
+				stats = 'Read';
+			} else if (val === 1) {
+				stats = 'Started';
+			} else {
+				stats = val + '<i class="fa fa-warn"></i>';
+			}
 		
-            return prefix + val + suffix;
+            return prefix + stats + suffix;
         }
 
         function toFixedFormatter(val, row, idx) {
