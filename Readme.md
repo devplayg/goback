@@ -2,8 +2,7 @@
 
 Cross-platform incremental backup service
 
-![test image size](goback.png){:height="50%" width="50%"}
-
+<img src="https://github.com/devplayg/goback/raw/master/goback.png" width="180">
 
 * Running on service
 * Embedded web supported (Default :8000)
