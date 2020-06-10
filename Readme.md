@@ -19,11 +19,11 @@ Backup
 
 - All files
     
-    <img src="https://github.com/devplayg/goback/raw/master/screenshots/modal-backup.png" width="800">
+    <img src="https://github.com/devplayg/goback/raw/master/screenshots/modal-backup.png" width="400">
     
 - Changes
 
-    <img src="https://github.com/devplayg/goback/raw/master/screenshots/modal-changes.png" width="800">
+    <img src="https://github.com/devplayg/goback/raw/master/screenshots/modal-changes.png" width="400">
     
 Stats
 
