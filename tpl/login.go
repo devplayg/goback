@@ -75,6 +75,8 @@ func Login() string {
 		});
     });
 
+	$("#form-login input[name=accessKey]").focus().select();
+
 	</script>
 {{end}}
 `
