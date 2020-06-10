@@ -217,11 +217,12 @@ func customScript() string {
         }
 
         function backupStateFormatter(val, row, idx) {
+			let stats = ""
             if (val === 5) {
-				return 'Completed';
+				stats = "Completed";
+				return stats;
 			}
 			
-			let stats = ";"
 			let prefix = '<span class="text-danger" class="has-tooltip" title="Started-&gt;Read-&gt;Compared-&gt;Copied-&gt;Logged">',
 				suffix = '</span>';
 			if (val === 4) {
