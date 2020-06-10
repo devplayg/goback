@@ -728,43 +728,12 @@ func Backup() string {
         window.backupStatsEvents = {
 
             'click .stats': function (e, val, row, idx) {
-                // $(".summary-id").text(row.id);
-                // $(".summary-totalCount").text(thousandCommaSep(row.totalCount));
-                // $(".summary-totalSize").text(bytesToSize(row.totalSize));
-                // $(".summary-srcDir").text(row.srcDir);
-                // $(".summary-date").html('<span class="text-soft">' + moment(row.date).format("lll") + '</span>');
-                //
-                // $(".summary-countAdded").text(row.countAdded);
-                // $(".summary-sizeAdded").html(bytesToSize(row.sizeAdded));
-                // $(".summary-countModified").text(row.countModified);
-                // $(".summary-sizeModified").html(bytesToSize(row.sizeModified));
-                // $(".summary-countDeleted").text(row.countDeleted);
-                // $(".summary-sizeDeleted").html(bytesToSize(row.sizeDeleted));
-                // $(".summary-countSuccess").text(row.countSuccess);
-                // $(".summary-sizeFailed").html(bytesToSize(row.sizeFailed));
-                // $(".summary-countFailed").text(row.countFailed);
-                //
-                // $(".summary-sizeSuccess").html(bytesToSize(row.sizeSuccess));
-                //
-                // $(".summary-execTime").text(row.execTime.toFixed(2) + " sec");
-                // $(".summary-readingTime").text( (moment.parseZone(row.readingTime).diff(moment.parseZone(row.date)) / 1000).toFixed(2) );
-                // $(".summary-comparingTime").text( (moment.parseZone(row.comparisonTime).diff(moment.parseZone(row.readingTime)) / 1000).toFixed(2) );
-                // $(".summary-backupTime").text( (moment.parseZone(row.backupTime).diff(moment.parseZone(row.comparisonTime)) / 1000).toFixed(2) );
-                // $(".summary-loggingTime").text( (moment.parseZone(row.loggingTime).diff(moment.parseZone(row.backupTime)) / 1000).toFixed(2) );
                 updateSummary(row);
                 showStats(row.id);
             },
             'click .changed': function (e, val, row, idx) {
                 let $btn = $(e.currentTarget);
-                //
-                // let tags = '<button type="button" class="btn btn-sm btn-outline-default mr-1">Backup ID: ' + row.id + '</button>';
-                // tags += '<button type="button" class="btn btn-sm btn-outline-default mr-1">' + row.totalCount + ' files</button>';
-                // tags += '<button type="button" class="btn btn-sm btn-outline-default mr-1">' + bytesToSize(row.totalSize) + '</button>';
-                // tags += '<button type="button" class="btn btn-sm btn-outline-default">' + row.srcDir + '</button>';
-                //
-                // $("#modal-backup-changes .modal-title .summary").html(tags);
                 updateSummary(row);
-
                 showChangedFiles(row.id, $btn.data("field"));
             },
         };

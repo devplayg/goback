@@ -20,8 +20,10 @@ const dbDir = "db"
 var db *bolt.DB
 
 func init() {
-	os.Mkdir(dbDir, 0755)
-	boltDb, err := bolt.Open(filepath.Join(dbDir, "goback.db"), 0755, &bolt.Options{Timeout: 1 * time.Second})
+	if err := os.Mkdir(dbDir, 0755); err != nil {
+		panic(err)
+	}
+	boltDb, err := bolt.Open(filepath.Join(dbDir, goback.ProcessName+".db"), 0755, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		panic(err)
 	}

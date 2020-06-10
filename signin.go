@@ -37,8 +37,29 @@ func errorPageTpl() string {
 					{{.Status}}
 				</small>
 			</a>
+
+			<h2 class="text-primary countDown"></h2>
 		</h1>
 	</div>
+{{end}}
+
+{{define "script"}}
+<script>
+    let seconds = 6;
+	$(".countDown").text(seconds);
+    
+    function countdown() {
+        seconds = seconds - 1;
+        if (seconds < 0) {
+            window.location = "/login";
+        } else {
+            $(".countDown").text(seconds);
+            setTimeout("countdown()", 1000);
+        }
+    }
+
+    countdown();
+</script>
 {{end}}
 `
 }

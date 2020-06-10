@@ -42,6 +42,14 @@ func Login() string {
     //console.log(sha256(""));
     $(function() {
 		$("#form-login").validate({
+            rules: {
+				accessKey: {
+					required: true,
+				},
+				secretKey: {
+					required: true,
+				}
+			},
 			submitHandler: function (form, e) {
 				e.preventDefault();
 

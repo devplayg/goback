@@ -39,6 +39,17 @@ func customScript() string {
 			color : "#616469"
 		};
 
+		jQuery.validator.setDefaults({
+			// debug: true,
+			errorClass: "text-danger",
+			highlight: function (element) {
+				$(element).closest(".form-group").addClass("has-error");
+			},
+			unhighlight: function (element) {
+				$(element).closest(".form-group").removeClass("has-error");
+			},
+		});
+
 		function thousandCommaSep(n) {
             return n.toLocaleString();
         }

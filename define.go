@@ -9,6 +9,8 @@ import (
 )
 
 const (
+	ProcessName = "goback"
+
 	FileModified = 1
 	FileAdded    = 2
 	FileDeleted  = 4
