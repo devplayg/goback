@@ -1,6 +1,7 @@
 package goback
 
 import (
+	"errors"
 	"github.com/devplayg/himma/v2"
 	"github.com/gorilla/mux"
 	"html/template"
@@ -25,12 +26,16 @@ func (c *Controller) setRouter() error {
 	})
 
 	// System
-	c.router.HandleFunc("/sysInfo", c.SysInfo).Methods(http.MethodGet)
+	c.router.HandleFunc(UriSysInfo, c.SysInfo).Methods(http.MethodGet)
 
-	// Backup
+	// Sign in/out
 	c.router.HandleFunc("/login", c.DisplayLogin).Methods(http.MethodGet)
 	c.router.HandleFunc("/login", c.DoLogin).Methods(http.MethodPost)
 	c.router.HandleFunc("/logout", c.DoLogout)
+	c.router.HandleFunc(UriNewAccessKey, c.DisplayNewAccessKey).Methods(http.MethodGet)
+	c.router.HandleFunc(UriNewAccessKey, c.CreateNewAccount).Methods(http.MethodPost)
+
+	// Backup
 	c.router.HandleFunc("/backup/", c.DisplayBackup)
 	c.router.HandleFunc("/summaries", c.GetSummaries)
 	c.router.HandleFunc("/summaries/{id:[0-9]+}", c.GetSummary)
@@ -56,13 +61,24 @@ func (c *Controller) setRouter() error {
 func (c *Controller) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// is static file ?
-		if strings.HasPrefix(r.RequestURI, AssetUriPrefix) {
+		if strings.HasPrefix(r.RequestURI, AssetUriPrefix) || r.RequestURI == UriSysInfo {
 			next.ServeHTTP(w, r)
 			return
 		}
 
 		if r.RequestURI == "/" {
 			http.Redirect(w, r, LoginUri, http.StatusSeeOther)
+			return
+		}
+
+		// Check if access_key and secret_key exist
+		_, _, err := c.server.getAccessKeyAndSecretKey()
+		if errors.Is(err, AccessKeyNotFound) {
+			if r.RequestURI == UriNewAccessKey {
+				next.ServeHTTP(w, r)
+				return
+			}
+			http.Redirect(w, r, UriNewAccessKey, http.StatusSeeOther)
 			return
 		}
 

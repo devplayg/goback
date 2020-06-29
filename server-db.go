@@ -134,3 +134,60 @@ func (s *Server) getDbValue(bucket, key []byte) ([]byte, error) {
 	})
 	return data, err
 }
+
+func (s *Server) resetAccount() error {
+	return s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(ConfigBucket)
+		if b == nil {
+			return ErrorBucketNotFound
+		}
+		if err := b.Delete(KeyAccessKey); err != nil {
+			return err
+		}
+		if err := b.Delete(KeySecretKey); err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func (s *Server) getAccessKeyAndSecretKey() ([]byte, []byte, error) {
+	var accessKey []byte
+	var secretKey []byte
+
+	err := s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(ConfigBucket)
+		if b == nil {
+			return ErrorBucketNotFound
+		}
+		accessKey = b.Get(KeyAccessKey)
+		if accessKey == nil {
+			return AccessKeyNotFound
+		}
+		secretKey = b.Get(KeySecretKey)
+		if secretKey == nil {
+			return AccessKeyNotFound
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return accessKey, secretKey, nil
+}
+
+func (s *Server) setAccessKeyAndSecretKey(accessKey, secretKey []byte) error {
+	return s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(ConfigBucket)
+		if b == nil {
+			return ErrorBucketNotFound
+		}
+		if err := b.Put(KeyAccessKey, accessKey); err != nil {
+			return err
+		}
+		if err := b.Put(KeySecretKey, secretKey); err != nil {
+			return err
+		}
+		return nil
+	})
+}

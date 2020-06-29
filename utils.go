@@ -15,7 +15,10 @@ import (
 	"time"
 )
 
-var ErrorBucketNotFound = errors.New("bucket not found")
+var (
+	ErrorBucketNotFound = errors.New("bucket not found")
+	AccessKeyNotFound   = errors.New("access key not found")
+)
 
 func IntToByte(v int) []byte {
 	b := make([]byte, 8)

@@ -51,11 +51,14 @@ const (
 )
 
 var (
-	SummaryBucket     = []byte("summary")
-	BackupBucket      = []byte("backup")
+	SummaryBucket = []byte("summary")
+	BackupBucket  = []byte("backup")
+
 	ConfigBucket      = []byte("config")
 	KeyConfig         = []byte("config")
 	KeyConfigChecksum = []byte("config_checksum")
+	KeyAccessKey      = []byte("accessKey")
+	KeySecretKey      = []byte("secretKey")
 )
 
 const (
@@ -71,6 +74,11 @@ const (
 	MB = 1000000
 	GB = 1000000000
 	TB = 1000000000000
+)
+
+const (
+	UriNewAccessKey = "/new"
+	UriSysInfo      = "/sysInfo"
 )
 
 var fileSizeCategories = []int64{
@@ -106,15 +114,15 @@ func newDirInfo(srcDir, dbDir string) *dirInfo {
 	}
 }
 
-//type ResponseError struct {
+// type ResponseError struct {
 //	Err error
-//}
+// }
 //
-//func NewResponseError(err error) *ResponseError{
+// func NewResponseError(err error) *ResponseError{
 //	return &ResponseError{Err:err}
-//}
+// }
 //
-//func (r ResponseError) Json() []byte {
+// func (r ResponseError) Json() []byte {
 //	b, _ := json.Marshal(r)
 //	return b
-//}
+// }

@@ -44,6 +44,26 @@ func (c *Controller) DisplayLogin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (c *Controller) DisplayNewAccessKey(w http.ResponseWriter, r *http.Request) {
+	_, _, err := c.server.getAccessKeyAndSecretKey()
+	if err == nil {
+		if isLogged(w, r) {
+			http.Redirect(w, r, HomeUri, http.StatusSeeOther)
+			return
+		}
+	}
+
+	if c.server.appConfig.DeveloperMode {
+		if err := c.display("login", DisplayWithLocalFile("new_account"), w, r); err != nil {
+			ResponseErr(w, r, err, http.StatusInternalServerError)
+		}
+		return
+	}
+	if err := c.display("login", tpl.NewAccount(), w, r); err != nil {
+		ResponseErr(w, r, err, http.StatusInternalServerError)
+	}
+}
+
 func (c *Controller) DisplayBackup(w http.ResponseWriter, r *http.Request) {
 	if c.server.appConfig.DeveloperMode {
 		if err := c.display("login", DisplayWithLocalFile("backup"), w, r); err != nil {

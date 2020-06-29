@@ -57,7 +57,7 @@ func Login() string {
 					url: "/login",
 					type: "POST",
 					data: {
-						accessKey: $("#form-login input[name=accessKey]").val(),
+						accessKey: sha256($("#form-login input[name=accessKey]").val()),
 						secretKey: sha256($("#form-login input[name=secretKey]").val()),
                     },
 				}).done(function (result) {
