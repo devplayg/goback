@@ -20,9 +20,9 @@
 ## To do
 
 - [ ] Monthly report
-- [ ] ID/PW settings
 - [ ] Custom logo image
-- [X] Loading scheduler on starting
+- [x] ID/PW settings
+- [x] Loading scheduler on starting
 - [ ] Displaying disk partition usage
 - [ ] Graphing file growth
 - [ ] Adding build note

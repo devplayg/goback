@@ -66,24 +66,36 @@ func (c *Controller) DisplayNewAccessKey(w http.ResponseWriter, r *http.Request)
 
 func (c *Controller) DisplayBackup(w http.ResponseWriter, r *http.Request) {
 	if c.server.appConfig.DeveloperMode {
-		if err := c.display("login", DisplayWithLocalFile("backup"), w, r); err != nil {
+		if err := c.display("backup", DisplayWithLocalFile("backup"), w, r); err != nil {
 			ResponseErr(w, r, err, http.StatusInternalServerError)
 		}
 		return
 	}
-	if err := c.display("login", tpl.Backup(), w, r); err != nil {
+	if err := c.display("backup", tpl.Backup(), w, r); err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
 	}
 }
 
 func (c *Controller) DisplayStats(w http.ResponseWriter, r *http.Request) {
 	if c.server.appConfig.DeveloperMode {
-		if err := c.display("login", DisplayWithLocalFile("stats"), w, r); err != nil {
+		if err := c.display("stats", DisplayWithLocalFile("stats"), w, r); err != nil {
 			ResponseErr(w, r, err, http.StatusInternalServerError)
 		}
 		return
 	}
-	if err := c.display("login", tpl.Stats(), w, r); err != nil {
+	if err := c.display("stats", tpl.Stats(), w, r); err != nil {
+		ResponseErr(w, r, err, http.StatusInternalServerError)
+	}
+}
+
+func (c *Controller) DisplayStatsReport(w http.ResponseWriter, r *http.Request) {
+	if c.server.appConfig.DeveloperMode {
+		if err := c.display("report", DisplayWithLocalFile("report"), w, r); err != nil {
+			ResponseErr(w, r, err, http.StatusInternalServerError)
+		}
+		return
+	}
+	if err := c.display("report", tpl.Stats(), w, r); err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
 	}
 }

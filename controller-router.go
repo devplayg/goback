@@ -39,11 +39,13 @@ func (c *Controller) setRouter() error {
 	c.router.HandleFunc("/backup/", c.DisplayBackup)
 	c.router.HandleFunc("/summaries", c.GetSummaries)
 	c.router.HandleFunc("/summaries/{id:[0-9]+}", c.GetSummary)
-	c.router.HandleFunc("/stats", c.GetStats)
 	c.router.HandleFunc("/summaries/{id:[0-9]+}/changes", c.GetChangesLog)
 
 	// Statistics
 	c.router.HandleFunc("/stats/", c.DisplayStats)
+	c.router.HandleFunc("/stats", c.GetStats)
+	c.router.HandleFunc("/report/", c.DisplayStatsReport)
+	c.router.HandleFunc("/report/{yyyymm:[0-9]+}", c.GetStatsReport)
 
 	// Settings
 	c.router.HandleFunc("/settings/", c.DisplaySettings)

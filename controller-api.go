@@ -37,6 +37,21 @@ func (c *Controller) GetStats(w http.ResponseWriter, r *http.Request) {
 	ResponseData(w, r, stats)
 }
 
+func (c *Controller) GetStatsReport(w http.ResponseWriter, r *http.Request) {
+	yyyymm, err := time.Parse("200601", mux.Vars(r)["yyyymm"])
+	if err != nil {
+		ResponseErr(w, r, err, http.StatusInternalServerError)
+		return
+	}
+	stats, err := c.server.findStatsReport(yyyymm)
+	if err != nil {
+		ResponseErr(w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	ResponseData(w, r, stats)
+}
+
 func (c *Controller) GetChangesLog(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 	data, err := c.server.getChangesLog(id)

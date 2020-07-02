@@ -85,6 +85,7 @@ func Stats() string {
                     <thead>
                     <tr>
                         <th data-field="date" data-sortable="true" data-formatter="yyyymmFormatter">Date</th>
+						<th data-field="report" data-sortable="true" data-formatter="reportFormatter">Report</th>
                         <th data-field="srcDir" data-sortable="true" data-formatter="shortDirFormatter">Directory</th>
 
                         <th data-field="countAdded" data-sortable="true" data-formatter="thousandCommaSep">Added</th>
@@ -149,7 +150,11 @@ func Stats() string {
                     }).text(dir).appendTo($("#select-srcDirs"));
                 });
             });
-    </script>
+    
+	function reportFormatter(val, row, idx) {
+		return '<a href="#"><i class="fal fa-file-alt"></i></a>';
+	}
+	</script>
 {{end}}
 `
 }
