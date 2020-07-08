@@ -17,7 +17,7 @@ Backup
 
 <img src="https://github.com/devplayg/goback/raw/master/screenshots/backup.png" width="800">
 
-- All files
+- Summary
     
     <img src="https://github.com/devplayg/goback/raw/master/screenshots/modal-backup.png" width="600">
     
@@ -28,6 +28,10 @@ Backup
 Stats
 
 <img src="https://github.com/devplayg/goback/raw/master/screenshots/stats.png" width="800">
+
+Report
+
+<img src="https://github.com/devplayg/goback/raw/master/screenshots/report.png" width="800">
 
 Settings
 
