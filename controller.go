@@ -98,6 +98,7 @@ func (c *Controller) Start() error {
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		fmt.Println(err.Error())
 		c.server.Log.Error(err)
+		c.server.Cancel()
 	}
 	<-ch
 	// c.server.Log.Debug("3) HTTP server has been stopped")
