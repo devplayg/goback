@@ -32,7 +32,7 @@ func errorPageTpl() string {
 	<div class="h-alt-hf d-flex flex-column align-items-center justify-content-center text-center">
 		<h1 class="page-error color-fusion-500">
 			<a href="/login">
-				ERROR <span class="text-gradient">{{.StatusCode}}</span>
+				<span class="text-gradient">{{.StatusCode}}</span>
 				<small class="fw-500">
 					{{.Status}}
 				</small>
@@ -45,7 +45,7 @@ func errorPageTpl() string {
 
 {{define "script"}}
 <script>
-    let seconds = 6;
+    let seconds = 4;
 	$(".countDown").text(seconds);
     
     function countdown() {

@@ -14,19 +14,19 @@ import (
 const (
 	appName        = "GoBack"
 	appDescription = "Smart incremental backup"
-	appVersion     = "3.0.1"
+	appVersion     = "3.1.0"
 )
 
 var (
-	fs           = pflag.NewFlagSet(appName+" "+appVersion, pflag.ExitOnError)
-	debug        = fs.Bool("debug", false, "Debug") // GODEBUG=http2debug=2
-	verbose      = fs.BoolP("verbose", "v", false, "Verbose")
-	version      = fs.Bool("version", false, "Version")
-	insecure     = fs.Bool("insecure", false, "Disable TLS")
-	certFile     = fs.String("certFile", "server.crt", "SSL Certificate file")
-	keyFile      = fs.String("keyFile", "server.key", "SSL Certificate key file")
-	port         = fs.Uint16("port", 8000, "Monitoring address")
-	securePort   = fs.Uint16("secureport", 8443, "Secured monitoring address")
+	fs      = pflag.NewFlagSet(appName+" "+appVersion, pflag.ExitOnError)
+	debug   = fs.Bool("debug", false, "Debug") // GODEBUG=http2debug=2
+	verbose = fs.BoolP("verbose", "v", false, "Verbose")
+	version = fs.Bool("version", false, "Version")
+	// insecure     = fs.Bool("insecure", false, "Disable TLS")
+	// certFile     = fs.String("certFile", "server.crt", "SSL Certificate file")
+	// keyFile      = fs.String("keyFile", "server.key", "SSL Certificate key file")
+	port = fs.Uint16("port", 8000, "Monitoring address")
+	// securePort   = fs.Uint16("secureport", 8443, "Secured monitoring address")
 	resetAccount = fs.Bool("resetkey", false, "Reset access key and secret key")
 )
 
@@ -48,14 +48,14 @@ func main() {
 			Version:     appVersion,
 			Debug:       *debug,
 			Trace:       false,
-			CertFile:    *certFile,
-			KeyFile:     *keyFile,
-			Insecure:    *insecure,
+			// CertFile:    *certFile,
+			// KeyFile:     *keyFile,
+			// Insecure:    *insecure,
 		},
-		Address:       ":" + strconv.Itoa(int(*port)),       // HTTP
-		SecureAddress: ":" + strconv.Itoa(int(*securePort)), // HTTPS
-		Verbose:       *verbose,
-		ResetAccount:  *resetAccount,
+		Address: ":" + strconv.Itoa(int(*port)), // HTTP
+		// SecureAddress: ":" + strconv.Itoa(int(*securePort)), // HTTPS
+		Verbose:      *verbose,
+		ResetAccount: *resetAccount,
 	}
 
 	// Start
