@@ -29,7 +29,7 @@ Stats
 
 <img src="https://github.com/devplayg/goback/raw/master/screenshots/stats.png" width="800">
 
-Report
+Report for printing
 
 <img src="https://github.com/devplayg/goback/raw/master/screenshots/report.png" width="800">
 
