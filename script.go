@@ -39,7 +39,6 @@ func customScript() string {
                 url: "/sysInfo",
             }).done(function(sys) {
                 sysInfo = sys;
-
             });
         }
 
@@ -165,6 +164,10 @@ func customScript() string {
 		}
 		
 		function yyyymmFormatter(val, row, idx) {
+			return moment(val).format("MMM YYYY");
+		}
+
+		function yyyymmddFormatter(val, row, idx) {
 			return moment(val).format("ll");
 		}
 
@@ -195,10 +198,6 @@ func customScript() string {
                 return val;
             }
             return '<span class="has-tooltip" title="' + bytesToSize(val / 10) + ' ~ ' +  bytesToSize(val) + '">' + humanizedSize(val / 10, true, 0) + " ~ " +  humanizedSize(val, true, 0) + '</span>';
-        }
-
-        function backupTotalCountFormatter(val, row, idx) {
-            return '<a href="javascript:void(0);" class="stats">' + thCommaFormatter(val, row, idx) + '</a>';
         }
 
         function shortDirFormatter(val, row, idx) {
@@ -292,6 +291,11 @@ func customScript() string {
             }
             return thousandCommaSep(val);
         }
+
+		function backupTotalCountFormatter(val, row, idx) {
+            return '<a href="javascript:void(0);" class="stats">' + thCommaFormatter(val, row, idx) + '</a>';
+        }
+
 `
 
 	return strings.TrimSpace(script)

@@ -1,6 +1,7 @@
 package goback
 
 import (
+	"errors"
 	"github.com/devplayg/himma/v2"
 	"github.com/gorilla/mux"
 	"html/template"
@@ -24,21 +25,37 @@ func (c *Controller) setRouter() error {
 		GetAsset(w, r)
 	})
 
-	// System
-	c.router.HandleFunc("/sysInfo", c.SysInfo).Methods(http.MethodGet)
+	c.router.HandleFunc("/img/{u1}", func(w http.ResponseWriter, r *http.Request) {
+		GetAsset(w, r)
+	})
+	c.router.HandleFunc("/plugins/{u1}/{u2}", func(w http.ResponseWriter, r *http.Request) {
+		GetAsset(w, r)
+	})
+	c.router.HandleFunc("/plugins/{u1}/{u2}/{u3}", func(w http.ResponseWriter, r *http.Request) {
+		GetAsset(w, r)
+	})
 
-	// Backup
+	// System
+	c.router.HandleFunc(UriSysInfo, c.SysInfo).Methods(http.MethodGet)
+
+	// Sign in/out
 	c.router.HandleFunc("/login", c.DisplayLogin).Methods(http.MethodGet)
 	c.router.HandleFunc("/login", c.DoLogin).Methods(http.MethodPost)
 	c.router.HandleFunc("/logout", c.DoLogout)
+	c.router.HandleFunc(UriNewAccessKey, c.DisplayNewAccessKey).Methods(http.MethodGet)
+	c.router.HandleFunc(UriNewAccessKey, c.CreateNewAccount).Methods(http.MethodPost)
+
+	// Backup
 	c.router.HandleFunc("/backup/", c.DisplayBackup)
 	c.router.HandleFunc("/summaries", c.GetSummaries)
 	c.router.HandleFunc("/summaries/{id:[0-9]+}", c.GetSummary)
-	c.router.HandleFunc("/stats", c.GetStats)
 	c.router.HandleFunc("/summaries/{id:[0-9]+}/changes", c.GetChangesLog)
 
 	// Statistics
 	c.router.HandleFunc("/stats/", c.DisplayStats)
+	c.router.HandleFunc("/stats", c.GetStats)
+	c.router.HandleFunc("/report/{yyyymm:[0-9]+}/", c.DisplayStatsReport)
+	c.router.HandleFunc("/report/{yyyymm:[0-9]+}", c.GetStatsReport)
 
 	// Settings
 	c.router.HandleFunc("/settings/", c.DisplaySettings)
@@ -56,13 +73,32 @@ func (c *Controller) setRouter() error {
 func (c *Controller) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// is static file ?
-		if strings.HasPrefix(r.RequestURI, AssetUriPrefix) {
+		if r.RequestURI == UriSysInfo {
 			next.ServeHTTP(w, r)
 			return
+
+		}
+
+		for prefix := range AssetUriPrefix {
+			if strings.HasPrefix(r.RequestURI, prefix) {
+				next.ServeHTTP(w, r)
+				return
+			}
 		}
 
 		if r.RequestURI == "/" {
 			http.Redirect(w, r, LoginUri, http.StatusSeeOther)
+			return
+		}
+
+		// Check if access_key and secret_key exist
+		_, _, err := c.server.getAccessKeyAndSecretKey()
+		if errors.Is(err, AccessKeyNotFound) {
+			if r.RequestURI == UriNewAccessKey {
+				next.ServeHTTP(w, r)
+				return
+			}
+			http.Redirect(w, r, UriNewAccessKey, http.StatusSeeOther)
 			return
 		}
 

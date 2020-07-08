@@ -1,6 +1,13 @@
 package tpl
 
+import "os"
+
 func Login() string {
+	tpl := "tpl/login.html"
+	if _, err := os.Stat(tpl); os.IsExist(err) {
+		return displayWithLocalFile(tpl)
+	}
+
 	return `
 {{define "css"}}
     <link rel="stylesheet" media="screen, print" href="/assets/css/custom.css">
@@ -57,7 +64,7 @@ func Login() string {
 					url: "/login",
 					type: "POST",
 					data: {
-						accessKey: $("#form-login input[name=accessKey]").val(),
+						accessKey: sha256($("#form-login input[name=accessKey]").val()),
 						secretKey: sha256($("#form-login input[name=secretKey]").val()),
                     },
 				}).done(function (result) {

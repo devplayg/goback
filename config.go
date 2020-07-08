@@ -2,6 +2,8 @@ package goback
 
 import (
 	"fmt"
+	"github.com/devplayg/himma/v2"
+	"github.com/devplayg/hippo/v2"
 	"github.com/robfig/cron/v3"
 	"strings"
 )
@@ -71,18 +73,10 @@ func (s *Storage) Tune() {
 }
 
 type AppConfig struct {
+	HimmaConfig   *himma.Config
+	HippoConfig   *hippo.Config
 	Address       string
-	Name          string
-	Description   string
-	Version       string
-	Url           string
-	Text1         string
-	Text2         string
-	Year          int
-	Company       string
-	Debug         bool
-	Trace         bool
+	SecureAddress string
 	Verbose       bool
-	DeveloperMode bool
-	// LogImgPath  string
+	ResetAccount  bool
 }

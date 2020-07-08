@@ -1,12 +1,13 @@
-github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/devplayg/eggcrate v1.0.3/go.mod h1:yL7PuksJXC6U+weTsbLADyOKDqUx6MTfrElnOJo/XB0=
+github.com/devplayg/golibs v1.0.1/go.mod h1:ejqC+44p6NJpDZo+oxyGVdBwrS56EEbQQqJ86Dpo9rE=
 github.com/devplayg/goutils v0.0.0-20200605065811-4b40c02eefbf h1:gsn1ERCnLcfVH7PP9qKl1vt9ggb9kKLjhlKj0umIx+U=
 github.com/devplayg/goutils v0.0.0-20200605065811-4b40c02eefbf/go.mod h1:m8qi4rSb9PMpLE9iNPTNxqHZEDa7JA1qxhfbY9hejmE=
-github.com/devplayg/himma/v2 v2.0.5 h1:3t5bY/2vlqY9VoQ31hu4A7Q6Mj2wuWgNDRiO5ZC/MsU=
-github.com/devplayg/himma/v2 v2.0.5/go.mod h1:PuVAlPKhLhaoCpxsc3MmB0KaTBmGI6H/zW6js15wA6E=
+github.com/devplayg/himma/v2 v2.1.1 h1:wO5y89WNpB3AFb6rcg+LW06tHkUjpxkoDQytagusN7g=
+github.com/devplayg/himma/v2 v2.1.1/go.mod h1:rm9mzfYS2eLLBYZe+ZJ4ffB+SA4gfv4H+XtbLsn/Yzw=
 github.com/devplayg/hippo/v2 v2.2.0 h1:wl7vMu6Qzm8t0Z1kqDCVsLObmbQu/htxJNiUEgyUwys=
 github.com/devplayg/hippo/v2 v2.2.0/go.mod h1:pJWWmu4NI55BSwRQEyKDrHnIi3Ze4MoBkRTCSMXeSZs=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=

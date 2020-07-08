@@ -4,7 +4,7 @@ require (
 	github.com/boltdb/bolt v1.3.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/devplayg/goutils v0.0.0-20200605065811-4b40c02eefbf
-	github.com/devplayg/himma/v2 v2.0.5
+	github.com/devplayg/himma/v2 v2.1.1
 	github.com/devplayg/hippo/v2 v2.2.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/gorilla/mux v1.7.4

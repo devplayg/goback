@@ -19,8 +19,11 @@
 	
 ## To do
 
-- [X] Loading scheduler on starting
-- [ ] Displaying disk partion usage
+- [ ] Monthly report
+- [ ] Custom logo image
+- [x] ID/PW settings
+- [x] Loading scheduler on starting
+- [ ] Displaying disk partition usage
 - [ ] Graphing file growth
 - [ ] Adding build note
 - [ ] Changing badge to button on UI

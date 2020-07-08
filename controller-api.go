@@ -1,12 +1,11 @@
 package goback
 
 import (
+	"bytes"
 	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 )
@@ -30,6 +29,22 @@ func (c *Controller) GetSummaries(w http.ResponseWriter, r *http.Request) {
 
 func (c *Controller) GetStats(w http.ResponseWriter, r *http.Request) {
 	stats, err := c.server.findStats()
+	if err != nil {
+		ResponseErr(w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	ResponseData(w, r, stats)
+}
+
+func (c *Controller) GetStatsReport(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	_, err := time.Parse("200601", vars["yyyymm"])
+	if err != nil {
+		ResponseErr(w, r, err, http.StatusInternalServerError)
+		return
+	}
+	stats, err := c.server.findMonthlySummaries(vars["yyyymm"])
 	if err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
 		return
@@ -79,19 +94,26 @@ func (c *Controller) DoLogin(w http.ResponseWriter, r *http.Request) {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
 		return
 	}
+
+	serverAcessKey, serverSecretKey, err := c.server.getAccessKeyAndSecretKey()
+	if err != nil {
+		ResponseErr(w, r, err, http.StatusInternalServerError)
+		return
+	}
+
 	session, err := store.Get(r, SignInSessionId)
 	if err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
 		return
 	}
-	// inputPwdHash := sha256.Sum256([]byte(SecretKey))
-	serverPwdHash := sha256.Sum256([]byte(os.Getenv(SecretKey)))
-
 	m := map[string]interface{}{
 		"logged": false,
 		"url":    "",
 	}
-	if !(os.Getenv(AccessKey) == signIn.AccessKey && signIn.SecretKey == hex.EncodeToString(serverPwdHash[:])) {
+
+	ak := sha256.Sum256([]byte(signIn.AccessKey))
+	sk := sha256.Sum256([]byte(signIn.SecretKey))
+	if !(bytes.Equal(ak[:], serverAcessKey) && bytes.Equal(sk[:], serverSecretKey)) {
 		b, _ := json.Marshal(m)
 		w.Header().Add("Content-Type", ApplicationJson)
 		w.Write(b)
@@ -108,4 +130,24 @@ func (c *Controller) DoLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ResponseData(w, r, m)
+}
+
+func (c *Controller) CreateNewAccount(w http.ResponseWriter, r *http.Request) {
+	var signIn SignIn
+	_, err := c.ParseForm(r, &signIn)
+	if err != nil {
+		ResponseErr(w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	ak := sha256.Sum256([]byte(signIn.AccessKey))
+	sk := sha256.Sum256([]byte(signIn.SecretKey))
+	if err := c.server.setAccessKeyAndSecretKey(ak[:], sk[:]); err != nil {
+		ResponseErr(w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	log.Info("ACCESS KEY is created")
+
+	http.Redirect(w, r, HomeUri, http.StatusMovedPermanently)
 }

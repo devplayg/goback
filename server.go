@@ -16,19 +16,10 @@ import (
 )
 
 func NewEngine(app *AppConfig) *hippo.Engine {
-	server := NewServer(app)
-	logDir := "."
-	if app.Verbose {
-		logDir = ""
+	if !app.Verbose {
+		app.HippoConfig.LogDir = "."
 	}
-	engine := hippo.NewEngine(server, &hippo.Config{
-		Name:        app.Name,
-		Description: app.Description,
-		Version:     app.Version,
-		Debug:       app.Debug,
-		Trace:       app.Trace,
-		LogDir:      logDir,
-	})
+	engine := hippo.NewEngine(NewServer(app), app.HippoConfig)
 	return engine
 }
 
@@ -56,6 +47,15 @@ func (s *Server) Start() error {
 	// Initialize server
 	if err := s.init(); err != nil {
 		return err
+	}
+
+	if s.appConfig.ResetAccount {
+		if err := s.resetAccount(); err != nil {
+			log.Error(err)
+			return err
+		}
+		fmt.Println("ACCESS KEY IS RESET SUCCESSFULLY")
+		return nil
 	}
 
 	ch := make(chan struct{})

@@ -27,6 +27,30 @@ func (s *Server) findSummaries() ([]*Summary, error) {
 	return summaries, err
 }
 
+func (s *Server) findMonthlySummaries(yyyymm string) ([]*Summary, error) {
+	summaries := make([]*Summary, 0)
+	err := s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(SummaryBucket)
+		b.ForEach(func(id, data []byte) error {
+			var summary Summary
+			if err := json.Unmarshal(data, &summary); err != nil {
+				log.Error(err)
+				return nil
+			}
+			if summary.Date.Format("200601") != yyyymm {
+				return nil
+			}
+
+			summary.Stats = nil
+			summaries = append(summaries, &summary)
+			return nil
+		})
+		return nil
+	})
+
+	return summaries, err
+}
+
 func (s *Server) findStats() ([]*Summary, error) {
 	summaries, err := s.findSummaries()
 	if err != nil {
@@ -59,6 +83,39 @@ func (s *Server) findStats() ([]*Summary, error) {
 	}
 	return stats, err
 }
+
+// func (s *Server) findStatsReport(t time.Time) ([]*Summary, error) {
+// summaries, err := s.findSummaries()
+// if err != nil {
+// 	return nil, err
+// }
+//
+// statsMap := make(map[string]*Summary)
+// for _, s := range summaries {
+// 	month := s.Date.Format("2006-01")
+// 	dir := s.SrcDir
+// 	key := month + dir
+// 	if _, have := statsMap[key]; !have {
+// 		statsMap[key] = newSummaryStats(s)
+// 	}
+// 	statsMap[key].AddedCount += s.AddedCount
+// 	statsMap[key].AddedSize += s.AddedSize
+// 	statsMap[key].ModifiedCount += s.ModifiedCount
+// 	statsMap[key].ModifiedSize += s.ModifiedSize
+// 	statsMap[key].DeletedCount += s.DeletedCount
+// 	statsMap[key].DeletedSize += s.DeletedSize
+// 	statsMap[key].SuccessCount += s.SuccessCount
+// 	statsMap[key].SuccessSize += s.SuccessSize
+// 	statsMap[key].FailedCount += s.FailedCount
+// 	statsMap[key].FailedSize += s.FailedSize
+// }
+//
+// var stats []*Summary
+// for _, s := range statsMap {
+// 	stats = append(stats, s)
+// }
+// return stats, err
+// }
 
 func (s *Server) findSummaryById(id int) (*Summary, error) {
 	var data []byte
@@ -133,4 +190,61 @@ func (s *Server) getDbValue(bucket, key []byte) ([]byte, error) {
 		return nil
 	})
 	return data, err
+}
+
+func (s *Server) resetAccount() error {
+	return s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(ConfigBucket)
+		if b == nil {
+			return ErrorBucketNotFound
+		}
+		if err := b.Delete(KeyAccessKey); err != nil {
+			return err
+		}
+		if err := b.Delete(KeySecretKey); err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func (s *Server) getAccessKeyAndSecretKey() ([]byte, []byte, error) {
+	var accessKey []byte
+	var secretKey []byte
+
+	err := s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(ConfigBucket)
+		if b == nil {
+			return ErrorBucketNotFound
+		}
+		accessKey = b.Get(KeyAccessKey)
+		if accessKey == nil {
+			return AccessKeyNotFound
+		}
+		secretKey = b.Get(KeySecretKey)
+		if secretKey == nil {
+			return AccessKeyNotFound
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return accessKey, secretKey, nil
+}
+
+func (s *Server) setAccessKeyAndSecretKey(accessKey, secretKey []byte) error {
+	return s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(ConfigBucket)
+		if b == nil {
+			return ErrorBucketNotFound
+		}
+		if err := b.Put(KeyAccessKey, accessKey); err != nil {
+			return err
+		}
+		if err := b.Put(KeySecretKey, secretKey); err != nil {
+			return err
+		}
+		return nil
+	})
 }
