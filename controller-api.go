@@ -38,12 +38,13 @@ func (c *Controller) GetStats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) GetStatsReport(w http.ResponseWriter, r *http.Request) {
-	yyyymm, err := time.Parse("200601", mux.Vars(r)["yyyymm"])
+	vars := mux.Vars(r)
+	_, err := time.Parse("200601", vars["yyyymm"])
 	if err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
 		return
 	}
-	stats, err := c.server.findStatsReport(yyyymm)
+	stats, err := c.server.findMonthlySummaries(vars["yyyymm"])
 	if err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
 		return

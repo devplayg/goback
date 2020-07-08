@@ -25,6 +25,16 @@ func (c *Controller) setRouter() error {
 		GetAsset(w, r)
 	})
 
+	c.router.HandleFunc("/img/{u1}", func(w http.ResponseWriter, r *http.Request) {
+		GetAsset(w, r)
+	})
+	c.router.HandleFunc("/plugins/{u1}/{u2}", func(w http.ResponseWriter, r *http.Request) {
+		GetAsset(w, r)
+	})
+	c.router.HandleFunc("/plugins/{u1}/{u2}/{u3}", func(w http.ResponseWriter, r *http.Request) {
+		GetAsset(w, r)
+	})
+
 	// System
 	c.router.HandleFunc(UriSysInfo, c.SysInfo).Methods(http.MethodGet)
 
@@ -44,7 +54,7 @@ func (c *Controller) setRouter() error {
 	// Statistics
 	c.router.HandleFunc("/stats/", c.DisplayStats)
 	c.router.HandleFunc("/stats", c.GetStats)
-	c.router.HandleFunc("/report/", c.DisplayStatsReport)
+	c.router.HandleFunc("/report/{yyyymm:[0-9]+}/", c.DisplayStatsReport)
 	c.router.HandleFunc("/report/{yyyymm:[0-9]+}", c.GetStatsReport)
 
 	// Settings
@@ -63,9 +73,17 @@ func (c *Controller) setRouter() error {
 func (c *Controller) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// is static file ?
-		if strings.HasPrefix(r.RequestURI, AssetUriPrefix) || r.RequestURI == UriSysInfo {
+		if r.RequestURI == UriSysInfo {
 			next.ServeHTTP(w, r)
 			return
+
+		}
+
+		for prefix := range AssetUriPrefix {
+			if strings.HasPrefix(r.RequestURI, prefix) {
+				next.ServeHTTP(w, r)
+				return
+			}
 		}
 
 		if r.RequestURI == "/" {

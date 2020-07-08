@@ -47,21 +47,25 @@ func (c *Controller) init() error {
 	}
 	uiAssetMap, err := himma.GetAssetMap(
 		himma.Bootstrap4,
-		himma.BootstrapDatepicker_1_9_0,
-		himma.BootstrapSelect_1_13_9,
-		himma.BootstrapTable_1_16_0,
-		himma.Holder_2_9,
-		himma.JqueryMask_1_14_16,
-		himma.JqueryValidation_1_19_1,
-		himma.JsCookie_2_2_1,
-		himma.Moment_2_24_0,
-		himma.ProgressbarJs_1_0_1,
-		himma.WaitMe_31_10_17,
+		himma.BootstrapSelect,
+		himma.BootstrapTable,
+		himma.Holder,
+		himma.JqueryMask,
+		himma.JqueryValidation,
+		himma.JsCookie,
+		himma.Moment,
+		himma.ProgressbarJs,
+		himma.WaitMe,
+		himma.Images,
 	)
 	if err != nil {
 		return err
 	}
-	uiAssetMap.AddZippedAndBase64Encoded("/assets/img/logo.png", LogoImg)
+
+	// for k := range uiAssetMap {
+	// 	log.Debug(k)
+	// }
+	uiAssetMap.AddZippedAndBase64Encoded("/img/logo.png", LogoImg)
 	uiAssetMap.AddRaw("/assets/js/custom.js", customScript())
 	uiAssetMap.AddRaw("/assets/css/custom.css", customCss())
 	WebAssetMap = uiAssetMap
@@ -110,7 +114,10 @@ func GetAsset(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Length", strconv.FormatInt(int64(len(content)), 10))
 		w.Header().Set("Content-Encoding", GZIP)
 		w.Write(content)
+		return
 	}
+
+	http.NotFound(w, r)
 }
 
 func DetectContentType(ext string) string {

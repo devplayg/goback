@@ -20,7 +20,7 @@ func (c *Controller) DisplayDefault(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, HomeUri, http.StatusSeeOther)
 }
 
-func (c *Controller) display(name string, tpl string, w http.ResponseWriter, r *http.Request) error {
+func (c *Controller) display(name string, tpl string, w http.ResponseWriter, data interface{}) error {
 	tmpl, err := template.New(name).Parse(himma.Base())
 	if err != nil {
 		return err
@@ -28,7 +28,7 @@ func (c *Controller) display(name string, tpl string, w http.ResponseWriter, r *
 	if tmpl, err = tmpl.Parse(tpl); err != nil {
 		return err
 	}
-	if err := tmpl.Execute(w, c.app); err != nil {
+	if err := tmpl.Execute(w, data); err != nil {
 		return err
 	}
 	return nil
@@ -39,8 +39,9 @@ func (c *Controller) DisplayLogin(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, HomeUri, http.StatusSeeOther)
 		return
 	}
-	if err := c.display("login", tpl.Login(), w, r); err != nil {
+	if err := c.display("login", tpl.Login(), w, c.app); err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -53,78 +54,43 @@ func (c *Controller) DisplayNewAccessKey(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	if c.server.appConfig.DeveloperMode {
-		if err := c.display("login", DisplayWithLocalFile("new_account"), w, r); err != nil {
-			ResponseErr(w, r, err, http.StatusInternalServerError)
-		}
-		return
-	}
-	if err := c.display("login", tpl.NewAccount(), w, r); err != nil {
+	if err := c.display("login", tpl.NewAccount(), w, c.app); err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
+		return
 	}
 }
 
 func (c *Controller) DisplayBackup(w http.ResponseWriter, r *http.Request) {
-	if c.server.appConfig.DeveloperMode {
-		if err := c.display("backup", DisplayWithLocalFile("backup"), w, r); err != nil {
-			ResponseErr(w, r, err, http.StatusInternalServerError)
-		}
-		return
-	}
-	if err := c.display("backup", tpl.Backup(), w, r); err != nil {
+	if err := c.display("backup", tpl.Backup(), w, c.app); err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
+		return
 	}
 }
 
 func (c *Controller) DisplayStats(w http.ResponseWriter, r *http.Request) {
-	if c.server.appConfig.DeveloperMode {
-		if err := c.display("stats", DisplayWithLocalFile("stats"), w, r); err != nil {
-			ResponseErr(w, r, err, http.StatusInternalServerError)
-		}
-		return
-	}
-	if err := c.display("stats", tpl.Stats(), w, r); err != nil {
+	if err := c.display("stats", tpl.Stats(), w, c.app); err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
+		return
 	}
 }
 
 func (c *Controller) DisplayStatsReport(w http.ResponseWriter, r *http.Request) {
-	if c.server.appConfig.DeveloperMode {
-		if err := c.display("report", DisplayWithLocalFile("report"), w, r); err != nil {
-			ResponseErr(w, r, err, http.StatusInternalServerError)
-		}
-		return
-	}
-	if err := c.display("report", tpl.Stats(), w, r); err != nil {
+	if err := c.display("report", tpl.Report(), w, c.app); err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
+		return
 	}
 }
 
 func (c *Controller) DisplaySettings(w http.ResponseWriter, r *http.Request) {
-	// config, err := loadConfig()
-	// if err != nil {
-	//	log.Error(err)
-	//	ResponseErr(w, r, errors.New("failed to load settings"), http.StatusInternalServerError)
-	// }
-
-	// testTemplate, err = template.New("hello.gohtml").Funcs(template.FuncMap{
-	// 	"hasPermission": func(feature string) bool {
-	// 		return false
-	// 	},
-	// }).ParseFiles("hello.gohtml")
-
 	tmpl, err := template.New("settings").Funcs(funcMap).Parse(himma.Base())
 	if err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
+		return
 	}
-	if c.server.appConfig.DeveloperMode {
-		if tmpl, err = tmpl.Funcs(funcMap).Parse(DisplayWithLocalFile("settings")); err != nil {
-			ResponseErr(w, r, err, http.StatusInternalServerError)
-		}
-	} else {
-		if tmpl, err = tmpl.Funcs(funcMap).Parse(tpl.Settings()); err != nil {
-			ResponseErr(w, r, err, http.StatusInternalServerError)
-		}
+
+	if tmpl, err = tmpl.Funcs(funcMap).Parse(tpl.Settings()); err != nil {
+		ResponseErr(w, r, err, http.StatusInternalServerError)
+		return
 	}
 
 	checksum, _ := c.server.getDbValue(ConfigBucket, KeyConfigChecksum)

@@ -1,8 +1,14 @@
 package tpl
 
+import "os"
+
 func Stats() string {
-	return `
-{{define "css"}}
+	tpl := "tpl/stats.html"
+	if _, err := os.Stat(tpl); os.IsExist(err) {
+		return displayWithLocalFile(tpl)
+	}
+
+	return `{{define "css"}}
     <link rel="stylesheet" media="screen, print" href="/assets/css/custom.css">
 {{end}}
 
@@ -85,7 +91,7 @@ func Stats() string {
                     <thead>
                     <tr>
                         <th data-field="date" data-sortable="true" data-formatter="yyyymmFormatter">Date</th>
-						<th data-field="report" data-sortable="true" data-formatter="reportFormatter">Report</th>
+                        <th data-field="report" data-sortable="true" data-formatter="reportFormatter">Report</th>
                         <th data-field="srcDir" data-sortable="true" data-formatter="shortDirFormatter">Directory</th>
 
                         <th data-field="countAdded" data-sortable="true" data-formatter="thousandCommaSep">Added</th>
@@ -150,11 +156,11 @@ func Stats() string {
                     }).text(dir).appendTo($("#select-srcDirs"));
                 });
             });
-    
-	function reportFormatter(val, row, idx) {
-		return '<a href="#"><i class="fal fa-file-alt"></i></a>';
-	}
-	</script>
+
+        function reportFormatter(val, row, idx) {
+            return '<a class="btn btn-primary btn-xs" href="/report/' + moment(row.date).format("YYYYMM") + '/' + '" target="_blank"><i class="fal fa-file-alt"></i> Report</a>';
+        }
+    </script>
 {{end}}
 `
 }

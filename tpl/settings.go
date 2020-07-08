@@ -1,6 +1,13 @@
 package tpl
 
+import "os"
+
 func Settings() string {
+	tpl := "tpl/settings.html"
+	if _, err := os.Stat(tpl); !os.IsNotExist(err) {
+		return displayWithLocalFile(tpl)
+	}
+
 	return `{{define "css"}}
     <link rel="stylesheet" media="screen, print" href="/assets/css/custom.css">
 {{end}}

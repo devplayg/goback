@@ -1,6 +1,13 @@
 package tpl
 
+import "os"
+
 func Backup() string {
+	tpl := "tpl/backup.html"
+	if _, err := os.Stat(tpl); os.IsExist(err) {
+		return displayWithLocalFile(tpl)
+	}
+
 	return `{{define "css"}}
     <link rel="stylesheet" media="screen, print" href="/assets/css/custom.css">
 {{end}}
@@ -563,7 +570,6 @@ func Backup() string {
 {{define "script"}}
     <script src="/assets/js/custom.js"></script>
     <script>
-        
         function backupRowStyle(row, index) {
             if (row.state === -1) {
                 return {

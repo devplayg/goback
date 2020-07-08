@@ -78,6 +78,5 @@ type AppConfig struct {
 	Address       string
 	SecureAddress string
 	Verbose       bool
-	DeveloperMode bool
 	ResetAccount  bool
 }

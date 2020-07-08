@@ -1,6 +1,13 @@
 package tpl
 
+import "os"
+
 func NewAccount() string {
+	tpl := "tpl/newAccount.html"
+	if _, err := os.Stat(tpl); os.IsExist(err) {
+		return displayWithLocalFile(tpl)
+	}
+
 	return `
 {{define "css"}}
     <link rel="stylesheet" media="screen, print" href="/assets/css/custom.css">

@@ -28,7 +28,6 @@ var (
 	port         = fs.Uint16("port", 8000, "Monitoring address")
 	securePort   = fs.Uint16("secureport", 8443, "Secured monitoring address")
 	resetAccount = fs.Bool("resetkey", false, "Reset access key and secret key")
-	devMode      = fs.Bool("dev", false, "Developer mode")
 )
 
 func main() {
@@ -55,7 +54,6 @@ func main() {
 		},
 		Address:       ":" + strconv.Itoa(int(*port)),       // HTTP
 		SecureAddress: ":" + strconv.Itoa(int(*securePort)), // HTTPS
-		DeveloperMode: *devMode,
 		Verbose:       *verbose,
 		ResetAccount:  *resetAccount,
 	}
