@@ -40,10 +40,10 @@ func Report() string {
             <div class="row">
                 <div class="col-sm-6">
                     <h3 class="display-4 fw-500 color-primary-600 keep-print-font pt-4 l-h-n m-0">
-                        May, 2020
+                        {{.YYYYMM}}
                     </h3>
                     <div class="text-dark fw-400 h1 mb-g keep-print-font">
-                        Jan 1 ~ Jan 31, 2010
+                        {{.From}} ~ {{.To}}
                     </div>
                 </div>
                 <div class="col-sm-6">

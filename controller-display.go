@@ -4,8 +4,10 @@ import (
 	"encoding/hex"
 	"github.com/devplayg/goback/tpl"
 	"github.com/devplayg/himma/v2"
+	"github.com/gorilla/mux"
 	"html/template"
 	"net/http"
+	"time"
 )
 
 var funcMap template.FuncMap
@@ -75,7 +77,20 @@ func (c *Controller) DisplayStats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) DisplayStatsReport(w http.ResponseWriter, r *http.Request) {
-	if err := c.display("report", tpl.Report(), w, c.app); err != nil {
+	t, _ := time.Parse("200601", mux.Vars(r)["yyyymm"])
+	m := struct {
+		*himma.Config
+		YYYYMM string
+		From   string
+		To     string
+	}{
+		c.app,
+		t.Format("Jan, 2006"),
+		t.Format("Jan 2"),
+		t.AddDate(0, 1, -1).Format("Jan 2, 2006"),
+	}
+
+	if err := c.display("report", tpl.Report(), w, m); err != nil {
 		ResponseErr(w, r, err, http.StatusInternalServerError)
 		return
 	}
