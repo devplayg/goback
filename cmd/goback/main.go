@@ -14,7 +14,7 @@ import (
 const (
 	appName        = "GoBack"
 	appDescription = "Smart incremental backup"
-	appVersion     = "3.1.0"
+	appVersion     = "3.1.1"
 )
 
 var (
